@@ -14,23 +14,16 @@
 
 ---
 
-## ✅ 2. Config Checker – Public Access Rule
+## ✅ 2. Config Checker 
+ ## Public Access Rule
 - File: `detectors/config_checker.py`
 - Added rule: detect `access_control.public = true`
 - Test file: `samples/config_example.yaml`
 - Result: Detected public access
 - Tested using `main.py`
-
----
-
-## 🔁 Git Commit Summary
-- **Message:** `init: setup project and add basic public access detection rule`
-- **Date:** April 20, 2025
-- **Files included:** Project base, config checker, samples, `main.py`
-
----
-
-## 🛠️ NEXT
-- [ ] Add rule: `authentication.password_required = false`
-- [ ] Update `Report-Notes.md`
-- [ ] Commit and push changes
+ ## Password Authentication Rule
+ - File: `detectors/config_checker.py`
+ - Added rule: detect `authentication.password_required = false`
+ - Test file: `samples/config_example.yaml`
+- Result: Detected missing password requirement
+- Verified detection with `main.py`
