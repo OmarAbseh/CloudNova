@@ -43,3 +43,13 @@
  - Test file: `samples/sample_cludtrail.json`
  - Result: Detected public accesss to S3
  - Verified detection with `main.py`
+
+
+ ## 5. Flask Dashboard Integration
+ ### Upload and Scan Interface
+ - File: `app.py`, `templates/index.html`
+ - Feature: Upload files, select file type (config/log/cloud), click scan 
+ - Output: Threats listed under the form after scanning
+ - Result: Confirmed working Flash web interface with real-time scanning
+ - Verified detection with `app.py`
+ 
