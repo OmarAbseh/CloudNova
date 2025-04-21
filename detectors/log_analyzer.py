@@ -16,6 +16,11 @@ def analyze_log_file(filepath):
                     })
 
     except Exception as e:
-        threats.append(f"Error reading log file: {e}")
+        threats.append({
+            "threat": f"Error reading log file: {e}",
+            "type": "System Error",
+            "severity": "Low",
+            "fix": "Check LOG formatting and file structure."
+           })
 
     return threats

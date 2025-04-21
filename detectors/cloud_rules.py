@@ -19,7 +19,7 @@ def analyze_cloudtrail_log(filepath):
                     })
                 
         # Rule 2: Detect overly permissive IAM policy (simulated)
-        if "iam:PutRolePolicy" in data.get("eventName2", ""):
+        if "iam:PutRolePolicy" in data.get("eventName", ""):
             if "Action" in data and data["Action"] == "*":
                 threats.append({
                     "threat": "IAM policy grants full administrative privileges (Action: '*')",
@@ -29,6 +29,12 @@ def analyze_cloudtrail_log(filepath):
                     })
                 
     except Exception as e:
-        threats.append(f"Error reading cloud log: {e}")
+        threats.append({
+            "threat": f"Error reading cloud log: {e}",
+            "type": "System Error",
+            "severity": "Low",
+            "fix": "Check json formatting and file structure."
+            
+            })
 
     return threats

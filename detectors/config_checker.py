@@ -25,7 +25,12 @@ def check_config_file(filepath):
                 })
 
     except Exception as e:
-        threats.append(f"Error reading file: {e}")
+        threats.append({
+            "threat": f"Error reading config file: {e}",
+            "type": "System Error",
+            "severity": "Low",
+            "fix": "Check YAML formatting and file structure."
+        })
 
     return threats
 
