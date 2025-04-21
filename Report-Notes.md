@@ -52,4 +52,39 @@
  - Output: Threats listed under the form after scanning
  - Result: Confirmed working Flash web interface with real-time scanning
  - Verified detection with `app.py`
+
+ ## Phase 2 - Enchancements
+ ### 1. Threat Metadata Added
+ - File: `detectors/config_checker.py`, `detectors/log_analyzer.py`, `detectors/cloud_rules.py`
+ - Upgrade: Changed output from plain strings to structured dicts with:
+        -`threat`, `severity`, `type`, `fix`
+ - Purpose: To better represent threats during development and display clean data
+ - Result: Unifed output format across all detection engines.
+ - Verified and tested in `main.py`
+
  
+ ### 2. Log Analyzer Upgrade
+ - File: `detectors/log_analyzer.py`
+ - Rule: Detect repeated SSH login failures using log line analysis
+ - Threat Type: Log-Based intrusion
+ - Severity: Medium
+ - Fix: Suggest monitoring brute-force activity or restricting SSH access
+ - Test File: `samples/example_syslog.py`
+
+ ### 3. Cloud Rules - Metadata + IAM Rule
+ - File: `detectors/cloud_rules.py`
+ - Public S3 Rule:
+              - Detects bucket names with "public"
+              - Type: Cloud Misconfiguration
+              - Severity : High
+              - Fix : Restrict or block access via S3 policy 
+-IAM Rule:
+              - Detects `Action: "*"` in IAM policy via mock CloudTrail log
+              - Type: Cloud privilege Escalation
+              - Severity: Critical
+              - Fix: Limit IAM policy actions to required permissions only
+              - Test File: `samples/sample_cloudtrail.json`
+
+### 4. `main.py` Printer Upgrade
+- Modified `main.py` to print metadata field: `threat`, `type`, `severity`, and `fix`
+- Verified that all engines return results in consistent structure

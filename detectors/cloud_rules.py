@@ -11,13 +11,23 @@ def analyze_cloudtrail_log(filepath):
         if data.get("eventName") == "PutObject":
             bucket = data.get("bucket", "").lower()
             if "public" in bucket:
-                threats.append(f"⚠️ Public S3 access detected on bucket: {bucket}")
-
+                threats.append({
+                    "threat": f"Public S3 access detected on bucket: {bucket}",
+                    "type": "Cloud Misconfiguration",
+                    "severity": "High",
+                    "fix": "Restrict the bucket policy or block all public access in S3 settings."
+                    })
+                
         # Rule 2: Detect overly permissive IAM policy (simulated)
-        if "iam:PutRolePolicy" in data.get("eventName", ""):
+        if "iam:PutRolePolicy" in data.get("eventName2", ""):
             if "Action" in data and data["Action"] == "*":
-                threats.append("⚠️ IAM policy grants full admin rights (Action: '*')")
-
+                threats.append({
+                    "threat": "IAM policy grants full administrative privileges (Action: '*')",
+                    "type": "Cloud Privilege Escalation",
+                    "severity": "Critical",
+                    "fix": "Restrict the IAM policy actions to only what's necessary for the role."
+                    })
+                
     except Exception as e:
         threats.append(f"Error reading cloud log: {e}")
 
