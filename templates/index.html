@@ -22,7 +22,21 @@
         <h2>Threats Detected:</h2>
         <ul>
             {% for t in threats %}
-                <li>{{ t }}</li>
+                <li>
+                    <strong>Threat:</strong> {{ t.threat }}<br>
+                    <strong>Type:</strong> {{ t.type }}<br>
+                    <strong>Severity:</strong>
+                        {% if t.severity == 'High' %}
+                            <span style="color: red">{{ t.severity }}</span>
+                        {% elif t.severity == 'Medium' %}
+                            <span style="color: orange">{{ t.severity }}</span>
+                        {% else %}
+                            <span style="color: green">{{ t.severity }}</span> 
+                        {% endif %}
+                        <br>
+                    <strong>Fix:</strong> {{ t.fix }}
+                </li>
+                <hr>
             {% endfor %}
         </ul>
 

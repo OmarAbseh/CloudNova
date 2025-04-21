@@ -88,3 +88,23 @@
 ### 4. `main.py` Printer Upgrade
 - Modified `main.py` to print metadata field: `threat`, `type`, `severity`, and `fix`
 - Verified that all engines return results in consistent structure
+
+### 5. Full System Stability with Realistic Dev Files
+ - Files: `samples/dev_config.yaml`, `dev_log.log`, `dev_cloudtrail.json`
+ - Purpose: Simulate real-world dev-stage inputs during software project development
+ - Fixes Applied:
+              - Added defensive parsing to `config_checker.py` using `safe_load(file) or {}`
+              - Fixed incorrect cloud rule key (`eventName2 → eventName`)
+              - Standardized all `except` blocks to return structured threat objects
+ - Result: System now returns clean structured metadata across all three modules (config, log, cloud)
+ - Test: `main.py` verified detection for all inputs with expected results
+
+ ### 6. Flask UI Upgrade - Threat Metadata Display
+ - File: `templates/index.html`
+ - Upgrade: Web interface now displays:
+              - Threat message
+              - Type
+              - Severity (color-coded)
+              - Fix recommendation
+ - Result: Improved readability and professionalism
+ - Verified by uploading dev-stage files via dashboard

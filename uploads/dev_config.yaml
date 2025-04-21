@@ -1,0 +1,11 @@
+project_name: secure-api
+environment: development
+
+access_control:
+  public: true
+
+authentication:
+  password_required: false
+
+session:
+  timeout: 0
