@@ -14,7 +14,7 @@
 
 ---
 
-##  2. Config Checker 
+ ##  2. Config Checker 
  ### Public Access Rule
  - File: `detectors/config_checker.py`
  - Added rule: detect `access_control.public = true`
@@ -28,7 +28,7 @@
  - Result: Detected missing password requirement
  - Verified detection with `main.py`
 
-## 3. Log Analyzer
+ ## 3. Log Analyzer
  ### SSH Brute Force Rule
  - File: `detectors/log_analyzer.py`
  - Rule: Detects any log line containing "Failed password"
@@ -36,7 +36,7 @@
  - Result: Detected brute force login attempt
  - Verified detection with `main.py`
 
-## 4. Cloud Rules
+ ## 4. Cloud Rules
  ### Public S3 Bucket Detection
  - File: `detectors/cloud_rules.py`
  - Rule: Detects S3 bucket names with "public"
@@ -44,16 +44,15 @@
  - Result: Detected public accesss to S3
  - Verified detection with `main.py`
 
-
  ## 5. Flask Dashboard Integration
  ### Upload and Scan Interface
  - File: `app.py`, `templates/index.html`
  - Feature: Upload files, select file type (config/log/cloud), click scan 
  - Output: Threats listed under the form after scanning
- - Result: Confirmed working Flash web interface with real-time scanning
+ - Result: Confirmed working Flask web interface with real-time scanning
  - Verified detection with `app.py`
 
- ## Phase 2 - Enchancements
+## Phase 2 - Enhancements
  ### 1. Threat Metadata Added
  - File: `detectors/config_checker.py`, `detectors/log_analyzer.py`, `detectors/cloud_rules.py`
  - Upgrade: Changed output from plain strings to structured dicts with:
@@ -85,11 +84,11 @@
               - Fix: Limit IAM policy actions to required permissions only
               - Test File: `samples/sample_cloudtrail.json`
 
-### 4. `main.py` Printer Upgrade
-- Modified `main.py` to print metadata field: `threat`, `type`, `severity`, and `fix`
-- Verified that all engines return results in consistent structure
+ ### 4. `main.py` Printer Upgrade
+ - Modified `main.py` to print metadata field: `threat`, `type`, `severity`, and `fix`
+ - Verified that all engines return results in consistent structure
 
-### 5. Full System Stability with Realistic Dev Files
+ ### 5. Full System Stability with Realistic Dev Files
  - Files: `samples/dev_config.yaml`, `dev_log.log`, `dev_cloudtrail.json`
  - Purpose: Simulate real-world dev-stage inputs during software project development
  - Fixes Applied:
@@ -108,3 +107,43 @@
               - Fix recommendation
  - Result: Improved readability and professionalism
  - Verified by uploading dev-stage files via dashboard
+
+ 
+ 
+
+
+## Phase 3 – AI Integration
+
+ ### 1. Define AI Use Case
+ - Goal: Predict whether a dev environment is secure or risky based on config/log/cloud features
+ - Input sources: 
+              - YAML (config)
+              - Syslog (SSH brute force)
+              - CloudTrail JSON (IAM over-permission)
+
+ ### 2. Dataset Creation
+ - File: `ai/threat_dataset.csv`
+ - Columns: public_access, password_required, timeout, failed_logins, duplicate_ip, cloud_permission_risk, threat
+ - Labels: 1 = risky project, 0 = safe
+ - Added new cases for better model generalization
+
+ ### 3. Model Training
+ - Model: DecisionTreeClassifier (scikit-learn)
+ - Evaluation:
+              - Accuracy: 1.0
+              - Precision: 1.0
+              - Recall: 1.0
+ - Saved to: `ai/model.pkl`
+
+ ### 4. Feature Extraction
+ - Extracted real values from all 3 files:
+ - Config: access_control, authentication, session
+ - Log: failed SSH attempts, duplicate IPs
+ - Cloud: Action = "*" check
+
+ ### 5. Flask Integration
+ - Full POST upload handler with cleanup
+ - Features passed to AI model and prediction displayed
+ - AI Risk Score shown in dashboard with color-coded threats
+ - Print debug used for transparency
+

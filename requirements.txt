@@ -1,2 +1,5 @@
 flask
 pyyaml
+scikit-learn
+joblib
+pandas

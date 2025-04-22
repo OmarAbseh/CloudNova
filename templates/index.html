@@ -4,20 +4,24 @@
     <title>Threat Detection Dashboard</title>
 </head>
 <body>
-    <h1>Upload File for Threat Analysis</h1>
+    <h1>Upload Dev Files for Threat Analysis</h1>
     <form method="POST" enctype="multipart/form-data">
-        <input type="file" name="file" required><br><br>
-        <label>File Type:</label>
-        <select name="filetype" required>
-            <option value="config">Config</option>
-            <option value="log">Log</option>
-            <option value="cloud">Cloud</option>
-        </select><br><br>
+        <label><strong>Config File:</strong></label><br>
+        <input type="file" name="config_file" required><br><br>
+
+        <label><strong>Log File:</strong></label><br>
+        <input type="file" name="log_file" required><br><br>
+
+        <label><strong>Cloud File:</strong></label><br>
+        <input type="file" name="cloud_file" required><br><br>
+
+
         <input type="submit" value="Scan">
 
     </form>
 
-    {% if threats %}
+    {% if show_results and threats and threats|length > 0 %}
+
 
         <h2>Threats Detected:</h2>
         <ul>
@@ -41,6 +45,11 @@
         </ul>
 
         {% endif %}
+
+        {% if ai_score is not none %}
+        <h2>AI Risk Prediciton</h2>
+        <p><strong>Risk Score:</strong> {{ ai_score }} (0 = Safe, 1 = Threat)</p>
         
+        {% endif %}
 </body>
 </html>
