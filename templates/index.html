@@ -1,55 +1,69 @@
-><!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Threat Detection Dashboard</title>
+    <meta charset="UTF-8">
+    <title>AI Threat Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <h1>Upload Dev Files for Threat Analysis</h1>
-    <form method="POST" enctype="multipart/form-data">
-        <label><strong>Config File:</strong></label><br>
-        <input type="file" name="config_file" required><br><br>
+<body class="bg-light">
+    <div class="container py-4">
+        <h1 class="mb-4 text-center">🛡️ AI Threat Detection System</h1>
 
-        <label><strong>Log File:</strong></label><br>
-        <input type="file" name="log_file" required><br><br>
+        <!-- Upload Form -->
+        <div class="card p-4 mb-4">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label"><strong>Config File:</strong></label>
+                    <input type="file" name="config_file" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Log File:</strong></label>
+                    <input type="file" name="log_file" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Cloud File:</strong></label>
+                    <input type="file" name="cloud_file" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Scan</button>
+            </form>
+        </div>
 
-        <label><strong>Cloud File:</strong></label><br>
-        <input type="file" name="cloud_file" required><br><br>
-
-
-        <input type="submit" value="Scan">
-
-    </form>
-
-    {% if show_results and threats and threats|length > 0 %}
-
-
-        <h2>Threats Detected:</h2>
-        <ul>
-            {% for t in threats %}
-                <li>
-                    <strong>Threat:</strong> {{ t.threat }}<br>
-                    <strong>Type:</strong> {{ t.type }}<br>
-                    <strong>Severity:</strong>
-                        {% if t.severity == 'High' %}
-                            <span style="color: red">{{ t.severity }}</span>
-                        {% elif t.severity == 'Medium' %}
-                            <span style="color: orange">{{ t.severity }}</span>
-                        {% else %}
-                            <span style="color: green">{{ t.severity }}</span> 
-                        {% endif %}
-                        <br>
-                    <strong>Fix:</strong> {{ t.fix }}
-                </li>
-                <hr>
-            {% endfor %}
-        </ul>
-
-        {% endif %}
-
+        <!-- AI Score -->
         {% if ai_score is not none %}
-        <h2>AI Risk Prediciton</h2>
-        <p><strong>Risk Score:</strong> {{ ai_score }} (0 = Safe, 1 = Threat)</p>
-        
+        <div class="alert alert-info">
+            <strong>AI Risk Score:</strong> {{ ai_score }} (0 = Safe, 1 = Threat)
+        </div>
         {% endif %}
+
+        <!-- Threat Results -->
+        {% if show_results and threats and threats|length > 0 %}
+        <h3 class="mb-3">Threats Detected:</h3>
+        <div class="row">
+            {% for t in threats %}
+            <div class="col-md-6">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ t.threat }}</h5>
+                        <p class="card-text">
+                            <strong>Type:</strong> {{ t.type }}<br>
+                            <strong>Severity:</strong>
+                            {% if t.severity == 'High' %}
+                                <span class="text-danger fw-bold">{{ t.severity }}</span>
+                            {% elif t.severity == 'Medium' %}
+                                <span class="text-warning">{{ t.severity }}</span>
+                            {% else %}
+                                <span class="text-success">{{ t.severity }}</span>
+                            {% endif %}<br>
+                            <strong>Fix:</strong> {{ t.fix }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

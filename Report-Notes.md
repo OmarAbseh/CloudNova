@@ -5,14 +5,12 @@
 
 ---
 
-##  1. Project Setup
-- Set up folder from template ZIP
-- Installed dependencies with `pip install -r requirements.txt`
-- Activated Python venv
-- Confirmed base file structure
-- Verified Flask entry page
-
----
+##  Phase 1 - Project Setup
+ - Set up folder from template ZIP
+ - Installed dependencies with `pip install -r requirements.txt`
+ - Activated Python venv
+ - Confirmed base file structure
+ - Verified Flask entry page
 
  ##  2. Config Checker 
  ### Public Access Rule
@@ -77,12 +75,12 @@
               - Type: Cloud Misconfiguration
               - Severity : High
               - Fix : Restrict or block access via S3 policy 
--IAM Rule:
+ -IAM Rule:
               - Detects `Action: "*"` in IAM policy via mock CloudTrail log
               - Type: Cloud privilege Escalation
               - Severity: Critical
               - Fix: Limit IAM policy actions to required permissions only
-              - Test File: `samples/sample_cloudtrail.json`
+ - Test File: `samples/sample_cloudtrail.json`
 
  ### 4. `main.py` Printer Upgrade
  - Modified `main.py` to print metadata field: `threat`, `type`, `severity`, and `fix`
@@ -147,3 +145,21 @@
  - AI Risk Score shown in dashboard with color-coded threats
  - Print debug used for transparency
 
+
+
+
+## Phase 4 - Final Polish & AI Assistant
+
+ ### Step 1: UI Redesign
+ - File: `templates/index.html`
+ - Libraries: Integrated Bootstrap 5 (CDN)
+ - Layout:
+              - Centered title
+              - Modern upload form (Config, Log, Cloud)
+              - Full-width Bootstrap button
+              - AI Risk Score shown in alert box
+              - Detected threats displayed in cards (with color-coded severity)
+ - Status: Fully integrated and tested
+ - Purpose: Enhance visual professionalism and structure system for future modules
+   
+ 
