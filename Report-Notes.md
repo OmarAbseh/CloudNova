@@ -189,4 +189,29 @@
   ### Step 5: Assistant Mock Intelligence
   - Smart keyword-matching logic
   - Ready for GPT upgrade (Logic in previous commits, .env file ready)
-  
+
+## Phase 5 - Exporting Options
+ 
+ ### Step 1: JSON Export
+  - Files `index.html`,`app.py`
+  - Feature: Users can download a full JSON report after scan
+  - Includes:
+              - Timestamp
+              - AI risk score
+              - List of threats (message,severity,type,fix)
+  - Route: `/download` (POST)
+  - Output: Triggers file download as `threat_report.json`
+  - Status: Tested and verified working
+
+ ### Step 2: PDF Export
+ - Files: `index.html`,`app.py`
+ - Feature: Users can download a full PDF report after scan
+ - Includes:
+              -Timestamp
+              -AI risk score
+              -List of threats (message,severity,type,fix)
+ - Route: `/download-pdf` (POST)
+ - Library: `reportlab`
+ - Output: Structure threat_report.pdf
+ - Status: Tested and verified working
+ 
