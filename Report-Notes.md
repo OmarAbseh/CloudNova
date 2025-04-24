@@ -162,4 +162,31 @@
  - Status: Fully integrated and tested
  - Purpose: Enhance visual professionalism and structure system for future modules
    
+ ### Step 2: AU Assistant Panel (Mock might add gpt later)
+ - Files: `index.html`, `app.py`
+ - Description: Added a local simulated assistant for threat clarification and AI interaction
+ - Frontend: Bootstrap UI with input field and result box
+ - Backend: Flask `/ask` route with keyword-based mock logic
+ - Capabilities:
+              - Explains public access, password auth, IAM, scoring
+              - Responds to “who are you”, “how does this work?”, and “cloud mind”
+ - Status: Tested and working
+ - Note: Fully upgradeable to GPT later
  
+ ### Step 3: Flask Assistant Logic
+  - Files: `App.py`
+  - Route: `/ask` POST
+  - Logic: interprets user question → return JSON with helpful explanation
+  - Handles: Public access, IAM, passwords, risk score, system purpose, etc..
+  - Smart fallback response if no matches found
+
+ ### Step 4: JS Integration
+  - Files: `index.html`
+  - Script: `fetch("/ask)` call using Bootstrap UI
+  - Output: Appends answer below input box
+  - Status: Fully tested
+
+  ### Step 5: Assistant Mock Intelligence
+  - Smart keyword-matching logic
+  - Ready for GPT upgrade (Logic in previous commits, .env file ready)
+  
