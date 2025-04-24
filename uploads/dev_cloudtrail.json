@@ -1,0 +1,6 @@
+{
+    "eventName": "iam:PutRolePolicy",
+    "Action": "*",
+    "role": "DevOpsAdmin"
+  }
+  

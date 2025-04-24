@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template, jsonify, make_response
 from detectors.config_checker import check_config_file
 from detectors.log_analyzer import analyze_log_file
 from detectors.cloud_rules import analyze_cloudtrail_log
@@ -13,7 +13,28 @@ app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+@app.route("/download", methods=["POST"])
+def download_report():
+    from datetime import datetime
+    import io
 
+    score = request.form.get("score")
+    threats = request.form.get("threats")
+
+    report = {
+        "timestamp": datetime.now().isoformat(),
+        "ai_score": score,
+        "threats": json.loads(threats)
+    }
+
+    buffer = io.BytesIO()
+    buffer.write(json.dumps(report, indent=2).encode('utf-8'))
+    buffer.seek(0)
+
+    response = make_response(buffer.read())
+    response.headers["Content-Disposition"] = "attachment; filename=threat_report.json"
+    response.headers["Content-Type"] = "application/json"
+    return response
 
 @app.route("/ask", methods=["POST"])
 def ask_assistant():

@@ -1,5 +1,0 @@
-access_control:
-  public: true
-
-authentication:
-  password_required: false
