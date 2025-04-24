@@ -1,8 +1,0 @@
-{ "eventName": "PutObject",
- "bucket": "public-bucket", 
-
- 
-    "eventName2": "iam:PutRolePolicy",
-    "Action": "*"
-  }
-  

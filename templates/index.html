@@ -74,6 +74,14 @@
             </div>
             {% endfor %}
         </div>
+
+
+        <form action="/download" method="POST">
+            <input type="hidden" name="score" value="{{ ai_score }}">
+            <input type="hidden" name="threats" value='{{ threats | tojson | safe }}'>
+            <button class="btn btn-outline-success mt-2 w-100" type="submit">📥 Download Report (JSON)</button>
+        </form>        
+    
         {% endif %}
     </div>
 
