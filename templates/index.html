@@ -80,7 +80,14 @@
             <input type="hidden" name="score" value="{{ ai_score }}">
             <input type="hidden" name="threats" value='{{ threats | tojson | safe }}'>
             <button class="btn btn-outline-success mt-2 w-100" type="submit">📥 Download Report (JSON)</button>
-        </form>        
+        </form>
+        
+        
+        <form action="/download-pdf" method="POST">
+            <input type="hidden" name="score" value="{{ ai_score }}">
+            <input type="hidden" name="threats" value='{{ threats | tojson | safe}}'>
+            <button class="btn btn-outline-dark mt-2 w-100" type="submit">📄 Download Report (PDF)</button>
+        </form>
     
         {% endif %}
     </div>

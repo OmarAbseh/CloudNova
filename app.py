@@ -36,6 +36,64 @@ def download_report():
     response.headers["Content-Type"] = "application/json"
     return response
 
+@app.route("/download-pdf", methods=["POST"])
+def download_pdf_report():
+    from datetime import datetime
+    import io
+    from reportlab.lib.pagesizes import letter
+    from reportlab.pdfgen import canvas
+
+    score = request.form.get("score")
+    threats = request.form.get("threats")
+
+    if threats is None:
+        return "No Threats submitted, Run a scan first.", 400
+    
+    threats = json.loads(threats)
+
+    buffer = io.BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+
+    y = height - 40
+    pdf.setFont("Helvetica-Bold", 16)
+    pdf.drawString(50, y, "AI Threat Detection Report")
+    y -= 30
+
+
+    pdf.setFont("Helvetica", 12)
+    pdf.drawString(50, y, f"Generated: {datetime.now().strftime('%y-%m-%d %H:%M:%S')}")
+    y -= 20
+    pdf.drawString(50, y, f"AI Risk Score: {score}")
+    y -= 30
+
+    for i, threat in enumerate(threats, 1):
+        if y < 100:
+            pdf.showPage()
+            y = height - 50
+        pdf.setFont("Helvetica-Bold", 12)
+        pdf.drawString(50, y, f"Threat {i}: {threat['threat']}")
+        y -= 18
+        pdf.setFont("Helvetica", 11)
+        pdf.drawString(60, y, f"Type: {threat['type']}")
+        y -= 16
+        pdf.drawString(60, y, f"Severity: {threat['severity']}")
+        y -= 16
+        pdf.drawString(60, y, f"Fix: {threat['fix']}")
+        y -= 30
+
+
+    pdf.save()
+    buffer.seek(0)
+
+    response = make_response(buffer.read())
+    response.headers["Content-Disposition"] = "attachment; filename=threat_report.pdf"
+    response.headers["Content-Type"] = "application/pdf"
+    return response
+
+
+
 @app.route("/ask", methods=["POST"])
 def ask_assistant():
     question = request.json["question"].lower()
