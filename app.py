@@ -1,17 +1,102 @@
-from flask import Flask, request, render_template, jsonify, make_response
+from flask import Flask, request, render_template, render_template_string, jsonify, make_response
 from detectors.config_checker import check_config_file
 from detectors.log_analyzer import analyze_log_file
 from detectors.cloud_rules import analyze_cloudtrail_log
 from ai.predict import predict_threat_risk
 from dotenv import load_dotenv
+from datetime import datetime
+from base64 import b64decode, b64encode
 import openai
 import yaml
 import json
 import os
+import io
 
 app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+@app.route("/download-config", methods=["POST"])
+def download_config_yaml():
+
+    encoded = request.form.get("yaml")
+    if not encoded:
+        return "No config provided", 400
+    
+
+    try:
+        decoded = b64decode(encoded).decode("utf-8")
+    except Exception as e:
+        return f"Error decoding YAML: {str(e)}", 400
+    
+    buffer = io.BytesIO()
+    buffer.write(decoded.encode("utf-8"))
+    buffer.seek(0)
+
+    response = make_response(buffer.read())
+    response.headers["Content-Disposition"] = f"attachment; filename=config_{datetime.now().strftime('%Y%m%d')}.yaml"
+    response.headers["Content-Type"] = "text/yaml"
+    return response
+
+
+
+
+@app.route("/cloudmind", methods=["GET", "POST"])
+def cloudmind():
+    if request.method == "POST":
+        services = request.form.getlist("services")
+        roles_input = request.form.get("roles", "")
+        description = request.form.get("description", "")
+
+    
+        roles = {}
+        for pair in roles_input.split(","):
+            if ":" in pair:
+                k, v = pair.strip().split(":")
+                roles[k.strip()] = v.strip()
+    
+# Config Output
+
+        config = {
+        "description": description,
+        "services": {},
+        "roles": roles
+        }
+
+
+        for s in services:
+            if s == "S3":
+                config["services"]["S3"] = {
+                    "public_access": False,
+                    "encryption": "AES256",
+                    "access_control": roles
+             }
+
+            elif s == "EC2":
+                config["services"]["EC2"] = {
+                    "instance_type": "t3.micro",
+                    "iam_roles": list(roles.keys()),
+                    "ssh_access": "restricted"
+             }
+
+            elif s == "Lambda":
+                config["services"]["Lambda"] = {
+                    "runtime": "python3.11",
+                    "timeout": 10,
+                    "env_access": "scoped"
+             }
+
+ # Convert to YAML for display/download
+
+        yaml_str = yaml.dump(config, sort_keys=False)
+        encoded = b64encode(yaml_str.encode()).decode()
+
+
+        return render_template("cloudmind.html", yaml=yaml_str, encoded=encoded, services=["EC2", "S3", "Lambda"])
+
+
+    return render_template("cloudmind.html", yaml=None)
+
 
 @app.route("/download", methods=["POST"])
 def download_report():

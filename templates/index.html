@@ -5,6 +5,7 @@
     <title>AI Threat Detection</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body class="bg-light">
     <div class="container py-4">
         <h1 class="mb-4 text-center">🛡️ AI Threat Detection System</h1>
@@ -26,6 +27,7 @@
                 </div>
                 <button type="submit" class="btn btn-primary w-100">Scan</button>
             </form>
+            <a href="/cloudmind" class="btn btn-outline-dark w-100">🧠 Open CloudMind Generator</a>
         </div>
 
         <!-- AI Score -->
@@ -86,7 +88,7 @@
         <form action="/download-pdf" method="POST">
             <input type="hidden" name="score" value="{{ ai_score }}">
             <input type="hidden" name="threats" value='{{ threats | tojson | safe}}'>
-            <button class="btn btn-outline-dark mt-2 w-100" type="submit">📄 Download Report (PDF)</button>
+            <button class="btn btn-outline-success mt-2 w-100" type="submit">📄 Download Report (PDF)</button>
         </form>
     
         {% endif %}
