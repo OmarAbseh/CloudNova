@@ -214,4 +214,26 @@
  - Library: `reportlab`
  - Output: Structure threat_report.pdf
  - Status: Tested and verified working
- 
+
+## Phase 6 - CloudMind: AI-Powered Config Generator
+
+ ### Step 1: Route Setup (`/cloudmind`)
+ - Route: `/cloudmind` (GET+POST)
+ - Page: added a new page `cloudmind.html`
+ - Functionality: Accepts service selection (EC2, S3, Lambda), role-permission pairs, and a use-case description
+ - Backend Logic:
+              - Converts inputs into a structured config
+              - applied secure best practices(encryption, IAM roles, scoped access)
+              - Encodes the final YAML output in Base64 for secure download
+
+
+ ### Step 2: YAML Output + Download (Secure Encoding)
+ - File: `app.py`
+ - Function: `download_config_yaml()`
+ - Tech: Uses Base64 encoding to safely store YAML in a hidden field
+ - Route: `/download-config`
+ - Result: User download `config_YYYYMMDD.YAML` with generated infrastructure
+
+ ### Step 3: Dashboard Link integration
+ - File: `index.html`
+ - Purpose: Links to `/cloudmind` from the main dashboard
