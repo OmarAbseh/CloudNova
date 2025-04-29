@@ -217,6 +217,11 @@
 
 ## Phase 6 - CloudMind: AI-Powered Config Generator
 
+
+
+
+
+
  ### Step 1: Route Setup (`/cloudmind`)
  - Route: `/cloudmind` (GET+POST)
  - Page: added a new page `cloudmind.html`
@@ -237,3 +242,12 @@
  ### Step 3: Dashboard Link integration
  - File: `index.html`
  - Purpose: Links to `/cloudmind` from the main dashboard
+
+
+## Phase 7 - Ai assistant
+ ### Step 1: Create Assistant Brain
+  - File: `ai/assistant_knowledge.json`, `assistant_ai.py`
+  - Logic: Matches user's question by scanning for topic keywords inside the question text.
+  - Topics: IAM, Public Access, Passwords, Timeout, CloudMind, Risk Score, Threats, Securiy Best Practices.
+  - Behaviour: Works on sematic keyword detection, not exact question matching.
+  - Status: Implemented and tested.
