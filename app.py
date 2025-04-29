@@ -177,33 +177,12 @@ def download_pdf_report():
     response.headers["Content-Type"] = "application/pdf"
     return response
 
-
+from assistant_ai import find_best_answer
 
 @app.route("/ask", methods=["POST"])
 def ask_assistant():
     question = request.json["question"].lower()
-
-    if "public access" in question:
-        answer = "Public access means a resource like an S3 bucket or system component is open to everyone on the internet. This is a high risk and should be avoided."
-    elif "password required" in question or "authentication" in question:
-        answer = "Password authentication ensures only valid users can log in. If it's disabled, anyone could try to access the system without validation."
-    elif "iam" in question or "permission" in question:
-        answer = "IAM policies define who can do what in your cloud environment. If an IAM policy uses 'Action: *', it gives full admin rights — a critical security flaw."
-    elif "risk score" in question or "ai score" in question:
-        answer = "The AI risk score is a prediction of how vulnerable your project setup is. A score of 1.0 = high threat; 0.0 = safe."
-    elif "fix" in question:
-        answer = "Every threat has a 'fix' section in your scan results. Follow those suggestions to secure your environment."
-    elif "what can you do" in question or "who are you" in question:
-        answer = "I'm your embedded security assistant. I explain threats, help you understand your scan results, and guide you toward more secure configurations."
-    elif "download report" in question:
-        answer = "The downloadable report feature (PDF/JSON) will allow you to archive your scan results and share them with a security team."
-    elif "cloud mind" in question:
-        answer = "Cloud Mind is an upcoming module that will generate secure IAM and cloud configuration files based on your inputs."
-    elif "how does this work" in question:
-        answer = "You upload your dev files (config, logs, cloud data), and we scan for threats using rules and AI. Threats are categorized, scored, and explained."
-    else:
-        answer = "I'm not sure how to answer that yet, but I'm learning more every day. Try asking about threats, scores, fixes, or how the system works."
-
+    answer = find_best_answer(question)
     return jsonify({"answer": answer})
 
 

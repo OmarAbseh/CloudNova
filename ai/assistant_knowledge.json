@@ -1,0 +1,43 @@
+[
+    {
+      "keywords": ["cloudmind", "cloud mind", "config generation"],
+      "answer": "CloudMind helps you generate secure cloud configurations based on your infrastructure needs."
+    },
+    {
+      "keywords": ["iam", "permissions", "privilege escalation", "roles"],
+      "answer": "IAM controls who can do what in your cloud environment. If your IAM policy uses 'Action: *', it exposes a major security risk."
+    },
+    {
+      "keywords": ["timeout", "session timeout", "session security"],
+      "answer": "Setting a session timeout ensures that inactive users are logged out automatically to prevent hijacking."
+    },
+    {
+      "keywords": ["risk score", "ai score"],
+      "answer": "The AI risk score indicates how vulnerable your project is. 1.0 = High Threat, 0.0 = Safe."
+    },
+    {
+      "keywords": ["public access", "s3 public", "bucket public"],
+      "answer": "Public access exposes your S3 buckets or services to the entire internet. Always disable public access unless strictly necessary."
+    },
+    {
+      "keywords": ["failed password", "brute force", "ssh attack"],
+      "answer": "Repeated failed password attempts suggest a brute-force attack. It's critical to monitor and restrict SSH access."
+    },
+    {
+      "keywords": ["duplicate ip", "same ip", "ip brute force"],
+      "answer": "Duplicate IPs found in log files may indicate a brute-force attack from a single source IP."
+    },
+    {
+      "keywords": ["cloudtrail", "cloud logs"],
+      "answer": "CloudTrail captures all cloud API activity. Misconfigured trails can expose sensitive operations."
+    },
+    {
+      "keywords": ["fix", "remediation", "resolve threats"],
+      "answer": "Every threat has a fix listed in your report. Apply those fixes starting with High severity issues first."
+    },
+    {
+      "keywords": ["assistant", "who are you", "what can you do"],
+      "answer": "I’m your built-in security analyst inside CloudNova. I explain threats, AI scoring, CloudMind generation, and offer guidance."
+    }
+  ]
+  
