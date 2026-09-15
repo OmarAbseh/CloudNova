@@ -1,130 +1,117 @@
-# 🛡️ CloudNova - AI-Powered Cloud Threat Detection System
+# 🛡️ CloudNova
 
-CloudNova is an advanced AI-driven threat detection system designed to identify misconfigurations, risky logs, and cloud-level security issues during cloud software development. Built for DevSecOps engineers, researchers, and cloud developers.
+**A cloud security scanning engine.** Point it at IaC configs, CloudTrail logs,
+or auth logs and it reports misconfigurations as structured, actionable findings
+— mapped to CIS Benchmarks and MITRE ATT&CK, and gate-able in CI.
 
----
+> Started as a University of Debrecen thesis; being rebuilt as a real
+> production-grade security tool. The original prototype is preserved under
+> [`legacy/`](./legacy).
 
-## 📌 Project Overview
-- **Author**: Absa Omar Naser Adel
-- **Thesis Project**: University of Debrecen
-- **Start Date**: April 20, 2025
-- **Repository**: [`CloudNova`](https://github.com/OmarAbseh/CloudNova/)
-
----
-
-## ⚙️ Core Features
-
-### ✅ Multi-Layer Detection
-- **Config Checker**: Detects public access and insecure authentication rules in YAML configs
-- **Log Analyzer**: Detects brute-force attacks, repeated SSH failures, and duplicate IPs
-- **Cloud Rules**: Detects public S3 buckets and wildcard IAM permissions
-
-### 📊 Flask Web Interface
-- Upload config/log/cloud files and scan instantly
-- Displays structured threat metadata (type, severity, fix)
-
-### 🧠 AI Risk Assessment
-- Predicts overall project risk using DecisionTreeClassifier (scikit-learn)
-- Input features extracted from uploaded files
-- Returns color-coded risk score + threat list
-
-### 🤖 AI Assistant (Mock)
-- Interactive threat explanation chatbot (Flask + JS frontend)
-- Handles questions like "what is public access?" or "explain IAM risks"
-- Ready for GPT-4 integration
-
-### 📄 Report Downloads
-- Download full threat report as `.json` or `.pdf`
-- Includes risk score, threats, fixes, and project metadata
-
-### 🧠 CloudMind Generator
-- AI-powered secure config file generator
-- Inputs: AWS services + roles + project description
-- Output: Encrypted downloadable YAML (EC2, S3, Lambda supported)
+[![CI](https://github.com/OmarAbseh/CloudNova/actions/workflows/ci.yml/badge.svg)](https://github.com/OmarAbseh/CloudNova/actions)
 
 ---
 
-## 🚀 Tech Stack
-
-| Category       | Tools                        |
-|----------------|------------------------------|
-| Language       | Python 3.10+                 |
-| Web Framework  | Flask + Bootstrap 5          |
-| AI/ML          | Scikit-learn, JSON + CSV     |
-| Parsing        | PyYAML, Log parsers, JSON    |
-| UI Assistant   | JS (Fetch) + Flask Routes    |
-| PDF Export     | ReportLab                    |
-| File Upload    | Multipart/form POST          |
-
----
-
-## 🧪 Detection Logic (Sample)
-
-| Type            | Rule Detected                        | Severity  | Fix                                  |
-|------------------|---------------------------------------|-----------|---------------------------------------|
-| Config           | `access_control: public`             | High      | Restrict public access                |
-| Config           | `password_required: false`           | High      | Enforce password authentication       |
-| Log              | `Failed password` (SSH brute force)  | Medium    | Monitor + block suspicious IPs        |
-| CloudTrail       | `Action: "*"` in IAM policy           | Critical  | Scope permissions to least privilege |
-
----
-
-## 🧠 AI Model - Dataset Features
-
-| Feature               | Source       |
-|------------------------|--------------|
-| public_access          | config.yaml  |
-| password_required      | config.yaml  |
-| timeout                | config.yaml  |
-| failed_logins          | syslog.log   |
-| duplicate_ip           | syslog.log   |
-| cloud_permission_risk  | cloudtrail.json |
-
----
-
-## 📁 Folder Structure
+## Quick start
 
 ```bash
-.
-├── app.py                # Flask backend
-├── templates/
-│   ├── index.html        # Main dashboard UI
-│   └── cloudmind.html    # Config generator UI
-├── detectors/
-│   ├── config_checker.py
-│   ├── log_analyzer.py
-│   └── cloud_rules.py
-├── ai/
-│   ├── threat_dataset.csv
-│   ├── model.pkl
-│   └── assistant_knowledge.json
-├── samples/
-│   ├── dev_config.yaml
-│   ├── dev_log.log
-│   └── dev_cloudtrail.json
+pip install -e ".[dev]"        # install with dev tooling
+
+cloudnova scan examples        # scan the bundled example fixtures
+cloudnova scan . --format json # machine-readable output
+cloudnova scan . --fail-on high  # non-zero exit for CI gating
+cloudnova checks               # list the loaded ruleset
+```
+
+Example output:
+
+```
+CRITICAL  CT_IAM_WILDCARD_ADMIN   AdminRole      IAM policy grants wildcard privileges
+HIGH      CT_S3_PUBLIC_ACL        company-data   S3 object written with a public ACL
+HIGH      IAC_ACCESS_PUBLIC       access_control.public   Resource exposes public access
+HIGH      LOG_SSH_BRUTE_FORCE     10.0.0.5       120 failed SSH attempts from one IP
 ```
 
 ---
 
-## 🎓 Thesis Status (April 2025)
-- ✅ Core system and AI modules built
-- ✅ Flask frontend complete
-- ✅ Assistant and CloudMind integrated
-- 🔄 Final polishing and README screenshots pending
+## What it detects today
+
+| Check ID | Target | Severity | Detects |
+|---|---|---|---|
+| `CT_IAM_WILDCARD_ADMIN` | CloudTrail | Critical | `Action:"*"` on `Resource:"*"` in a real IAM policy document |
+| `CT_S3_PUBLIC_ACL` | CloudTrail | High | Objects written with a public **canned ACL** (not a name guess) |
+| `IAC_ACCESS_PUBLIC` | YAML config | High | `access_control.public: true` |
+| `IAC_AUTH_NO_PASSWORD` | YAML config | Medium | `authentication.password_required: false` |
+| `IAC_SESSION_NO_TIMEOUT` | YAML config | Low | Disabled / missing session timeout |
+| `LOG_SSH_BRUTE_FORCE` | auth log | Med/High | Failed SSH logins **aggregated per source IP** |
 
 ---
 
-## 🧠 Future Upgrades
-- GPT integration for AI Assistant
-- Real AWS API scanning
-- CI/CD integration for DevSecOps pipelines
+## Architecture
+
+```
+files ──► loader ──► Artifact(kind, data) ──► Engine ──► [ matching Checks ] ──► [ Finding ] ──► reporters
+          (I/O)       (typed, parsed)          (isolates                          (one typed        (console
+                                                errors)                            contract)          / json)
+```
+
+- **`Finding`** — one immutable, validated Pydantic model is the contract every
+  check produces and every formatter consumes. ([ADR 0001](docs/adr/0001-finding-as-the-core-contract.md))
+- **Checks are plugins** — subclass `Check`, add `@register`; the engine
+  discovers them. Adding a rule never touches the engine. ([ADR 0002](docs/adr/0002-plugin-check-registry.md))
+- **Parse ≠ check** — only the loader touches disk; checks are pure functions of
+  parsed data, so one bad file can't crash a scan. ([ADR 0003](docs/adr/0003-parse-then-check-separation.md))
+- **Severity ⊥ confidence** — the scanner says how bad *and* how sure, so it
+  doesn't cry wolf. ([ADR 0004](docs/adr/0004-severity-and-confidence-are-separate.md))
+
+Every design decision is written up in [`docs/adr/`](docs/adr).
 
 ---
 
-## 📫 Contact
+## Development
 
-- 📧 omar_absah@icloud.com
-- 💼 [LinkedIn: Omar Abseh](https://www.linkedin.com/in/omarabseh/)
-- 🔗 GitHub: [OmarAbseh](https://github.com/OmarAbseh)
+```bash
+pip install -e ".[dev]"
+ruff check src tests      # lint
+ruff format src tests     # format
+mypy                      # strict type check
+pytest --cov=cloudnova    # tests + coverage
+pre-commit install        # run all of the above on every commit
+```
 
-> "Secure DevOps isn't optional. It’s the foundation of resilient innovation."
+CI runs the same gate on Python 3.11 and 3.12, plus a secret-scanning hook so a
+credential can never be committed again.
+
+### Adding a check
+
+```python
+from cloudnova.core.check import Check, register
+from cloudnova.core.findings import Finding, Location, Severity
+
+@register
+class MyRule(Check):
+    id = "IAC_MY_RULE"
+    title = "..."
+    severity = Severity.HIGH
+    target = "iac_config"
+
+    def run(self, artifact):
+        if is_bad(artifact.data):
+            yield Finding(check_id=self.id, title=self.title, severity=self.severity,
+                          location=Location(path=artifact.path),
+                          description="...", remediation="...")
+```
+
+Add its module to `src/cloudnova/checks/__init__.py`, write a test, done.
+
+---
+
+## Roadmap
+
+See [ROADMAP.md](./ROADMAP.md). In short: real IaC (Terraform/CFN/K8s) →
+live cloud scanning (AWS/Azure/GCP) → attack-path graph → authorized offensive
+modules → AI triage agents → SaaS.
+
+## License
+
+MIT — see [LICENSE](./LICENSE).
