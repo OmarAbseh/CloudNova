@@ -17,10 +17,11 @@ or auth logs and it reports misconfigurations as structured, actionable findings
 ```bash
 pip install -e ".[dev]"        # install with dev tooling
 
-cloudnova scan examples        # scan the bundled example fixtures
-cloudnova scan . --format json # machine-readable output
+cloudnova scan examples          # scan the bundled example fixtures
+cloudnova scan . --format json   # machine-readable output
+cloudnova scan . --format sarif  # SARIF 2.1.0 for GitHub code-scanning
 cloudnova scan . --fail-on high  # non-zero exit for CI gating
-cloudnova checks               # list the loaded ruleset
+cloudnova checks                 # list the loaded ruleset
 ```
 
 Example output:
@@ -36,14 +37,20 @@ HIGH      LOG_SSH_BRUTE_FORCE     10.0.0.5       120 failed SSH attempts from on
 
 ## What it detects today
 
-| Check ID | Target | Severity | Detects |
-|---|---|---|---|
-| `CT_IAM_WILDCARD_ADMIN` | CloudTrail | Critical | `Action:"*"` on `Resource:"*"` in a real IAM policy document |
-| `CT_S3_PUBLIC_ACL` | CloudTrail | High | Objects written with a public **canned ACL** (not a name guess) |
-| `IAC_ACCESS_PUBLIC` | YAML config | High | `access_control.public: true` |
-| `IAC_AUTH_NO_PASSWORD` | YAML config | Medium | `authentication.password_required: false` |
-| `IAC_SESSION_NO_TIMEOUT` | YAML config | Low | Disabled / missing session timeout |
-| `LOG_SSH_BRUTE_FORCE` | auth log | Med/High | Failed SSH logins **aggregated per source IP** |
+**18 checks across 5 input formats** — Terraform, CloudFormation, Kubernetes,
+CloudTrail logs, and generic config/auth logs. Run `cloudnova checks` for the
+live list. Highlights:
+
+| Area | Formats | Examples |
+|---|---|---|
+| **S3 exposure** | Terraform, CloudFormation, CloudTrail | Public ACLs (by ACL, never by name), missing encryption |
+| **Network** | Terraform, CloudFormation | Security groups open to `0.0.0.0/0`, with severity escalated for SSH/RDP/DB ports |
+| **IAM** | Terraform, CloudFormation, CloudTrail | Wildcard `Action`/`Resource`, parsing real policy documents (incl. `jsonencode`) |
+| **Kubernetes** | K8s manifests | Privileged containers, host namespace sharing, run-as-root, privilege escalation |
+| **Runtime logs** | auth log | SSH brute force **aggregated per source IP**, severity by volume |
+
+Every finding maps to CIS Benchmark controls and MITRE ATT&CK techniques, and
+carries a severity **and** an independent confidence.
 
 ---
 

@@ -22,7 +22,7 @@ from rich.table import Table
 from cloudnova.core.check import registry
 from cloudnova.core.engine import Engine
 from cloudnova.core.findings import Severity
-from cloudnova.reporting import render_console, render_json
+from cloudnova.reporting import render_console, render_json, render_sarif
 
 app = typer.Typer(
     add_completion=False,
@@ -36,7 +36,7 @@ _console = Console()
 def scan(
     path: Annotated[Path, typer.Argument(help="File or directory to scan.")],
     output_format: Annotated[
-        str, typer.Option("--format", "-f", help="Output format: table or json.")
+        str, typer.Option("--format", "-f", help="Output format: table, json, or sarif.")
     ] = "table",
     fail_on: Annotated[
         str | None,
@@ -53,10 +53,14 @@ def scan(
     if output_format == "json":
         # Plain print (not Rich) so the JSON is pipeable and unstyled.
         print(render_json(result))
+    elif output_format == "sarif":
+        print(render_sarif(result))
     elif output_format == "table":
         render_console(result, _console)
     else:
-        _console.print(f"[red]Unknown format: {output_format!r} (use 'table' or 'json').[/]")
+        _console.print(
+            f"[red]Unknown format: {output_format!r} (use 'table', 'json', or 'sarif').[/]"
+        )
         raise typer.Exit(code=2)
 
     if fail_on:
