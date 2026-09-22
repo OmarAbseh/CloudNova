@@ -15,6 +15,10 @@ from cloudnova.core.check import CheckRegistry
 from cloudnova.core.check import registry as default_registry
 from cloudnova.core.findings import Finding
 from cloudnova.core.loader import LoadError, discover, load_file
+from cloudnova.core.resource import CloudResource
+
+#: Artifact kinds whose data payload is a list of CloudResource objects.
+_RESOURCE_KINDS = {"terraform", "cloudformation", "kubernetes"}
 
 
 @dataclass
@@ -25,6 +29,8 @@ class ScanResult:
     files_scanned: int = 0
     checks_run: int = 0
     errors: list[str] = field(default_factory=list)
+    #: Every normalized resource seen, for cross-file analysis (the attack graph).
+    resources: list[CloudResource] = field(default_factory=list)
 
     def sorted_findings(self) -> list[Finding]:
         return sorted(self.findings, key=lambda f: f.sort_key())
@@ -50,6 +56,8 @@ class Engine:
                 continue
 
             result.files_scanned += 1
+            if artifact.kind in _RESOURCE_KINDS and isinstance(artifact.data, list):
+                result.resources.extend(r for r in artifact.data if isinstance(r, CloudResource))
             for check in self._registry.for_target(artifact.kind):
                 result.checks_run += 1
                 try:

@@ -56,6 +56,21 @@ live list. Highlights:
 Every finding maps to CIS Benchmark controls and MITRE ATT&CK techniques, and
 carries a severity **and** an independent confidence.
 
+### Attack paths (the differentiator)
+
+Beyond per-resource findings, CloudNova builds a **graph** of your resources and
+reports exploitable *chains* — the thing a checklist scanner misses:
+
+```
+CRITICAL  GRAPH_ATTACK_PATH   aws_instance.web
+  An attacker who compromises the internet-exposed resource 'aws_instance.web'
+  reaches a privileged identity (privilege escalation to admin).
+  Chain: aws_instance.web — can assume → aws_iam_instance_profile.app
+         — can assume → aws_iam_role.app
+```
+
+This runs automatically during `scan` (disable with `--no-graph`).
+
 ---
 
 ## Architecture
@@ -79,6 +94,9 @@ files ──► loader ──► Artifact(kind, data) ──► Engine ──►
   triplicated. ([ADR 0005](docs/adr/0005-normalized-resource-model.md))
 - **Baselines by fingerprint** — accept a backlog and gate only on *new*
   findings, stable across reformatting. ([ADR 0006](docs/adr/0006-baseline-fingerprints.md))
+- **Attack-path graph** — resources become a graph; a walk from an
+  internet-exposed node to an admin role or data store is reported as one
+  narrated CRITICAL finding, not scattered nits. ([ADR 0007](docs/adr/0007-attack-path-graph.md))
 
 Every design decision is written up in [`docs/adr/`](docs/adr).
 

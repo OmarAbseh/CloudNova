@@ -23,6 +23,8 @@ from cloudnova.core.baseline import Baseline
 from cloudnova.core.check import registry
 from cloudnova.core.engine import Engine
 from cloudnova.core.findings import Severity
+from cloudnova.graph import build_graph, find_attack_paths
+from cloudnova.graph.attack_paths import paths_to_findings
 from cloudnova.reporting import render_console, render_json, render_sarif
 
 app = typer.Typer(
@@ -47,6 +49,10 @@ def scan(
         Path | None,
         typer.Option("--baseline", help="Suppress findings recorded in this baseline file."),
     ] = None,
+    graph: Annotated[
+        bool,
+        typer.Option("--graph/--no-graph", help="Analyze cross-resource attack paths."),
+    ] = True,
 ) -> None:
     """Scan PATH for security findings."""
     if not path.exists():
@@ -54,6 +60,11 @@ def scan(
         raise typer.Exit(code=2)
 
     result = Engine().scan_path(path)
+
+    if graph and result.resources:
+        # Cross-file analysis: build the resource graph and add attack-path findings.
+        resource_graph = build_graph(result.resources)
+        result.findings.extend(paths_to_findings(resource_graph, find_attack_paths(resource_graph)))
 
     if baseline is not None:
         if not baseline.exists():

@@ -23,11 +23,13 @@ aggregation) and killed the crash-on-malformed-input bugs.
 - Credentials via the SDK's own provider chain (SSO / assumed role) — never
   pasted secrets.
 
-## Phase 3 — Attack-path graph
-- Model findings + resources as a graph; chain them into paths
-  ("public EC2 → over-privileged role → readable S3 with PII").
-- Rank by exploitability, not just per-finding severity. This is the
-  senior-level differentiator over a flat checklist scanner.
+## Phase 3 — Attack-path graph 🚧
+- ✅ Resource graph (`cloudnova.graph`): nodes tagged with security roles,
+  edges extracted from Terraform references; bounded DFS finds exploitable chains.
+- ✅ Attack paths surface as narrated CRITICAL findings in the normal scan output
+  ("internet-exposed EC2 — can assume → admin role").
+- ⏭️ Next: CloudFormation/live-cloud edges, IAM-implied data-access edges,
+  exploitability ranking.
 
 ## Phase 4 — Offensive / pentest modules (authorized-only)
 - Safe, opt-in recon and exploit-*validation* (confirm a finding is real, don't
