@@ -19,6 +19,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from cloudnova.core.baseline import Baseline
 from cloudnova.core.check import registry
 from cloudnova.core.engine import Engine
 from cloudnova.core.findings import Severity
@@ -42,6 +43,10 @@ def scan(
         str | None,
         typer.Option("--fail-on", help="Exit non-zero if a finding at/above this severity exists."),
     ] = None,
+    baseline: Annotated[
+        Path | None,
+        typer.Option("--baseline", help="Suppress findings recorded in this baseline file."),
+    ] = None,
 ) -> None:
     """Scan PATH for security findings."""
     if not path.exists():
@@ -49,6 +54,12 @@ def scan(
         raise typer.Exit(code=2)
 
     result = Engine().scan_path(path)
+
+    if baseline is not None:
+        if not baseline.exists():
+            _console.print(f"[red]Baseline file not found: {baseline}[/]")
+            raise typer.Exit(code=2)
+        result = Baseline.load(baseline).filter(result)
 
     if output_format == "json":
         # Plain print (not Rich) so the JSON is pipeable and unstyled.
@@ -67,6 +78,28 @@ def scan(
         threshold = _parse_severity(fail_on)
         if any(f.severity.rank >= threshold.rank for f in result.findings):
             raise typer.Exit(code=1)
+
+
+@app.command()
+def baseline(
+    path: Annotated[Path, typer.Argument(help="File or directory to scan.")],
+    output: Annotated[
+        Path, typer.Option("--output", "-o", help="Where to write the baseline file.")
+    ] = Path(".cloudnova-baseline.json"),
+) -> None:
+    """Record all current findings as an accepted baseline.
+
+    Later runs of ``scan --baseline <file>`` report only findings introduced
+    after this snapshot.
+    """
+    if not path.exists():
+        _console.print(f"[red]Path not found: {path}[/]")
+        raise typer.Exit(code=2)
+    result = Engine().scan_path(path)
+    Baseline.from_result(result).save(output)
+    _console.print(
+        f"Wrote baseline with [bold]{len(result.findings)}[/] finding(s) to [bold]{output}[/]."
+    )
 
 
 @app.command()

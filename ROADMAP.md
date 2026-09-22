@@ -9,11 +9,13 @@ console/JSON reporters, full test + lint + type gate, CI on 3.11/3.12.
 Corrected every prototype detector (real CloudTrail schema, ACL-based S3, IP
 aggregation) and killed the crash-on-malformed-input bugs.
 
-## Phase 1 — Real IaC scanning
-- Terraform HCL, CloudFormation, and Kubernetes manifest parsers → `Artifact`s.
-- A real rule pack (dozens of checks) mapped to CIS Benchmarks.
-- SARIF output for GitHub code-scanning integration.
-- Baseline / suppression file so teams can accept known findings.
+## Phase 1 — Real IaC scanning ✅
+- ✅ Terraform HCL, CloudFormation (JSON/YAML incl. intrinsic tags), and
+  multi-document Kubernetes manifest parsers → normalized `CloudResource`s.
+- ✅ Rule packs mapped to CIS Benchmarks + MITRE ATT&CK (18 checks, 5 formats).
+- ✅ SARIF 2.1.0 output + GitHub code-scanning workflow.
+- ✅ Baseline / suppression by content fingerprint (`cloudnova baseline`).
+- ⏭️ Next: broaden the AWS rule packs (RDS, KMS, VPC flow logs, public AMIs).
 
 ## Phase 2 — Live cloud posture
 - Read-only AWS scanning via boto3 (S3, IAM, SG, RDS, CloudTrail config).

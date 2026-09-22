@@ -1,8 +1,9 @@
 # 🛡️ CloudNova
 
-**A cloud security scanning engine.** Point it at IaC configs, CloudTrail logs,
-or auth logs and it reports misconfigurations as structured, actionable findings
-— mapped to CIS Benchmarks and MITRE ATT&CK, and gate-able in CI.
+**A cloud security scanning engine.** Point it at Terraform, CloudFormation,
+Kubernetes manifests, CloudTrail logs, or config/auth logs and it reports
+misconfigurations as structured, actionable findings — mapped to CIS Benchmarks
+and MITRE ATT&CK, emittable as SARIF, and gate-able in CI.
 
 > Started as a University of Debrecen thesis; being rebuilt as a real
 > production-grade security tool. The original prototype is preserved under
@@ -22,6 +23,9 @@ cloudnova scan . --format json   # machine-readable output
 cloudnova scan . --format sarif  # SARIF 2.1.0 for GitHub code-scanning
 cloudnova scan . --fail-on high  # non-zero exit for CI gating
 cloudnova checks                 # list the loaded ruleset
+
+cloudnova baseline .             # accept current findings as a baseline
+cloudnova scan . --baseline .cloudnova-baseline.json  # report only NEW findings
 ```
 
 Example output:
@@ -70,6 +74,11 @@ files ──► loader ──► Artifact(kind, data) ──► Engine ──►
   parsed data, so one bad file can't crash a scan. ([ADR 0003](docs/adr/0003-parse-then-check-separation.md))
 - **Severity ⊥ confidence** — the scanner says how bad *and* how sure, so it
   doesn't cry wolf. ([ADR 0004](docs/adr/0004-severity-and-confidence-are-separate.md))
+- **One normalized resource model** — Terraform, CloudFormation, and Kubernetes
+  all parse into the same `CloudResource`, so AWS rules are shared, not
+  triplicated. ([ADR 0005](docs/adr/0005-normalized-resource-model.md))
+- **Baselines by fingerprint** — accept a backlog and gate only on *new*
+  findings, stable across reformatting. ([ADR 0006](docs/adr/0006-baseline-fingerprints.md))
 
 Every design decision is written up in [`docs/adr/`](docs/adr).
 

@@ -46,3 +46,21 @@ def test_clean_scan_reports_no_findings(tmp_path):
     result = runner.invoke(app, ["scan", str(tmp_path)])
     assert result.exit_code == 0
     assert "No findings" in result.stdout
+
+
+def test_baseline_command_and_filter(tmp_path):
+    (tmp_path / "c.yaml").write_text("access_control:\n  public: true\n", encoding="utf-8")
+    bl = tmp_path / "bl.json"
+    created = runner.invoke(app, ["baseline", str(tmp_path), "-o", str(bl)])
+    assert created.exit_code == 0
+    assert bl.exists()
+    # With the baseline applied, a re-scan reports nothing and the gate passes.
+    scanned = runner.invoke(app, ["scan", str(tmp_path), "--baseline", str(bl), "--fail-on", "low"])
+    assert scanned.exit_code == 0
+
+
+def test_scan_sarif_format(tmp_path):
+    (tmp_path / "c.yaml").write_text("access_control:\n  public: true\n", encoding="utf-8")
+    result = runner.invoke(app, ["scan", str(tmp_path), "--format", "sarif"])
+    assert result.exit_code == 0
+    assert '"version": "2.1.0"' in result.stdout
