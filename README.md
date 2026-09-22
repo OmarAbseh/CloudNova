@@ -57,6 +57,9 @@ live list. Highlights:
 Every finding maps to CIS Benchmark controls and MITRE ATT&CK techniques, and
 carries a severity **and** an independent confidence.
 
+Each scan also reports a **transparent posture score** (0-100, A-F) with a full
+breakdown of how it was computed — no black box. ([ADR 0009](docs/adr/0009-transparent-posture-score.md))
+
 ### Attack paths (the differentiator)
 
 Beyond per-resource findings, CloudNova builds a **graph** of your resources and

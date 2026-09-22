@@ -20,6 +20,7 @@ from cloudnova.core.engine import Engine, ScanResult, filter_by_severity
 from cloudnova.core.findings import Finding, Severity
 from cloudnova.graph import build_graph, find_attack_paths
 from cloudnova.graph.attack_paths import paths_to_findings
+from cloudnova.scoring import posture_score
 
 
 def _finding_dict(finding: Finding) -> dict[str, Any]:
@@ -61,12 +62,16 @@ def scan(
     for f in result.findings:
         counts[f.severity.value] += 1
 
+    score = posture_score(result)
     return {
         "summary": {
             "files_scanned": result.files_scanned,
             "checks_run": result.checks_run,
             "findings": len(result.findings),
             "severity_counts": counts,
+            "posture_score": score.score,
+            "grade": score.grade,
+            "score_breakdown": score.breakdown,
             "errors": len(result.errors),
         },
         "findings": [_finding_dict(f) for f in result.sorted_findings()],

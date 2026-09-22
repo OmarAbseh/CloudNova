@@ -10,14 +10,19 @@ from __future__ import annotations
 import json
 
 from cloudnova.core.engine import ScanResult
+from cloudnova.scoring import posture_score
 
 
 def render_json(result: ScanResult, *, indent: int = 2) -> str:
+    score = posture_score(result)
     payload = {
         "summary": {
             "files_scanned": result.files_scanned,
             "checks_run": result.checks_run,
             "findings": len(result.findings),
+            "posture_score": score.score,
+            "grade": score.grade,
+            "score_breakdown": score.breakdown,
             "errors": len(result.errors),
         },
         "findings": [f.model_dump(mode="json") for f in result.sorted_findings()],

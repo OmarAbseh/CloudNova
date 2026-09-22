@@ -13,6 +13,7 @@ from rich.text import Text
 
 from cloudnova.core.engine import ScanResult
 from cloudnova.core.findings import Severity
+from cloudnova.scoring import posture_score
 
 _SEVERITY_STYLE: dict[Severity, str] = {
     Severity.CRITICAL: "bold white on red",
@@ -56,6 +57,14 @@ def render_console(result: ScanResult, console: Console | None = None) -> None:
         f"\nScanned [bold]{result.files_scanned}[/] file(s), ran "
         f"[bold]{result.checks_run}[/] check(s). "
         f"[bold]{len(result.findings)}[/] finding(s){'  ' + summary if summary else ''}."
+    )
+    score = posture_score(result)
+    grade_style = {"A": "green", "B": "green", "C": "yellow", "D": "red", "F": "bold red"}[
+        score.grade
+    ]
+    console.print(
+        f"Security posture: [{grade_style}]{score.grade}[/] "
+        f"([bold]{score.score}[/]/100, lower is better)."
     )
     for err in result.errors:
         console.print(f"[yellow]! {err}[/]")

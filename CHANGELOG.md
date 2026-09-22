@@ -6,6 +6,11 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Scoring
+- Transparent 0-100 / A-F security-posture score (`cloudnova.scoring`) replacing
+  the thesis's black-box "AI risk score". Weighted by finding severity plus an
+  attack-path penalty, with a full auditable breakdown; shown in console + JSON.
+
 ### Phase 5 — AI agents (started)
 - MCP server (`cloudnova-mcp`) exposing `scan`, `list_checks`, and `attack_paths`
   so Claude or any MCP client can drive CloudNova. Logic lives in a new
