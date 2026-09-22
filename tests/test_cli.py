@@ -88,3 +88,16 @@ def test_scan_no_graph_flag(tmp_path):
     )
     result = runner.invoke(app, ["scan", str(tmp_path), "--no-graph"])
     assert result.exit_code == 0
+
+
+def test_scan_html_format(tmp_path):
+    (tmp_path / "c.yaml").write_text("access_control:\n  public: true\n", encoding="utf-8")
+    result = runner.invoke(app, ["scan", str(tmp_path), "--format", "html"])
+    assert result.exit_code == 0
+    assert "<!doctype html>" in result.stdout
+
+
+def test_scan_unknown_format_errors(tmp_path):
+    (tmp_path / "c.yaml").write_text("access_control:\n  public: false\n", encoding="utf-8")
+    result = runner.invoke(app, ["scan", str(tmp_path), "--format", "xml"])
+    assert result.exit_code == 2

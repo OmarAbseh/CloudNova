@@ -6,6 +6,11 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Reporting
+- Self-contained HTML report (`scan --format html`): posture grade, severity
+  summary, and every finding in one offline file with no external resources.
+  All finding content is HTML-escaped.
+
 ### Scoring
 - Transparent 0-100 / A-F security-posture score (`cloudnova.scoring`) replacing
   the thesis's black-box "AI risk score". Weighted by finding severity plus an

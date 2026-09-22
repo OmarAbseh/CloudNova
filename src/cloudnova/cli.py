@@ -25,7 +25,7 @@ from cloudnova.core.engine import Engine, filter_by_severity
 from cloudnova.core.findings import Severity
 from cloudnova.graph import build_graph, find_attack_paths
 from cloudnova.graph.attack_paths import paths_to_findings
-from cloudnova.reporting import render_console, render_json, render_sarif
+from cloudnova.reporting import render_console, render_html, render_json, render_sarif
 
 app = typer.Typer(
     add_completion=False,
@@ -39,7 +39,7 @@ _console = Console()
 def scan(
     path: Annotated[Path, typer.Argument(help="File or directory to scan.")],
     output_format: Annotated[
-        str, typer.Option("--format", "-f", help="Output format: table, json, or sarif.")
+        str, typer.Option("--format", "-f", help="Output format: table, json, sarif, or html.")
     ] = "table",
     fail_on: Annotated[
         str | None,
@@ -85,11 +85,13 @@ def scan(
         print(render_json(result))
     elif output_format == "sarif":
         print(render_sarif(result))
+    elif output_format == "html":
+        print(render_html(result))
     elif output_format == "table":
         render_console(result, _console)
     else:
         _console.print(
-            f"[red]Unknown format: {output_format!r} (use 'table', 'json', or 'sarif').[/]"
+            f"[red]Unknown format: {output_format!r} (use table, json, sarif, or html).[/]"
         )
         raise typer.Exit(code=2)
 
