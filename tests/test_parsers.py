@@ -54,3 +54,22 @@ def test_cloudformation_rejects_generic_yaml():
 
     data = {"access_control": {"public": True}}
     assert not cloudformation.looks_like_cloudformation(data)
+
+
+def test_kubernetes_multidoc_parse():
+    from cloudnova.core.parsers import kubernetes
+
+    text = (
+        "apiVersion: v1\nkind: Pod\nmetadata:\n  name: a\n---\n"
+        "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: b\n"
+    )
+    docs = kubernetes.load_documents(text)
+    assert kubernetes.looks_like_kubernetes(docs)
+    resources = kubernetes.parse_documents(docs)
+    assert {r.type for r in resources} == {"Pod", "Deployment"}
+
+
+def test_kubernetes_rejects_non_manifest():
+    from cloudnova.core.parsers import kubernetes
+
+    assert not kubernetes.looks_like_kubernetes([{"foo": "bar"}])

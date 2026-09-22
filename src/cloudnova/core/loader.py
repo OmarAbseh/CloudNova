@@ -19,7 +19,7 @@ from pathlib import Path
 import yaml
 
 from cloudnova.core.artifact import Artifact
-from cloudnova.core.parsers import cloudformation, terraform
+from cloudnova.core.parsers import cloudformation, kubernetes, terraform
 
 #: File extensions we know how to parse. The value is the *default* kind; content
 #: classification may override it (see :func:`_classify`).
@@ -70,28 +70,36 @@ def load_file(path: Path) -> Artifact:
         if suffix == ".template":
             return _cloudformation_artifact(raw, path)
 
-        # .json / .yaml / .yml: parse then classify by content.
         if suffix == ".json":
             data: object = json.loads(raw)
             kind = _classify(data)
-        else:
-            # The CFN-aware loader is a SafeLoader subclass, so it parses generic
-            # YAML exactly like safe_load while also tolerating intrinsic tags.
-            data = cloudformation.load_template(raw)
-            kind = (
-                "cloudformation" if cloudformation.looks_like_cloudformation(data) else "iac_config"
-            )
+            if kind == "cloudformation":
+                return _cloudformation_artifact(raw, path, preparsed=data)
+            return Artifact(kind=kind, path=str(path), data=data, raw=raw)
 
-        if kind == "cloudformation":
-            return _cloudformation_artifact(raw, path, preparsed=data)
-        return Artifact(kind=kind, path=str(path), data=data, raw=raw)
+        # .yaml / .yml: parse every document (CFN intrinsics + multi-doc K8s),
+        # then classify by content.
+        return _yaml_artifact(raw, path)
     except (
         yaml.YAMLError,
         json.JSONDecodeError,
         terraform.TerraformParseError,
         cloudformation.CloudFormationParseError,
+        kubernetes.KubernetesParseError,
     ) as exc:
         raise LoadError(f"Failed to parse {path}: {exc}") from exc
+
+
+def _yaml_artifact(raw: str, path: Path) -> Artifact:
+    """Classify a YAML file as CloudFormation, Kubernetes, or generic config."""
+    docs = cloudformation.load_all(raw)
+    first = docs[0] if docs else {}
+    if cloudformation.looks_like_cloudformation(first):
+        return _cloudformation_artifact(raw, path, preparsed=first)
+    if kubernetes.looks_like_kubernetes(docs):
+        resources = kubernetes.parse_documents(docs, str(path))
+        return Artifact(kind="kubernetes", path=str(path), data=resources, raw=raw)
+    return Artifact(kind="iac_config", path=str(path), data=first, raw=raw)
 
 
 def _cloudformation_artifact(raw: str, path: Path, preparsed: object | None = None) -> Artifact:

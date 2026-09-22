@@ -94,6 +94,19 @@ def load_template(text: str) -> Any:
         raise CloudFormationParseError(str(exc)) from exc
 
 
+def load_all(text: str) -> list[Any]:
+    """Parse every YAML document in ``text`` with the CFN-aware safe loader.
+
+    Shared by the loader for all ``.yaml``/``.yml`` inputs: it tolerates CFN
+    intrinsic tags *and* multi-document manifests (Kubernetes), so one parse
+    serves every YAML dialect we classify.
+    """
+    try:
+        return [doc for doc in yaml.load_all(text, Loader=_CfnLoader) if doc is not None]
+    except yaml.YAMLError as exc:
+        raise CloudFormationParseError(str(exc)) from exc
+
+
 def parse(text: str, path: str = "<string>") -> list[CloudResource]:
     """Parse CloudFormation ``text`` into resources."""
     return parse_data(load_template(text), path)
