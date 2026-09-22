@@ -41,7 +41,7 @@ HIGH      LOG_SSH_BRUTE_FORCE     10.0.0.5       120 failed SSH attempts from on
 
 ## What it detects today
 
-**18 checks across 5 input formats** — Terraform, CloudFormation, Kubernetes,
+**24 checks across 5 input formats** — Terraform, CloudFormation, Kubernetes,
 CloudTrail logs, and generic config/auth logs. Run `cloudnova checks` for the
 live list. Highlights:
 

@@ -93,3 +93,23 @@ def test_malformed_terraform_is_recorded_not_crashed(tmp_path):
     root = _write(tmp_path, 'resource "aws_s3_bucket" "b" {\n  acl = \n')  # syntax error
     result = Engine().scan_path(root)
     assert isinstance(result.findings, list)  # no exception
+
+
+def test_rds_public_flagged(tmp_path):
+    root = _write(tmp_path, 'resource "aws_db_instance" "db" {\n  publicly_accessible = true\n}\n')
+    assert "TF_RDS_PUBLIC" in _ids(root)
+
+
+def test_rds_private_not_flagged(tmp_path):
+    root = _write(tmp_path, 'resource "aws_db_instance" "db" {\n  publicly_accessible = false\n}\n')
+    assert "TF_RDS_PUBLIC" not in _ids(root)
+
+
+def test_ebs_unencrypted_flagged(tmp_path):
+    root = _write(tmp_path, 'resource "aws_ebs_volume" "v" {\n  size = 10\n}\n')
+    assert "TF_EBS_NO_ENCRYPTION" in _ids(root)
+
+
+def test_ebs_encrypted_not_flagged(tmp_path):
+    root = _write(tmp_path, 'resource "aws_ebs_volume" "v" {\n  size = 10\n  encrypted = true\n}\n')
+    assert "TF_EBS_NO_ENCRYPTION" not in _ids(root)

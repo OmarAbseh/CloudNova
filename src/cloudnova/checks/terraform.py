@@ -182,3 +182,58 @@ class IamWildcardPolicy(_TerraformCheck):
                 cis_controls=["CIS AWS 1.16"],
                 mitre_attack=["T1098"],
             )
+
+
+@register
+class RdsPubliclyAccessible(_TerraformCheck):
+    id = "TF_RDS_PUBLIC"
+    title = "RDS instance is publicly accessible"
+    severity = Severity.HIGH
+
+    def check_resource(self, resource: CloudResource) -> Iterator[Finding]:
+        if resource.type != "aws_db_instance":
+            return
+        if _first(resource.get("publicly_accessible")) is True:
+            yield Finding(
+                check_id=self.id,
+                title=self.title,
+                severity=self.severity,
+                confidence=Confidence.HIGH,
+                location=self._loc(resource),
+                description=(
+                    f"RDS instance '{resource.name}' sets publicly_accessible = true, giving it "
+                    "a public endpoint reachable from outside the VPC."
+                ),
+                remediation="Set publicly_accessible = false and reach the database over private "
+                "networking (VPC / peering / VPN).",
+                evidence="publicly_accessible = true",
+                cis_controls=["CIS AWS 2.3.3"],
+                mitre_attack=["T1190"],
+            )
+
+
+@register
+class EbsVolumeNotEncrypted(_TerraformCheck):
+    id = "TF_EBS_NO_ENCRYPTION"
+    title = "EBS volume is not encrypted"
+    severity = Severity.MEDIUM
+
+    def check_resource(self, resource: CloudResource) -> Iterator[Finding]:
+        if resource.type != "aws_ebs_volume":
+            return
+        if _first(resource.get("encrypted")) is not True:
+            yield Finding(
+                check_id=self.id,
+                title=self.title,
+                severity=self.severity,
+                confidence=Confidence.HIGH,
+                location=self._loc(resource),
+                description=(
+                    f"EBS volume '{resource.name}' does not set encrypted = true, so data at "
+                    "rest is stored unencrypted."
+                ),
+                remediation="Set encrypted = true (and optionally a kms_key_id).",
+                evidence="encrypted != true",
+                cis_controls=["CIS AWS 2.2.1"],
+                mitre_attack=["T1530"],
+            )

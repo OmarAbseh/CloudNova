@@ -184,3 +184,31 @@ class CfnIamWildcard(_CfnCheck):
         for inline in _aws.as_list(resource.get("Policies")):
             if isinstance(inline, dict) and isinstance(inline.get("PolicyDocument"), dict):
                 yield inline["PolicyDocument"]
+
+
+@register
+class CfnRdsPubliclyAccessible(_CfnCheck):
+    id = "CFN_RDS_PUBLIC"
+    title = "RDS instance is publicly accessible"
+    severity = Severity.HIGH
+
+    def check_resource(self, resource: CloudResource) -> Iterator[Finding]:
+        if resource.type != "AWS::RDS::DBInstance":
+            return
+        if resource.get("PubliclyAccessible") is True:
+            yield Finding(
+                check_id=self.id,
+                title=self.title,
+                severity=self.severity,
+                confidence=Confidence.HIGH,
+                location=self._loc(resource),
+                description=(
+                    f"RDS instance '{resource.name}' sets PubliclyAccessible: true, giving it a "
+                    "public endpoint reachable from outside the VPC."
+                ),
+                remediation="Set PubliclyAccessible: false and reach the database over private "
+                "networking.",
+                evidence="PubliclyAccessible: true",
+                cis_controls=["CIS AWS 2.3.3"],
+                mitre_attack=["T1190"],
+            )

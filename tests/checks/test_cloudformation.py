@@ -95,3 +95,12 @@ def test_json_template_classified_as_cfn(tmp_path):
     )
     root = _write(tmp_path, body, name="template.json")
     assert "CFN_S3_PUBLIC_ACL" in _ids(root)
+
+
+def test_rds_public_flagged(tmp_path):
+    root = _write(
+        tmp_path,
+        _HEADER + "  DB:\n    Type: AWS::RDS::DBInstance\n"
+        "    Properties:\n      PubliclyAccessible: true\n",
+    )
+    assert "CFN_RDS_PUBLIC" in _ids(root)

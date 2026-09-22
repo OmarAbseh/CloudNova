@@ -221,3 +221,102 @@ class PrivilegeEscalation(_K8sCheck):
                 cis_controls=["CIS Kubernetes 5.2.5"],
                 mitre_attack=["T1548"],  # Abuse Elevation Control Mechanism
             )
+
+
+@register
+class MissingResourceLimits(_K8sCheck):
+    id = "K8S_NO_RESOURCE_LIMITS"
+    title = "Container has no CPU/memory limits"
+    severity = Severity.LOW
+
+    def check_workload(
+        self, resource: CloudResource, pod_spec: dict[str, Any]
+    ) -> Iterator[Finding]:
+        for container in _containers(pod_spec):
+            resources = container.get("resources")
+            limits = resources.get("limits") if isinstance(resources, dict) else None
+            if not limits:
+                yield Finding(
+                    check_id=self.id,
+                    title=self.title,
+                    severity=self.severity,
+                    confidence=Confidence.HIGH,
+                    location=self._loc(resource, container.get("name")),
+                    description=(
+                        f"Container '{container.get('name')}' declares no resources.limits, so a "
+                        "runaway process can exhaust node CPU/memory (denial of service)."
+                    ),
+                    remediation="Set resources.limits.cpu and resources.limits.memory.",
+                    cis_controls=["CIS Kubernetes 5.7.3"],
+                    mitre_attack=["T1499"],  # Endpoint Denial of Service
+                )
+
+
+@register
+class HostPathVolume(_K8sCheck):
+    id = "K8S_HOSTPATH_VOLUME"
+    title = "Pod mounts a hostPath volume"
+    severity = Severity.HIGH
+
+    def check_workload(
+        self, resource: CloudResource, pod_spec: dict[str, Any]
+    ) -> Iterator[Finding]:
+        for volume in pod_spec.get("volumes", []) or []:
+            if isinstance(volume, dict) and "hostPath" in volume:
+                host_path = volume.get("hostPath", {})
+                path = host_path.get("path") if isinstance(host_path, dict) else None
+                yield Finding(
+                    check_id=self.id,
+                    title=self.title,
+                    severity=self.severity,
+                    confidence=Confidence.HIGH,
+                    location=self._loc(resource),
+                    description=(
+                        f"Volume '{volume.get('name')}' mounts host path '{path}'. A hostPath "
+                        "exposes the node filesystem to the pod and can be used to escape to the "
+                        "host."
+                    ),
+                    remediation="Avoid hostPath; use a PersistentVolumeClaim, configMap, or "
+                    "emptyDir instead.",
+                    evidence=f"hostPath.path: {path}",
+                    cis_controls=["CIS Kubernetes 5.2.9"],
+                    mitre_attack=["T1611"],
+                )
+
+
+@register
+class MutableImageTag(_K8sCheck):
+    id = "K8S_MUTABLE_IMAGE_TAG"
+    title = "Container image uses a mutable tag"
+    severity = Severity.LOW
+
+    def check_workload(
+        self, resource: CloudResource, pod_spec: dict[str, Any]
+    ) -> Iterator[Finding]:
+        for container in _containers(pod_spec):
+            image = container.get("image")
+            if not isinstance(image, str):
+                continue
+            # A digest (image@sha256:...) is immutable and safe.
+            if "@sha256:" in image:
+                continue
+            tag = image.rsplit(":", 1)[1] if ":" in image.rsplit("/", 1)[-1] else "latest"
+            if tag == "latest":
+                yield Finding(
+                    check_id=self.id,
+                    title=self.title,
+                    severity=self.severity,
+                    confidence=Confidence.MEDIUM,
+                    location=self._loc(resource, container.get("name")),
+                    description=(
+                        f"Container '{container.get('name')}' uses image '{image}' with a mutable "
+                        "'latest' tag, so deployments are not reproducible and a compromised tag "
+                        "silently changes what runs."
+                    ),
+                    remediation=(
+                        "Pin a specific version tag or, better, an immutable @sha256 digest."
+                    ),
+                    evidence=f"image: {image}",
+                    cis_controls=["CIS Kubernetes 5.5.1"],
+                    mitre_attack=["T1525"],  # Implant Internal Image
+                )

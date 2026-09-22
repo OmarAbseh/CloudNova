@@ -39,9 +39,14 @@ spec:
     runAsUser: 1000
   containers:
     - name: app
+      image: nginx:1.27.0
       securityContext:
         allowPrivilegeEscalation: false
         privileged: false
+      resources:
+        limits:
+          cpu: "1"
+          memory: 256Mi
 """
 
 
@@ -110,3 +115,54 @@ def test_non_k8s_yaml_not_treated_as_workload(tmp_path):
     root = _write(tmp_path, "access_control:\n  public: true\n")
     # Generic config, not Kubernetes -> no K8s findings (but iac_config fires).
     assert not any(i.startswith("K8S_") for i in _ids(root))
+
+
+def test_hostpath_volume_flagged(tmp_path):
+    root = _write(
+        tmp_path,
+        "apiVersion: v1\nkind: Pod\nmetadata:\n  name: p\n"
+        "spec:\n  volumes:\n    - name: h\n      hostPath:\n        path: /\n"
+        "  containers:\n    - name: c\n      image: nginx:1.2\n"
+        "      securityContext:\n        runAsNonRoot: true\n"
+        "        allowPrivilegeEscalation: false\n"
+        '      resources:\n        limits:\n          cpu: "1"\n',
+    )
+    assert "K8S_HOSTPATH_VOLUME" in _ids(root)
+
+
+def test_missing_resource_limits_flagged(tmp_path):
+    root = _write(
+        tmp_path,
+        "apiVersion: v1\nkind: Pod\nmetadata:\n  name: p\n"
+        "spec:\n  containers:\n    - name: c\n      image: nginx:1.2\n",
+    )
+    assert "K8S_NO_RESOURCE_LIMITS" in _ids(root)
+
+
+def test_resource_limits_present_not_flagged(tmp_path):
+    root = _write(
+        tmp_path,
+        "apiVersion: v1\nkind: Pod\nmetadata:\n  name: p\n"
+        "spec:\n  containers:\n    - name: c\n      image: nginx:1.2\n"
+        '      resources:\n        limits:\n          cpu: "1"\n          memory: 256Mi\n',
+    )
+    assert "K8S_NO_RESOURCE_LIMITS" not in _ids(root)
+
+
+def test_latest_image_flagged(tmp_path):
+    root = _write(
+        tmp_path,
+        "apiVersion: v1\nkind: Pod\nmetadata:\n  name: p\n"
+        "spec:\n  containers:\n    - name: c\n      image: nginx:latest\n",
+    )
+    assert "K8S_MUTABLE_IMAGE_TAG" in _ids(root)
+
+
+def test_pinned_image_digest_not_flagged(tmp_path):
+    root = _write(
+        tmp_path,
+        "apiVersion: v1\nkind: Pod\nmetadata:\n  name: p\n"
+        "spec:\n  containers:\n    - name: c\n      image: nginx@sha256:abc123\n"
+        '      resources:\n        limits:\n          cpu: "1"\n',
+    )
+    assert "K8S_MUTABLE_IMAGE_TAG" not in _ids(root)

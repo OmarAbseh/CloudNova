@@ -12,7 +12,7 @@ aggregation) and killed the crash-on-malformed-input bugs.
 ## Phase 1 — Real IaC scanning ✅
 - ✅ Terraform HCL, CloudFormation (JSON/YAML incl. intrinsic tags), and
   multi-document Kubernetes manifest parsers → normalized `CloudResource`s.
-- ✅ Rule packs mapped to CIS Benchmarks + MITRE ATT&CK (18 checks, 5 formats).
+- ✅ Rule packs mapped to CIS Benchmarks + MITRE ATT&CK (24 checks, 5 formats).
 - ✅ SARIF 2.1.0 output + GitHub code-scanning workflow.
 - ✅ Baseline / suppression by content fingerprint (`cloudnova baseline`).
 - ⏭️ Next: broaden the AWS rule packs (RDS, KMS, VPC flow logs, public AMIs).
