@@ -74,7 +74,12 @@ class Engine:
             result.files_scanned += 1
             if artifact.kind in _RESOURCE_KINDS and isinstance(artifact.data, list):
                 result.resources.extend(r for r in artifact.data if isinstance(r, CloudResource))
-            for check in self._registry.for_target(artifact.kind):
+            # Kind-specific checks plus universal ("*") checks that run on every
+            # artifact regardless of type (e.g. secret scanning on raw text).
+            for check in [
+                *self._registry.for_target(artifact.kind),
+                *self._registry.for_target("*"),
+            ]:
                 result.checks_run += 1
                 try:
                     result.findings.extend(check.run(artifact))

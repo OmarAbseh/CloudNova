@@ -6,6 +6,12 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Secret scanning
+- Universal `SECRET_HARDCODED` check runs on every scanned file's raw text
+  (AWS keys, PEM private keys, GitHub/Slack/Google tokens, generic key
+  assignments). Evidence is redacted so the report never re-leaks the secret.
+  Enabled by a new universal-check target ("*") in the engine.
+
 ### Reporting
 - Self-contained HTML report (`scan --format html`): posture grade, severity
   summary, and every finding in one offline file with no external resources.

@@ -10,6 +10,7 @@ from cloudnova.checks import (
     cloudtrail,
     iac_config,
     kubernetes,
+    secrets,
     syslog,
     terraform,
 )
@@ -19,6 +20,7 @@ __all__ = [
     "cloudtrail",
     "iac_config",
     "kubernetes",
+    "secrets",
     "syslog",
     "terraform",
 ]
