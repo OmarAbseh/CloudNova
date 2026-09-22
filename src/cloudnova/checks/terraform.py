@@ -10,18 +10,14 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Iterator
-from typing import Any, ClassVar
+from typing import Any
 
+from cloudnova.checks import _aws
 from cloudnova.core.artifact import Artifact
 from cloudnova.core.check import Check, register
 from cloudnova.core.findings import Confidence, Finding, Location, Severity
 from cloudnova.core.parsers.terraform import resolve_jsonencode
 from cloudnova.core.resource import CloudResource
-
-# Canned S3 ACLs that grant access beyond the account owner.
-_PUBLIC_ACLS = {"public-read", "public-read-write", "authenticated-read"}
-# CIDRs that mean "the entire internet".
-_WORLD_CIDRS = {"0.0.0.0/0", "::/0"}
 
 
 def _resources(artifact: Artifact) -> list[CloudResource]:
@@ -65,7 +61,7 @@ class S3PublicAcl(_TerraformCheck):
         if resource.type not in {"aws_s3_bucket", "aws_s3_bucket_acl"}:
             return
         acl = _first(resource.get("acl"))
-        if acl in _PUBLIC_ACLS:
+        if acl in _aws.PUBLIC_ACLS:
             yield Finding(
                 check_id=self.id,
                 title=self.title,
@@ -120,15 +116,6 @@ class SecurityGroupWorldIngress(_TerraformCheck):
     title = "Security group allows ingress from the entire internet"
     severity = Severity.HIGH
 
-    #: Ports that are especially dangerous to expose to 0.0.0.0/0.
-    _SENSITIVE_PORTS: ClassVar[dict[int, str]] = {
-        22: "SSH",
-        3389: "RDP",
-        3306: "MySQL",
-        5432: "PostgreSQL",
-        6379: "Redis",
-    }
-
     def check_resource(self, resource: CloudResource) -> Iterator[Finding]:
         if resource.type != "aws_security_group":
             return
@@ -139,10 +126,10 @@ class SecurityGroupWorldIngress(_TerraformCheck):
             if not isinstance(rule, dict):
                 continue
             cidrs = rule.get("cidr_blocks") or []
-            if not any(c in _WORLD_CIDRS for c in _as_list(cidrs)):
+            if not any(c in _aws.WORLD_CIDRS for c in _aws.as_list(cidrs)):
                 continue
             from_port = rule.get("from_port")
-            port_name = self._SENSITIVE_PORTS.get(from_port) if isinstance(from_port, int) else None
+            port_name = _aws.SENSITIVE_PORTS.get(from_port) if isinstance(from_port, int) else None
             severity = Severity.CRITICAL if port_name else Severity.HIGH
             exposed = f"{port_name} (port {from_port})" if port_name else f"port {from_port}"
             yield Finding(
@@ -173,15 +160,11 @@ class IamWildcardPolicy(_TerraformCheck):
         if resource.type not in {"aws_iam_policy", "aws_iam_role_policy"}:
             return
         policy = resolve_jsonencode(_first(resource.get("policy")))
-        for stmt in _iter_policy_statements(policy):
-            if stmt.get("Effect") != "Allow":
+        for stmt in _aws.iter_policy_statements(policy):
+            kind = _aws.wildcard_kind(stmt)
+            if kind is None:
                 continue
-            actions = _as_list(stmt.get("Action"))
-            resources = _as_list(stmt.get("Resource"))
-            action_wild = "*" in actions
-            resource_wild = "*" in resources
-            if not (action_wild or resource_wild):
-                continue
+            action_wild, resource_wild = kind
             critical = action_wild and resource_wild
             yield Finding(
                 check_id=self.id,
@@ -191,39 +174,11 @@ class IamWildcardPolicy(_TerraformCheck):
                 location=self._loc(resource),
                 description=(
                     f"IAM policy '{resource.name}' allows "
-                    f"Action={'*' if action_wild else actions} on "
-                    f"Resource={'*' if resource_wild else resources}. "
+                    f"Action={'*' if action_wild else _aws.as_list(stmt.get('Action'))} on "
+                    f"Resource={'*' if resource_wild else _aws.as_list(stmt.get('Resource'))}. "
                     "Wildcards violate least privilege."
                 ),
                 remediation="Scope Action and Resource to the minimum the principal needs.",
                 cis_controls=["CIS AWS 1.16"],
                 mitre_attack=["T1098"],
             )
-
-
-def _as_list(value: Any) -> list[Any]:
-    if value is None:
-        return []
-    return value if isinstance(value, list) else [value]
-
-
-def _iter_policy_statements(policy: Any) -> Iterator[dict[str, Any]]:
-    """Yield statements from an IAM policy that may be a dict or a JSON string.
-
-    In Terraform the ``policy`` argument is often ``jsonencode({...})`` (parsed
-    to a dict) or an inline heredoc JSON string. We handle both and never raise.
-    """
-    import json
-
-    if isinstance(policy, str):
-        try:
-            policy = json.loads(policy)
-        except json.JSONDecodeError:
-            return
-    if not isinstance(policy, dict):
-        return
-    statements = policy.get("Statement")
-    if isinstance(statements, dict):
-        yield statements
-    elif isinstance(statements, list):
-        yield from (s for s in statements if isinstance(s, dict))

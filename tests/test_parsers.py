@@ -32,3 +32,25 @@ def test_terraform_parse_error_raises():
 
     with pytest.raises(terraform.TerraformParseError):
         terraform.parse("resource {{{ broken")
+
+
+def test_cloudformation_detects_and_parses():
+    from cloudnova.core.parsers import cloudformation
+
+    text = (
+        'AWSTemplateFormatVersion: "2010-09-09"\n'
+        "Resources:\n  B:\n    Type: AWS::S3::Bucket\n"
+        "    Properties:\n      AccessControl: Private\n"
+    )
+    data = cloudformation.load_template(text)
+    assert cloudformation.looks_like_cloudformation(data)
+    resources = cloudformation.parse_data(data)
+    assert resources[0].type == "AWS::S3::Bucket"
+    assert resources[0].name == "B"
+
+
+def test_cloudformation_rejects_generic_yaml():
+    from cloudnova.core.parsers import cloudformation
+
+    data = {"access_control": {"public": True}}
+    assert not cloudformation.looks_like_cloudformation(data)
