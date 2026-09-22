@@ -6,6 +6,11 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Phase 5 — AI agents (started)
+- MCP server (`cloudnova-mcp`) exposing `scan`, `list_checks`, and `attack_paths`
+  so Claude or any MCP client can drive CloudNova. Logic lives in a new
+  plain-dict `cloudnova.service` API; `mcp` is an optional extra.
+
 ### Phase 3 — Attack-path graph
 - `cloudnova.graph`: a dependency-free resource graph. Nodes are normalized
   `CloudResource`s tagged with security roles (internet-exposed, privileged,

@@ -72,6 +72,20 @@ CRITICAL  GRAPH_ATTACK_PATH   aws_instance.web
 
 This runs automatically during `scan` (disable with `--no-graph`).
 
+### Use it from an AI agent (MCP)
+
+CloudNova ships a [Model Context Protocol](https://modelcontextprotocol.io)
+server so Claude or any MCP client can scan and reason about your infrastructure:
+
+```bash
+pip install -e ".[mcp]"
+cloudnova-mcp            # serves tools: scan, list_checks, attack_paths
+```
+
+An agent can then ask *"scan this repo, explain the worst attack path, and
+propose the Terraform fix."* All server logic is a thin wrapper over the tested
+`cloudnova.service` API. ([ADR 0008](docs/adr/0008-mcp-server.md))
+
 ---
 
 ## Architecture

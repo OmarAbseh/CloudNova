@@ -38,11 +38,12 @@ aggregation) and killed the crash-on-malformed-input bugs.
   full audit log, dry-run default. Refuses to run without written scope.
 - This is what makes CloudNova a portfolio piece a security team recognizes.
 
-## Phase 5 — AI agents
-- Claude-powered triage: explain a finding, propose a fix PR, cluster related
-  findings, draft the remediation runbook.
-- An agent that reasons over the attack graph like a pentester and narrates the
-  path. The `Finding` JSON schema (Phase 0) is already the agent's input format.
+## Phase 5 — AI agents 🚧
+- ✅ MCP server (`cloudnova-mcp`): exposes scan / list_checks / attack_paths so
+  Claude or any MCP client can drive CloudNova; logic in the tested
+  `cloudnova.service` API.
+- ⏭️ Next: Claude-powered triage (explain a finding, propose a fix PR, cluster
+  related findings) and an agent that narrates the attack graph like a pentester.
 
 ## Phase 6 — SaaS
 - FastAPI service, multi-tenant, scan history + trend dashboards, scheduled

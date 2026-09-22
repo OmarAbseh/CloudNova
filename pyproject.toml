@@ -35,9 +35,13 @@ dev = [
     "mypy>=1.10",
     "types-PyYAML>=6.0",
 ]
+mcp = [
+    "mcp>=1.2",
+]
 
 [project.scripts]
 cloudnova = "cloudnova.cli:app"
+cloudnova-mcp = "cloudnova.mcp_server:main"
 
 [project.urls]
 Homepage = "https://github.com/OmarAbseh/CloudNova"
@@ -75,6 +79,13 @@ files = ["src"]
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_defs = false
+
+# The MCP adapter wraps an optional, dynamically-typed SDK (server is Any across
+# v1/v2), so its tool decorators are untyped by nature. Relax just those checks
+# here; the real logic lives in the fully-typed cloudnova.service.
+[[tool.mypy.overrides]]
+module = "cloudnova.mcp_server"
+disable_error_code = ["misc", "untyped-decorator"]
 
 # ---- pytest ----
 [tool.pytest.ini_options]
