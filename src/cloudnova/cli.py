@@ -21,7 +21,7 @@ from rich.table import Table
 
 from cloudnova.core.baseline import Baseline
 from cloudnova.core.check import registry
-from cloudnova.core.engine import Engine
+from cloudnova.core.engine import Engine, filter_by_severity
 from cloudnova.core.findings import Severity
 from cloudnova.graph import build_graph, find_attack_paths
 from cloudnova.graph.attack_paths import paths_to_findings
@@ -53,6 +53,10 @@ def scan(
         bool,
         typer.Option("--graph/--no-graph", help="Analyze cross-resource attack paths."),
     ] = True,
+    min_severity: Annotated[
+        str | None,
+        typer.Option("--min-severity", help="Only report findings at/above this severity."),
+    ] = None,
 ) -> None:
     """Scan PATH for security findings."""
     if not path.exists():
@@ -71,6 +75,10 @@ def scan(
             _console.print(f"[red]Baseline file not found: {baseline}[/]")
             raise typer.Exit(code=2)
         result = Baseline.load(baseline).filter(result)
+
+    if min_severity is not None:
+        threshold = _parse_severity(min_severity)
+        result = filter_by_severity(result, threshold)
 
     if output_format == "json":
         # Plain print (not Rich) so the JSON is pipeable and unstyled.

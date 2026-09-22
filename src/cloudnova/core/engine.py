@@ -13,7 +13,7 @@ from pathlib import Path
 
 from cloudnova.core.check import CheckRegistry
 from cloudnova.core.check import registry as default_registry
-from cloudnova.core.findings import Finding
+from cloudnova.core.findings import Finding, Severity
 from cloudnova.core.loader import LoadError, discover, load_file
 from cloudnova.core.resource import CloudResource
 
@@ -38,6 +38,22 @@ class ScanResult:
     @property
     def has_findings(self) -> bool:
         return bool(self.findings)
+
+
+def filter_by_severity(result: ScanResult, threshold: Severity) -> ScanResult:
+    """Return a copy of ``result`` keeping only findings at/above ``threshold``.
+
+    Operational metadata (files/checks/errors/resources) is preserved so a
+    filtered view still reports what was scanned, only fewer findings.
+    """
+    kept = [f for f in result.findings if f.severity.rank >= threshold.rank]
+    return ScanResult(
+        findings=kept,
+        files_scanned=result.files_scanned,
+        checks_run=result.checks_run,
+        errors=list(result.errors),
+        resources=list(result.resources),
+    )
 
 
 class Engine:

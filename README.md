@@ -22,6 +22,7 @@ cloudnova scan examples          # scan the bundled example fixtures
 cloudnova scan . --format json   # machine-readable output
 cloudnova scan . --format sarif  # SARIF 2.1.0 for GitHub code-scanning
 cloudnova scan . --fail-on high  # non-zero exit for CI gating
+cloudnova scan . --min-severity high  # only show high+ findings
 cloudnova checks                 # list the loaded ruleset
 
 cloudnova baseline .             # accept current findings as a baseline

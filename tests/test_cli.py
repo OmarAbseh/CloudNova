@@ -64,3 +64,27 @@ def test_scan_sarif_format(tmp_path):
     result = runner.invoke(app, ["scan", str(tmp_path), "--format", "sarif"])
     assert result.exit_code == 0
     assert '"version": "2.1.0"' in result.stdout
+
+
+def test_scan_min_severity_filters(tmp_path):
+    # public access is HIGH, missing timeout is LOW; --min-severity high drops the LOW one.
+    (tmp_path / "c.yaml").write_text(
+        "access_control:\n  public: true\nsession:\n  timeout: 0\n", encoding="utf-8"
+    )
+    result = runner.invoke(
+        app, ["scan", str(tmp_path), "--format", "json", "--min-severity", "high"]
+    )
+    assert result.exit_code == 0
+    import json
+
+    ids = {f["check_id"] for f in json.loads(result.stdout)["findings"]}
+    assert "IAC_ACCESS_PUBLIC" in ids
+    assert "IAC_SESSION_NO_TIMEOUT" not in ids
+
+
+def test_scan_no_graph_flag(tmp_path):
+    (tmp_path / "main.tf").write_text(
+        'resource "aws_s3_bucket" "b" { acl = "public-read" }\n', encoding="utf-8"
+    )
+    result = runner.invoke(app, ["scan", str(tmp_path), "--no-graph"])
+    assert result.exit_code == 0
