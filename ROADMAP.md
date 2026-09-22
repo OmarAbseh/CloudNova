@@ -28,8 +28,8 @@ aggregation) and killed the crash-on-malformed-input bugs.
   edges extracted from Terraform references; bounded DFS finds exploitable chains.
 - ✅ Attack paths surface as narrated CRITICAL findings in the normal scan output
   ("internet-exposed EC2 — can assume → admin role").
-- ⏭️ Next: CloudFormation/live-cloud edges, IAM-implied data-access edges,
-  exploitability ranking.
+- ✅ CloudFormation edges too (Ref / Fn::GetAtt); attack paths across both IaC formats.
+- ⏭️ Next: live-cloud edges, IAM-implied data-access edges, exploitability ranking.
 
 ## Phase 4 — Offensive / pentest modules (authorized-only)
 - Safe, opt-in recon and exploit-*validation* (confirm a finding is real, don't
