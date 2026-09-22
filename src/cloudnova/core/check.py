@@ -33,19 +33,12 @@ class Check(ABC):
     #: What kind of artifact this check consumes, e.g. "iac_config", "cloudtrail".
     target: str
 
+    _REQUIRED_METADATA = ("id", "title", "severity", "target")
+
     @abstractmethod
     def run(self, artifact: Artifact) -> Iterator[Finding]:
         """Yield findings for one parsed ``artifact`` of type ``self.target``."""
         raise NotImplementedError
-
-    def __init_subclass__(cls, **kwargs: object) -> None:
-        super().__init_subclass__(**kwargs)
-        # Fail loudly at import time if a subclass forgets required metadata,
-        # rather than silently registering a half-defined rule.
-        if ABC not in cls.__bases__:
-            for attr in ("id", "title", "severity", "target"):
-                if not hasattr(cls, attr):
-                    raise TypeError(f"Check {cls.__name__} is missing required attribute '{attr}'")
 
 
 class CheckRegistry:
@@ -74,6 +67,14 @@ registry = CheckRegistry()
 
 
 def register(check_cls: type[Check]) -> type[Check]:
-    """Class decorator: instantiate a check and add it to the global registry."""
+    """Class decorator: validate metadata, instantiate, and register a check.
+
+    Validation happens here (not in ``__init_subclass__``) so that abstract
+    intermediate bases — which are never decorated — are never checked, while
+    every concrete registered rule is guaranteed to carry its metadata.
+    """
+    for attr in Check._REQUIRED_METADATA:
+        if not hasattr(check_cls, attr):
+            raise TypeError(f"Check {check_cls.__name__} is missing required attribute '{attr}'")
     registry.add(check_cls())
     return check_cls

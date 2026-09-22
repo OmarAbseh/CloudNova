@@ -15,6 +15,7 @@ from pathlib import Path
 import yaml
 
 from cloudnova.core.artifact import Artifact
+from cloudnova.core.parsers import terraform
 
 #: Files we know how to parse, mapped to the artifact kind they produce.
 #: A single YAML/JSON file may be reclassified by content (e.g. CloudTrail).
@@ -23,6 +24,7 @@ _SUFFIX_KINDS: dict[str, str] = {
     ".yml": "iac_config",
     ".json": "json_doc",
     ".log": "syslog",
+    ".tf": "terraform",
 }
 
 
@@ -55,6 +57,9 @@ def load_file(path: Path) -> Artifact:
         if suffix == ".log":
             # Log files stay raw text; the syslog checks tokenise per line.
             return Artifact(kind="syslog", path=str(path), data=raw, raw=raw)
+        if suffix == ".tf":
+            resources = terraform.parse(raw, str(path))
+            return Artifact(kind="terraform", path=str(path), data=resources, raw=raw)
         if suffix == ".json":
             data = json.loads(raw)
             kind = _classify_json(data)
@@ -63,7 +68,7 @@ def load_file(path: Path) -> Artifact:
             # when scanning untrusted config files.
             data = yaml.safe_load(raw)
             kind = "iac_config"
-    except (yaml.YAMLError, json.JSONDecodeError) as exc:
+    except (yaml.YAMLError, json.JSONDecodeError, terraform.TerraformParseError) as exc:
         raise LoadError(f"Failed to parse {path}: {exc}") from exc
 
     return Artifact(kind=kind, path=str(path), data=data, raw=raw)

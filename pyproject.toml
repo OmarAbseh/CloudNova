@@ -24,6 +24,7 @@ dependencies = [
     "typer>=0.12",
     "rich>=13.7",
     "pyyaml>=6.0",
+    "python-hcl2>=7.0",
 ]
 
 [project.optional-dependencies]
