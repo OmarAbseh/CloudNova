@@ -1,0 +1,56 @@
+# Changelog
+
+All notable changes to CloudNova. Format loosely follows
+[Keep a Changelog](https://keepachangelog.com/); the project predates semver
+releases, so entries are grouped by development phase.
+
+## [Unreleased]
+
+### Secret scanning
+- Universal `SECRET_HARDCODED` check runs on every scanned file's raw text
+  (AWS keys, PEM private keys, GitHub/Slack/Google tokens, generic key
+  assignments). Evidence is redacted so the report never re-leaks the secret.
+  Enabled by a new universal-check target ("*") in the engine.
+
+### Reporting
+- Self-contained HTML report (`scan --format html`): posture grade, severity
+  summary, and every finding in one offline file with no external resources.
+  All finding content is HTML-escaped.
+
+### Scoring
+- Transparent 0-100 / A-F security-posture score (`cloudnova.scoring`) replacing
+  the thesis's black-box "AI risk score". Weighted by finding severity plus an
+  attack-path penalty, with a full auditable breakdown; shown in console + JSON.
+
+### Phase 5 — AI agents (started)
+- MCP server (`cloudnova-mcp`) exposing `scan`, `list_checks`, and `attack_paths`
+  so Claude or any MCP client can drive CloudNova. Logic lives in a new
+  plain-dict `cloudnova.service` API; `mcp` is an optional extra.
+
+### Phase 3 — Attack-path graph
+- `cloudnova.graph`: a dependency-free resource graph. Nodes are normalized
+  `CloudResource`s tagged with security roles (internet-exposed, privileged,
+  data-store, compute); edges are relationships extracted from Terraform
+  references (`PROTECTED_BY` / `CAN_ASSUME` / `GRANTS`).
+- Bounded, cycle-safe DFS reports exploitable chains as narrated CRITICAL
+  findings ("internet-exposed EC2 — can assume → admin role"). Runs during
+  `scan` (`--no-graph` to disable).
+
+### Phase 1 — IaC scanning
+- Terraform (HCL, incl. `jsonencode` policy resolution), CloudFormation
+  (JSON/YAML with intrinsic tags), and multi-document Kubernetes parsers, all
+  normalized to `CloudResource`.
+- 24 checks across 5 formats mapped to CIS Benchmarks + MITRE ATT&CK.
+- SARIF 2.1.0 output and a GitHub code-scanning workflow.
+- Baseline/suppression by content fingerprint (`cloudnova baseline`).
+- `--min-severity` filter and `--fail-on` CI gate.
+
+### Phase 0 — Foundation
+- Rebuilt from the thesis prototype into a typed, tested package.
+- Immutable Pydantic `Finding` contract; plugin check registry; loader/check
+  separation so malformed input is recorded, never fatal.
+- Typer CLI (`scan`, `checks`, `baseline`); console + JSON reporters.
+- Full quality gate: ruff, mypy (strict), pytest; CI on Python 3.11 & 3.12.
+- Security hygiene: `.gitignore`, `.env.example`, detect-private-key pre-commit
+  hook (the prototype had leaked a live key — since revoked).
+- Original prototype preserved under `legacy/`.
