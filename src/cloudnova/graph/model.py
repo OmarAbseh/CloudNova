@@ -24,6 +24,8 @@ class EdgeKind(StrEnum):
     CAN_ASSUME = "can_assume"
     #: src grants the permissions in dst (role → policy).
     GRANTS = "grants"
+    #: src can access the data in dst (a wildcard-admin role → a data store).
+    CAN_ACCESS = "can_access"
     #: generic reference between resources we could not classify further.
     REFERENCES = "references"
 

@@ -159,7 +159,25 @@ def build_graph(resources: list[CloudResource]) -> ResourceGraph:
     graph = ResourceGraph()
     _build_terraform(graph, [r for r in resources if r.format is IaCFormat.TERRAFORM])
     _build_cloudformation(graph, [r for r in resources if r.format is IaCFormat.CLOUDFORMATION])
+    _add_data_access_edges(graph)
     return graph
+
+
+def _add_data_access_edges(graph: ResourceGraph) -> None:
+    """Connect wildcard-admin identities to the data stores they can reach.
+
+    A role with ``Action:"*"`` can read every data store in its account, so we
+    add a CAN_ACCESS edge from each privileged node to each data store of the
+    same IaC format (stacks don't share resources across formats). This is what
+    lets attack-path search report data *exfiltration*, not just privilege
+    escalation — the wildcard grant, not an explicit reference, is the link.
+    """
+    privileged = [n for n in graph.nodes() if n.has(NodeRole.PRIVILEGED)]
+    data_stores = [n for n in graph.nodes() if n.has(NodeRole.DATA_STORE)]
+    for role in privileged:
+        for store in data_stores:
+            if role.resource.format is store.resource.format:
+                graph.add_edge(role.id, store.id, EdgeKind.CAN_ACCESS)
 
 
 # --- CloudFormation -------------------------------------------------------

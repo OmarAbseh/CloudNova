@@ -23,6 +23,7 @@ _EDGE_VERB = {
     EdgeKind.PROTECTED_BY: "is protected by",
     EdgeKind.CAN_ASSUME: "can assume",
     EdgeKind.GRANTS: "is granted",
+    EdgeKind.CAN_ACCESS: "can access",
     EdgeKind.REFERENCES: "references",
 }
 

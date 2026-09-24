@@ -94,3 +94,24 @@ def test_cycle_does_not_hang():
     """
     # Must terminate; no exposed entry so no paths, but the point is no infinite loop.
     assert find_attack_paths(_graph(tf)) == []
+
+
+def test_data_exfiltration_edge_reaches_data_store():
+    # An exposed instance -> admin role -> can access a sensitive S3 bucket.
+    tf = _CHAIN + '\nresource "aws_s3_bucket" "pii" { bucket = "customer-pii" }\n'
+    paths = find_attack_paths(_graph(tf))
+    targets = {p.target for p in paths}
+    assert "aws_iam_role.app" in targets  # privilege escalation
+    assert "aws_s3_bucket.pii" in targets  # data exfiltration via wildcard admin
+
+
+def test_no_data_edge_without_privilege():
+    # Scoped policy -> role not privileged -> no CAN_ACCESS edge to the bucket.
+    scoped = (
+        _CHAIN.replace(
+            'Action = "*", Resource = "*"',
+            'Action = "s3:GetObject", Resource = "arn:aws:s3:::b/*"',
+        )
+        + '\nresource "aws_s3_bucket" "pii" { bucket = "customer-pii" }\n'
+    )
+    assert find_attack_paths(_graph(scoped)) == []
