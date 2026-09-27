@@ -267,3 +267,19 @@ def test_range_report_uses_persona_byline(tmp_path, monkeypatch):
     r = runner.invoke(app, ["range", "report", str(eng), "-o", str(out)])
     assert r.exit_code == 0
     assert "gh0st" in out.read_text()  # byline defaulted to the active persona
+
+
+def test_triage_command_offline(tmp_path, monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_AUTH_TOKEN", raising=False)
+    (tmp_path / "c.yaml").write_text("access_control:\n  public: true\n", encoding="utf-8")
+    r = runner.invoke(app, ["triage", str(tmp_path)])
+    assert r.exit_code == 0
+    assert "What it is:" in r.stdout
+
+
+def test_triage_clean_scan(tmp_path):
+    (tmp_path / "c.yaml").write_text("access_control:\n  public: false\n", encoding="utf-8")
+    r = runner.invoke(app, ["triage", str(tmp_path)])
+    assert r.exit_code == 0
+    assert "No findings" in r.stdout

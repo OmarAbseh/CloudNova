@@ -266,11 +266,11 @@ def _scan_results_body(path: str, result: dict[str, Any]) -> str:
     return f"""
     <div class="card summary">
       <div><div class="grade" style="color:{color}">{_e(grade)}</div>
-        <div class="muted">{summary['posture_score']}/100 · lower is better</div></div>
+        <div class="muted">{summary["posture_score"]}/100 · lower is better</div></div>
       <div>
         <div class="kicker">Results</div>
-        <h1 style="margin:2px 0">{summary['findings']} finding(s)</h1>
-        <p class="muted" style="margin:2px 0">{_e(path)} — {summary['files_scanned']} file(s) scanned</p>
+        <h1 style="margin:2px 0">{summary["findings"]} finding(s)</h1>
+        <p class="muted" style="margin:2px 0">{_e(path)} — {summary["files_scanned"]} file(s) scanned</p>
         <div class="pills">{pills}</div>
       </div>
     </div>

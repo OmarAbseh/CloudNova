@@ -6,6 +6,12 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### AI finding triage
+- `cloudnova triage <path>`: scans, then explains the worst findings in plain
+  English — what it is, why it matters (attacker's view + friendly ATT&CK names),
+  and a concrete fix. Uses Claude when ANTHROPIC_API_KEY is set, with a useful
+  templated offline fallback. `cloudnova.triage.explain_finding` is the reusable API.
+
 ### Web dashboard redesign
 - Professional dark UI with a red-accented palette (not the default warm tones), a
   Three.js 3D animated hero (wireframe icosahedron) with a CSS orb fallback,

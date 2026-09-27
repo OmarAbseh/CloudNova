@@ -21,6 +21,7 @@ import yaml
 from rich.console import Console
 from rich.table import Table
 
+from cloudnova import service
 from cloudnova.core.baseline import Baseline
 from cloudnova.core.check import registry
 from cloudnova.core.engine import Engine, ScanResult, filter_by_severity
@@ -42,6 +43,7 @@ from cloudnova.range import (
     set_active,
 )
 from cloudnova.reporting import render_console, render_html, render_json, render_sarif
+from cloudnova.triage import triage_findings
 
 app = typer.Typer(
     add_completion=False,
@@ -137,6 +139,44 @@ def baseline(
     _console.print(
         f"Wrote baseline with [bold]{len(result.findings)}[/] finding(s) to [bold]{output}[/]."
     )
+
+
+@app.command()
+def triage(
+    path: Annotated[Path, typer.Argument(help="File or directory to scan and triage.")],
+    limit: Annotated[
+        int, typer.Option("--limit", "-n", help="How many top findings to explain.")
+    ] = 5,
+    min_severity: Annotated[
+        str | None,
+        typer.Option("--min-severity", help="Only triage findings at/above this severity."),
+    ] = None,
+) -> None:
+    """Scan, then explain the worst findings in plain English with concrete fixes.
+
+    Uses Claude when ANTHROPIC_API_KEY is set (install `cloudnova[agent]`); otherwise
+    gives a useful offline explanation built from each finding and its ATT&CK mapping.
+    """
+    if not path.exists():
+        _console.print(f"[red]Path not found: {path}[/]")
+        raise typer.Exit(code=2)
+    result = service.scan(str(path), min_severity=min_severity)
+    findings = result["findings"]
+    if not findings:
+        _console.print("No findings to triage. 🎉")
+        return
+    notes = triage_findings(findings, limit=limit)
+    for i, note in enumerate(notes, 1):
+        _console.print(
+            f"\n[bold]{i}. [{note.severity.upper()}] {note.title}[/] "
+            f"[dim]({note.check_id}, via {note.source})[/]"
+        )
+        _console.print(note.text)
+    shown = len(notes)
+    if len(findings) > shown:
+        _console.print(
+            f"\n[dim]… {len(findings) - shown} more finding(s). Raise --limit to see them.[/]"
+        )
 
 
 @app.command()

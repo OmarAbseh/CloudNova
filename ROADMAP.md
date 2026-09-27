@@ -50,8 +50,9 @@ aggregation) and killed the crash-on-malformed-input bugs.
   `cloudnova.service` API.
 - ✅ Mentor advisor: Claude-powered Q&A (`range mentor ask`) with an offline
   curriculum fallback and a tutor/guardrail system prompt.
-- ⏭️ Next: Claude-powered finding triage (explain a finding, propose a fix PR) and
-  attack-graph narration.
+- ✅ Claude-powered finding triage (`cloudnova triage`): plain-English explanation,
+  attacker view, and concrete fix per finding, with an offline fallback.
+- ⏭️ Next: propose-a-fix PRs, attack-graph narration.
 
 ## Phase 6 — SaaS / Web 🚧
 - ✅ Local FastAPI dashboard (`cloudnova-web`): run scans and view findings, the
