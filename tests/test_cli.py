@@ -101,3 +101,39 @@ def test_scan_unknown_format_errors(tmp_path):
     (tmp_path / "c.yaml").write_text("access_control:\n  public: false\n", encoding="utf-8")
     result = runner.invoke(app, ["scan", str(tmp_path), "--format", "xml"])
     assert result.exit_code == 2
+
+
+def test_iam_generate_and_analyze_roundtrip(tmp_path):
+    spec = tmp_path / "grants.yaml"
+    spec.write_text(
+        "grants:\n  - service: s3\n    access: [read]\n    resources: ['arn:aws:s3:::b/*']\n",
+        encoding="utf-8",
+    )
+    out = tmp_path / "policy.json"
+    gen = runner.invoke(app, ["iam", "generate", str(spec), "-o", str(out)])
+    assert gen.exit_code == 0
+    assert out.exists()
+    # The generated policy analyzes clean.
+    analyzed = runner.invoke(app, ["iam", "analyze", str(out)])
+    assert analyzed.exit_code == 0
+    assert "No findings" in analyzed.stdout
+
+
+def test_iam_analyze_flags_bad_policy(tmp_path):
+    p = tmp_path / "bad.json"
+    p.write_text('{"Statement":[{"Effect":"Allow","Action":"*","Resource":"*"}]}', encoding="utf-8")
+    result = runner.invoke(app, ["iam", "analyze", str(p), "--format", "json"])
+    assert result.exit_code == 0
+    import json
+
+    ids = {f["check_id"] for f in json.loads(result.stdout)["findings"]}
+    assert "IAM_FULL_WILDCARD" in ids
+
+
+def test_iam_generate_invalid_spec_errors(tmp_path):
+    spec = tmp_path / "bad.yaml"
+    spec.write_text(
+        "grants:\n  - service: s3\n    access: read\n    resources: ['*']\n", encoding="utf-8"
+    )
+    result = runner.invoke(app, ["iam", "generate", str(spec)])
+    assert result.exit_code == 2

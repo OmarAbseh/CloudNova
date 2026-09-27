@@ -76,6 +76,20 @@ CRITICAL  GRAPH_ATTACK_PATH   aws_instance.web
 
 This runs automatically during `scan` (disable with `--no-graph`).
 
+### Author & audit IAM
+
+CloudNova doesn't just find bad IAM — it can write good IAM and audit any policy:
+
+```bash
+cloudnova iam generate grants.yaml -o policy.json   # least-privilege policy from intents
+cloudnova iam analyze policy.json                   # audit for escalation vectors
+```
+
+`generate` refuses wildcard resources, so its output is least-privilege by
+construction; `analyze` flags full/service wildcards, privilege-escalation
+actions and combos (`iam:PassRole` + `ec2:RunInstances`), wildcard principals,
+and `NotAction`+Allow. ([ADR 0010](docs/adr/0010-iam-generate-and-analyze.md))
+
 ### Use it from an AI agent (MCP)
 
 CloudNova ships a [Model Context Protocol](https://modelcontextprotocol.io)

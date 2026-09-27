@@ -6,6 +6,14 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### IAM authoring & analysis
+- `cloudnova iam generate`: authors a least-privilege IAM policy from a
+  high-level grant spec (service + access + resource ARNs); refuses wildcard
+  resources.
+- `cloudnova iam analyze`: audits a policy for full/service wildcards,
+  privilege-escalation actions and combos, wildcard principals, and NotAction+
+  Allow. The generator's output analyzes clean (round-trip tested).
+
 ### Secret scanning
 - Universal `SECRET_HARDCODED` check runs on every scanned file's raw text
   (AWS keys, PEM private keys, GitHub/Slack/Google tokens, generic key

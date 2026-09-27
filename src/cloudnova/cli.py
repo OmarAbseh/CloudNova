@@ -12,19 +12,22 @@ job fails the build on real risk.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Annotated
 
 import typer
+import yaml
 from rich.console import Console
 from rich.table import Table
 
 from cloudnova.core.baseline import Baseline
 from cloudnova.core.check import registry
-from cloudnova.core.engine import Engine, filter_by_severity
+from cloudnova.core.engine import Engine, ScanResult, filter_by_severity
 from cloudnova.core.findings import Severity
 from cloudnova.graph import build_graph, find_attack_paths
 from cloudnova.graph.attack_paths import paths_to_findings
+from cloudnova.iam import GenerationError, analyze_policy, generate_policy
 from cloudnova.reporting import render_console, render_html, render_json, render_sarif
 
 app = typer.Typer(
@@ -143,6 +146,71 @@ def _parse_severity(value: str) -> Severity:
         valid = ", ".join(s.value for s in Severity)
         _console.print(f"[red]Invalid severity {value!r}. Choose from: {valid}.[/]")
         raise typer.Exit(code=2) from exc
+
+
+# ---- iam subcommands: author and audit IAM policies ----
+iam_app = typer.Typer(help="Author and audit IAM policies.", no_args_is_help=True)
+app.add_typer(iam_app, name="iam")
+
+
+def _load_structured(path: Path) -> object:
+    """Load a JSON or YAML file into Python data."""
+    text = path.read_text(encoding="utf-8")
+    if path.suffix.lower() in {".yaml", ".yml"}:
+        return yaml.safe_load(text)
+    return json.loads(text)
+
+
+@iam_app.command("generate")
+def iam_generate(
+    spec: Annotated[Path, typer.Argument(help="Grant-spec file (JSON or YAML).")],
+    output: Annotated[
+        Path | None, typer.Option("--output", "-o", help="Write the policy here instead of stdout.")
+    ] = None,
+) -> None:
+    """Generate a least-privilege IAM policy from a grant spec."""
+    if not spec.exists():
+        _console.print(f"[red]Spec not found: {spec}[/]")
+        raise typer.Exit(code=2)
+    try:
+        data = _load_structured(spec)
+        if not isinstance(data, dict):
+            raise GenerationError("spec must be a mapping with a 'grants' list.")
+        policy = generate_policy(data)
+    except (GenerationError, json.JSONDecodeError, yaml.YAMLError) as exc:
+        _console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    rendered = json.dumps(policy, indent=2)
+    if output is not None:
+        output.write_text(rendered + "\n", encoding="utf-8")
+        _console.print(f"Wrote least-privilege policy to [bold]{output}[/].")
+    else:
+        print(rendered)
+
+
+@iam_app.command("analyze")
+def iam_analyze(
+    policy: Annotated[Path, typer.Argument(help="IAM policy document (JSON or YAML).")],
+    output_format: Annotated[
+        str, typer.Option("--format", "-f", help="Output format: table or json.")
+    ] = "table",
+) -> None:
+    """Analyze an IAM policy for anti-patterns and privilege escalation."""
+    if not policy.exists():
+        _console.print(f"[red]Policy not found: {policy}[/]")
+        raise typer.Exit(code=2)
+    try:
+        doc = _load_structured(policy)
+    except (json.JSONDecodeError, yaml.YAMLError) as exc:
+        _console.print(f"[red]Could not parse {policy}: {exc}[/]")
+        raise typer.Exit(code=2) from exc
+
+    findings = analyze_policy(doc, source=str(policy))
+    result = ScanResult(findings=findings, files_scanned=1, checks_run=1)
+    if output_format == "json":
+        print(render_json(result))
+    else:
+        render_console(result, _console)
 
 
 if __name__ == "__main__":
