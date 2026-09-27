@@ -243,3 +243,27 @@ def test_mentor_ask_offline(monkeypatch):
     r = runner.invoke(app, ["range", "mentor", "ask", "how do I use burp suite?"])
     assert r.exit_code == 0
     assert "Burp Suite" in r.stdout
+
+
+def test_range_persona_switch(tmp_path, monkeypatch):
+    monkeypatch.setenv("CLOUDNOVA_CONFIG_DIR", str(tmp_path))
+    monkeypatch.delenv("CLOUDNOVA_PERSONA", raising=False)
+    assert runner.invoke(app, ["range", "persona", "use", "gh0st"]).exit_code == 0
+    who = runner.invoke(app, ["range", "whoami"])
+    assert who.exit_code == 0 and "gh0st" in who.stdout
+
+
+def test_range_report_uses_persona_byline(tmp_path, monkeypatch):
+    monkeypatch.setenv("CLOUDNOVA_CONFIG_DIR", str(tmp_path))
+    monkeypatch.setenv("CLOUDNOVA_PERSONA", "gh0st")
+    eng = tmp_path / "e.yaml"
+    eng.write_text(
+        "engagement:\n  client: Acme\n  scope: '*.acme.com'\n"
+        "findings:\n  - title: X\n    severity: low\n    affected: a\n"
+        "    description: d\n    remediation: r\n",
+        encoding="utf-8",
+    )
+    out = tmp_path / "r.md"
+    r = runner.invoke(app, ["range", "report", str(eng), "-o", str(out)])
+    assert r.exit_code == 0
+    assert "gh0st" in out.read_text()  # byline defaulted to the active persona

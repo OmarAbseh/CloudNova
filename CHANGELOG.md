@@ -6,6 +6,13 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Range personas
+- `cloudnova.range.persona`: switchable operator identity — `cloudnova` (the
+  professional product face) and `gh0st` (personal handle). Cosmetic only: it
+  changes greetings and the default report byline, never any security behavior.
+  Selection via `CLOUDNOVA_PERSONA` env var or a saved config. CLI:
+  `cloudnova range whoami`, `range persona list`, `range persona use <id>`.
+
 ### Mentor advisor (Claude-powered Q&A)
 - `cloudnova.range.mentor.advisor`: ask the mentor free-form questions. When an
   Anthropic API key is set it answers via Claude (claude-opus-5, adaptive

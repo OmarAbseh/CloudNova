@@ -32,11 +32,14 @@ from cloudnova.range import (
     ReconParseError,
     Scope,
     ScopeError,
+    active_persona,
     engagement_from_dict,
+    list_personas,
     load_scope,
     mentor,
     organize,
     render_markdown,
+    set_active,
 )
 from cloudnova.reporting import render_console, render_html, render_json, render_sarif
 
@@ -229,6 +232,41 @@ range_app = typer.Typer(
     no_args_is_help=True,
 )
 app.add_typer(range_app, name="range")
+
+
+@range_app.command("whoami")
+def range_whoami() -> None:
+    """Show the active operator persona."""
+    p = active_persona()
+    _console.print(f"[bold cyan]{p.display_name}[/]  [dim](persona: {p.id})[/]")
+    _console.print(f"  handle:  {p.handle}")
+    _console.print(f"  {p.tagline}")
+
+
+persona_app = typer.Typer(help="Switch the operator persona (cosmetic only).", no_args_is_help=True)
+range_app.add_typer(persona_app, name="persona")
+
+
+@persona_app.command("list")
+def persona_list() -> None:
+    """List available personas."""
+    active = active_persona().id
+    for p in list_personas():
+        mark = "[green]*[/]" if p.id == active else " "
+        _console.print(f"{mark} [bold]{p.id}[/] — {p.display_name}: {p.tagline}")
+
+
+@persona_app.command("use")
+def persona_use(
+    persona_id: Annotated[str, typer.Argument(help="Persona id: cloudnova or gh0st.")],
+) -> None:
+    """Switch the active persona (saved to your config)."""
+    try:
+        p = set_active(persona_id)
+    except KeyError as exc:
+        _console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    _console.print(f"Persona set to [bold cyan]{p.display_name}[/] ({p.id}). {p.banner()}")
 
 
 def _load_scope_or_exit(scope_path: Path) -> Scope:
@@ -463,6 +501,9 @@ def range_report(
     except (yaml.YAMLError, ValueError) as exc:
         _console.print(f"[red]{exc}[/]")
         raise typer.Exit(code=2) from exc
+    # Default the report byline to the active operator persona when unspecified.
+    if not engagement.tester:
+        engagement.tester = active_persona().handle
     report = render_markdown(engagement)
     if output is not None:
         output.write_text(report, encoding="utf-8")
