@@ -37,3 +37,6 @@ coverage.xml
 # ---- CloudNova runtime output ----
 /reports/
 *.cloudnova.json
+
+# Private gh0st edition — kept out of the public repo (export to a private repo)
+/gh0st/
