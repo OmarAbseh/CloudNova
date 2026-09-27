@@ -56,3 +56,13 @@ def test_mentor_page(client):
     assert r.status_code == 200
     assert "pentester" in r.text.lower()
     assert "Foundations" in r.text  # a curriculum module is listed
+
+
+def test_scan_results_include_explain(tmp_path, client):
+    (tmp_path / "main.tf").write_text(
+        'resource "aws_s3_bucket" "b" { acl = "public-read" }\n', encoding="utf-8"
+    )
+    r = client.post("/scan", data={"path": str(tmp_path)})
+    assert r.status_code == 200
+    assert "Explain" in r.text  # per-finding expandable explanation
+    assert "How to fix it:" in r.text

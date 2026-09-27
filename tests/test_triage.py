@@ -89,3 +89,10 @@ def test_triage_findings_respects_limit(monkeypatch):
     findings = [_finding(check_id=f"C{i}") for i in range(10)]
     notes = triage.triage_findings(findings, limit=3)
     assert len(notes) == 3
+
+
+def test_allow_claude_false_forces_offline(monkeypatch):
+    # Even with credentials present, allow_claude=False must not call the API.
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-should-not-be-used")
+    note = triage.explain_finding(_finding(), allow_claude=False)
+    assert note.source == "offline"

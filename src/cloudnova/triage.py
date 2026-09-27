@@ -140,11 +140,21 @@ def _claude_note(finding: dict[str, Any], client: Any, model: str) -> TriageNote
 
 
 def explain_finding(
-    finding: dict[str, Any], *, client: Any = None, model: str = DEFAULT_MODEL
+    finding: dict[str, Any],
+    *,
+    client: Any = None,
+    model: str = DEFAULT_MODEL,
+    allow_claude: bool = True,
 ) -> TriageNote:
-    """Explain and propose a fix for one finding (Claude when available, else offline)."""
+    """Explain and propose a fix for one finding (Claude when available, else offline).
+
+    Set ``allow_claude=False`` to force the instant offline explanation — used by the
+    web dashboard so rendering a page never makes (slow, paid) API calls per finding.
+    """
     if client is not None:
         return _claude_note(finding, client, model)
+    if not allow_claude:
+        return _offline_note(finding)
     from cloudnova.range.mentor.advisor import _credentials_available  # reuse the same check
 
     if not _credentials_available():

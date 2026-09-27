@@ -25,6 +25,7 @@ from fastapi.responses import HTMLResponse
 from cloudnova import __version__, service
 from cloudnova.range import active_persona
 from cloudnova.range.mentor import learning_path
+from cloudnova.triage import explain_finding
 
 # Three.js (UMD, exposes global THREE). Progressive enhancement only.
 _THREE_CDN = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
@@ -253,10 +254,16 @@ def _scan_results_body(path: str, result: dict[str, Any]) -> str:
 
     def _row(f: dict[str, Any]) -> str:
         loc = f["location"].get("resource") or f["location"]["path"]
+        note = explain_finding(f, allow_claude=False)  # instant offline explanation
+        explain = (
+            f'<details><summary style="cursor:pointer;color:var(--pink)">Explain</summary>'
+            f'<pre style="white-space:pre-wrap;color:var(--muted);margin:8px 0 0">{_e(note.text)}</pre>'
+            f"</details>"
+        )
         return (
             f'<tr><td><span class="sev {f["severity"]}">{_e(f["severity"].upper())}</span></td>'
             f'<td><b>{_e(f["title"])}</b><br><span class="muted">{_e(f["description"])}</span>'
-            f'<br><span class="muted">↳ {_e(f["remediation"])}</span></td>'
+            f'<br><span class="muted">↳ {_e(f["remediation"])}</span>{explain}</td>'
             f'<td class="muted">{_e(loc)}</td></tr>'
         )
 

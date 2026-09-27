@@ -6,6 +6,11 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Triage in the dashboard
+- The web scan-results page now has a per-finding **Explain** expander (what it is,
+  why it matters, how to fix) rendered instantly offline — `explain_finding` gained
+  an `allow_claude=False` mode so page rendering never makes API calls.
+
 ### Scan diff (posture over time)
 - `cloudnova diff <old.json> <path>`: compares a saved scan against a fresh one and
   shows newly introduced vs fixed findings and the posture-score delta, matching by
