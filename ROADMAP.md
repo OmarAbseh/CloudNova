@@ -48,8 +48,10 @@ aggregation) and killed the crash-on-malformed-input bugs.
 - ✅ MCP server (`cloudnova-mcp`): exposes scan / list_checks / attack_paths so
   Claude or any MCP client can drive CloudNova; logic in the tested
   `cloudnova.service` API.
-- ⏭️ Next: Claude-powered triage (explain a finding, propose a fix PR, cluster
-  related findings) and an agent that narrates the attack graph like a pentester.
+- ✅ Mentor advisor: Claude-powered Q&A (`range mentor ask`) with an offline
+  curriculum fallback and a tutor/guardrail system prompt.
+- ⏭️ Next: Claude-powered finding triage (explain a finding, propose a fix PR) and
+  attack-graph narration.
 
 ## Phase 6 — SaaS
 - FastAPI service, multi-tenant, scan history + trend dashboards, scheduled

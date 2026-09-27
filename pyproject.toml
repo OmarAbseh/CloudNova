@@ -38,6 +38,9 @@ dev = [
 mcp = [
     "mcp>=1.2",
 ]
+agent = [
+    "anthropic>=0.40",
+]
 
 [project.scripts]
 cloudnova = "cloudnova.cli:app"

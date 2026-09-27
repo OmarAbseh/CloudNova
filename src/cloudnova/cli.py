@@ -368,6 +368,20 @@ def mentor_jobs(
         _print_module(m, order=i)
 
 
+@mentor_app.command("ask")
+def mentor_ask(
+    question: Annotated[str, typer.Argument(help="Ask your pentest mentor anything.")],
+) -> None:
+    """Ask the mentor a question (Claude-powered when an API key is set, offline otherwise)."""
+    answer = mentor.ask(question)
+    _console.print(answer.text)
+    if answer.source == "offline":
+        _console.print(
+            "\n[dim]Tip: set ANTHROPIC_API_KEY and install `cloudnova[agent]` for full "
+            "Claude-powered mentoring.[/]"
+        )
+
+
 @mentor_app.command("lab")
 def mentor_lab(
     target: Annotated[str, typer.Argument(help="Practice target (must be in your scope file).")],

@@ -6,6 +6,14 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Mentor advisor (Claude-powered Q&A)
+- `cloudnova.range.mentor.advisor`: ask the mentor free-form questions. When an
+  Anthropic API key is set it answers via Claude (claude-opus-5, adaptive
+  thinking) with a tutor system prompt that stays methodology-focused and
+  authorized-targets-only; with no key it falls back to a genuinely useful
+  curriculum-based answer. CLI: `cloudnova range mentor ask "..."`. Optional
+  `cloudnova[agent]` extra installs the anthropic SDK.
+
 ### Recon organizer
 - `cloudnova.range.recon`: ingests operator-run `nmap -oX` output, gates every
   discovered host through the scope engine, and structures open services into an

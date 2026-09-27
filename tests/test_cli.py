@@ -235,3 +235,11 @@ def test_range_recon_scoped(tmp_path):
     assert r.exit_code == 0
     assert "10.1.2.3" in r.stdout
     assert "skipped (out of scope): 1.2.3.4" in r.stdout
+
+
+def test_mentor_ask_offline(monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_AUTH_TOKEN", raising=False)
+    r = runner.invoke(app, ["range", "mentor", "ask", "how do I use burp suite?"])
+    assert r.exit_code == 0
+    assert "Burp Suite" in r.stdout

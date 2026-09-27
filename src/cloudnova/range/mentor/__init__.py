@@ -6,6 +6,7 @@ Knowledge/coaching is safe and ungated; anything that names a *target* to work
 against goes through the Range scope engine first.
 """
 
+from cloudnova.range.mentor.advisor import Answer, ask
 from cloudnova.range.mentor.coach import (
     CERT_TRACKS,
     JOB_LEVELS,
@@ -21,10 +22,12 @@ __all__ = [
     "CERT_TRACKS",
     "CURRICULUM",
     "JOB_LEVELS",
+    "Answer",
     "LabPlan",
     "Level",
     "Module",
     "all_modules",
+    "ask",
     "cert_track",
     "certs_for",
     "get_module",
