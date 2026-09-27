@@ -498,6 +498,58 @@ def mentor_jobs(
         _print_module(m, order=i)
 
 
+@mentor_app.command("done")
+def mentor_done(
+    module_id: Annotated[
+        str, typer.Argument(help="Module id you've completed (see `mentor path`).")
+    ],
+) -> None:
+    """Mark a curriculum module as completed."""
+    try:
+        module = mentor.mark_done(module_id)
+    except KeyError:
+        ids = ", ".join(m.id for m in mentor.all_modules())
+        _console.print(f"[red]Unknown module {module_id!r}. Available: {ids}[/]")
+        raise typer.Exit(code=2) from None
+    prog = mentor.summary()
+    _console.print(
+        f"[green]✓[/] Marked [bold]{module.title}[/] done. "
+        f"Progress: {prog.done}/{prog.total} ({prog.percent}%)."
+    )
+
+
+@mentor_app.command("progress")
+def mentor_progress() -> None:
+    """Show your progress and what's next."""
+    prog = mentor.summary()
+    done = mentor.completed()
+    _console.print(f"[bold]Progress:[/] {prog.done}/{prog.total} ({prog.percent}%)\n")
+    for step in mentor.learning_path():
+        mark = "[green]✓[/]" if step.module.id in done else "[dim]○[/]"
+        _console.print(f"  {mark} {step.module.title} [dim]({step.module.id})[/]")
+    nxt = mentor.next_modules(1)
+    if nxt:
+        _console.print(
+            f"\n[bold]Next up:[/] {nxt[0].title} — `cloudnova range mentor topic {nxt[0].id}`"
+        )
+    else:
+        _console.print("\n[green]All modules complete. 🎓[/]")
+
+
+@mentor_app.command("next")
+def mentor_next(
+    count: Annotated[int, typer.Option("--count", "-n", help="How many next steps to show.")] = 3,
+) -> None:
+    """Show the next module(s) to study, based on your progress."""
+    nxt = mentor.next_modules(count)
+    if not nxt:
+        _console.print("[green]All caught up — every module is complete. 🎓[/]")
+        return
+    for m in nxt:
+        _print_module(m)
+        _console.print(f"   [dim]→ cloudnova range mentor topic {m.id}[/]")
+
+
 @mentor_app.command("ask")
 def mentor_ask(
     question: Annotated[str, typer.Argument(help="Ask your pentest mentor anything.")],

@@ -305,3 +305,17 @@ def test_diff_command(tmp_path):
     assert r.exit_code == 1  # a new finding was introduced
     assert "Introduced" in r.stdout
     assert "IAC_AUTH_NO_PASSWORD" in r.stdout or "Password" in r.stdout
+
+
+def test_mentor_progress_flow(tmp_path, monkeypatch):
+    monkeypatch.setenv("CLOUDNOVA_CONFIG_DIR", str(tmp_path))
+    assert runner.invoke(app, ["range", "mentor", "done", "foundations"]).exit_code == 0
+    prog = runner.invoke(app, ["range", "mentor", "progress"])
+    assert prog.exit_code == 0 and "1/12" in prog.stdout
+    nxt = runner.invoke(app, ["range", "mentor", "next"])
+    assert nxt.exit_code == 0
+
+
+def test_mentor_done_unknown(tmp_path, monkeypatch):
+    monkeypatch.setenv("CLOUDNOVA_CONFIG_DIR", str(tmp_path))
+    assert runner.invoke(app, ["range", "mentor", "done", "nope"]).exit_code == 2

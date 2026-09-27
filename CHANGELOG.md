@@ -6,6 +6,13 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Mentor progress tracking
+- The Mentor now remembers where you are: `cloudnova range mentor done <module>`
+  marks a curriculum module complete, `progress` shows your completion bar, and
+  `next` suggests the next modules whose prerequisites you've already finished.
+  State persists in the config dir (`CLOUDNOVA_CONFIG_DIR` or `~/.cloudnova`),
+  turning the static curriculum into a companion that walks with you.
+
 ### Triage in the dashboard
 - The web scan-results page now has a per-finding **Explain** expander (what it is,
   why it matters, how to fix) rendered instantly offline — `explain_finding` gained
