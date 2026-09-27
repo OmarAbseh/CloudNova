@@ -28,7 +28,14 @@ from cloudnova.core.findings import Severity
 from cloudnova.graph import build_graph, find_attack_paths
 from cloudnova.graph.attack_paths import paths_to_findings
 from cloudnova.iam import GenerationError, analyze_policy, generate_policy
-from cloudnova.range import Scope, ScopeError, load_scope, mentor
+from cloudnova.range import (
+    Scope,
+    ScopeError,
+    engagement_from_dict,
+    load_scope,
+    mentor,
+    render_markdown,
+)
 from cloudnova.reporting import render_console, render_html, render_json, render_sarif
 
 app = typer.Typer(
@@ -380,6 +387,37 @@ def mentor_lab(
         _console.print(f"[bold cyan]{phase}[/]")
         for s in steps:
             _console.print(f"   • {s}")
+
+
+@range_app.command("report")
+def range_report(
+    engagement_file: Annotated[
+        Path, typer.Argument(help="Engagement file (YAML): metadata + findings.")
+    ],
+    output: Annotated[
+        Path | None, typer.Option("--output", "-o", help="Write the report here instead of stdout.")
+    ] = None,
+) -> None:
+    """Generate a professional penetration-test report from an engagement file."""
+    if not engagement_file.exists():
+        _console.print(f"[red]Engagement file not found: {engagement_file}[/]")
+        raise typer.Exit(code=2)
+    try:
+        data = yaml.safe_load(engagement_file.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            raise ValueError("engagement file must be a mapping.")
+        engagement = engagement_from_dict(data)
+    except (yaml.YAMLError, ValueError) as exc:
+        _console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    report = render_markdown(engagement)
+    if output is not None:
+        output.write_text(report, encoding="utf-8")
+        _console.print(
+            f"Wrote report ([bold]{len(engagement.findings)}[/] findings) to [bold]{output}[/]."
+        )
+    else:
+        print(report)
 
 
 if __name__ == "__main__":

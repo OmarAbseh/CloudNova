@@ -1,0 +1,27 @@
+# An engagement file: your notes as data. `cloudnova range report` turns this
+# into a professional Markdown report you can hand to a client.
+engagement:
+  client: "Example Corp"
+  tester: "Omar Abseh"
+  date: "2026-09-27"
+  scope: "*.example.com (public web app), authorized per HackerOne program policy"
+
+findings:
+  - title: "Reflected XSS in search parameter"
+    severity: high
+    cvss: "6.1 (AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N)"
+    affected: "https://api.example.com/search?q="
+    description: "The `q` parameter is reflected into the response without encoding."
+    impact: "An attacker can execute script in a victim's browser session."
+    steps:
+      - "Send GET /search?q=<script>alert(1)</script>"
+      - "Observe the payload reflected unencoded in the HTML response."
+    remediation: "Context-aware output encoding; add a Content-Security-Policy."
+    references:
+      - "https://owasp.org/www-community/attacks/xss/"
+  - title: "Missing rate limiting on login"
+    severity: medium
+    affected: "https://api.example.com/login"
+    description: "No throttling on failed authentication attempts."
+    impact: "Enables credential brute-force / stuffing."
+    remediation: "Add rate limiting and account lockout with monitoring."

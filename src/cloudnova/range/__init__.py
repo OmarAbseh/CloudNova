@@ -12,6 +12,7 @@ practice-lab tutor) all consult :func:`authorize` first and refuse out-of-scope
 targets.
 """
 
+from cloudnova.range.report import Engagement, engagement_from_dict, render_markdown
 from cloudnova.range.scope import (
     Authorization,
     Decision,
@@ -24,8 +25,11 @@ from cloudnova.range.scope import (
 __all__ = [
     "Authorization",
     "Decision",
+    "Engagement",
     "Scope",
     "ScopeError",
     "authorize",
+    "engagement_from_dict",
     "load_scope",
+    "render_markdown",
 ]

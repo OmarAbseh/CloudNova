@@ -194,3 +194,20 @@ def test_mentor_lab_gated(tmp_path):
     assert ok.exit_code == 0 and "guided lab plan" in ok.stdout
     denied = runner.invoke(app, ["range", "mentor", "lab", "evil.com", "--scope", str(scope)])
     assert denied.exit_code == 1
+
+
+def test_range_report_generation(tmp_path):
+    eng = tmp_path / "engagement.yaml"
+    eng.write_text(
+        "engagement:\n  client: Acme\n  tester: me\n  scope: '*.acme.com'\n"
+        "findings:\n  - title: SQLi\n    severity: critical\n    affected: /login\n"
+        "    description: d\n    remediation: use params\n",
+        encoding="utf-8",
+    )
+    out = tmp_path / "report.md"
+    r = runner.invoke(app, ["range", "report", str(eng), "-o", str(out)])
+    assert r.exit_code == 0
+    assert out.exists()
+    text = out.read_text()
+    assert "Penetration Test Report — Acme" in text
+    assert "SQLi" in text

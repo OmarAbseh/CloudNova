@@ -6,6 +6,13 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Pentest report generation
+- `cloudnova.range.report`: turns an engagement (metadata + findings, as a YAML
+  file) into a professional Markdown pentest report — executive summary,
+  findings-at-a-glance table, methodology, per-finding detail (severity/CVSS,
+  impact, reproduction, remediation), appendix. Can adapt CloudNova scan findings.
+- CLI: `cloudnova range report <engagement.yaml> [-o report.md]`.
+
 ### CloudNova Mentor (pentest tutor)
 - New `cloudnova.range.mentor`: a prereq-linked curriculum (foundations → web/Burp
   → privesc → AD → cloud → reporting) mapped to tools, legitimate practice

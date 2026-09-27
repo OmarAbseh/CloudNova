@@ -39,8 +39,10 @@ aggregation) and killed the crash-on-malformed-input bugs.
 - This is what makes CloudNova a portfolio piece a security team recognizes.
 - ✅ `cloudnova.range` scope/authorization engine: deny-by-default gate, exclusions
   win, attestation required (fails closed). Every capability gates through it.
-- ⏭️ Next (all gated by scope): recon organization (operator-run), finding
-  validation, a practice-lab tutor for TryHackMe/HTB/Juice Shop.
+- ✅ Mentor: scope-aware pentest tutor (curriculum, cert tracks, guided labs).
+- ✅ Report generator: engagement notes -> professional Markdown report.
+- ⏭️ Next (all gated by scope): recon organization (operator-run, ingest tool
+  output), finding validation, Claude-backed mentor Q&A at runtime.
 
 ## Phase 5 — AI agents 🚧
 - ✅ MCP server (`cloudnova-mcp`): exposes scan / list_checks / attack_paths so
