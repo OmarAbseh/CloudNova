@@ -184,7 +184,7 @@ def create_app() -> FastAPI:
         </section>
 
         <div class="grid">
-          <div class="card"><div class="kicker">Scan</div><h3>25+ checks, 5 formats</h3>
+          <div class="card"><div class="kicker">Scan</div><h3>30+ checks, 5 formats</h3>
             <p>Terraform, CloudFormation, Kubernetes, CloudTrail &amp; logs — mapped to CIS &amp; MITRE ATT&amp;CK.</p></div>
           <div class="card"><div class="kicker">Graph</div><h3>Attack paths</h3>
             <p>Exposed compute → over-privileged role → sensitive data, chained automatically.</p></div>

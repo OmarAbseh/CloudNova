@@ -43,6 +43,7 @@ spec:
       securityContext:
         allowPrivilegeEscalation: false
         privileged: false
+        readOnlyRootFilesystem: true
       resources:
         limits:
           cpu: "1"
@@ -166,3 +167,45 @@ def test_pinned_image_digest_not_flagged(tmp_path):
         '      resources:\n        limits:\n          cpu: "1"\n',
     )
     assert "K8S_MUTABLE_IMAGE_TAG" not in _ids(root)
+
+
+def test_dangerous_capability_flagged(tmp_path):
+    root = _write(
+        tmp_path,
+        "apiVersion: v1\nkind: Pod\nmetadata:\n  name: p\n"
+        "spec:\n  containers:\n    - name: c\n      image: nginx:1.2\n"
+        "      securityContext:\n        readOnlyRootFilesystem: true\n"
+        "        runAsNonRoot: true\n        allowPrivilegeEscalation: false\n"
+        "        capabilities:\n          add: [SYS_ADMIN]\n"
+        '      resources:\n        limits:\n          cpu: "1"\n',
+    )
+    assert "K8S_DANGEROUS_CAPABILITIES" in _ids(root)
+
+
+def test_safe_capabilities_not_flagged(tmp_path):
+    root = _write(
+        tmp_path,
+        "apiVersion: v1\nkind: Pod\nmetadata:\n  name: p\n"
+        "spec:\n  containers:\n    - name: c\n      image: nginx:1.2\n"
+        "      securityContext:\n        capabilities:\n          add: [NET_BIND_SERVICE]\n",
+    )
+    assert "K8S_DANGEROUS_CAPABILITIES" not in _ids(root)
+
+
+def test_writable_root_fs_flagged(tmp_path):
+    root = _write(
+        tmp_path,
+        "apiVersion: v1\nkind: Pod\nmetadata:\n  name: p\n"
+        "spec:\n  containers:\n    - name: c\n      image: nginx:1.2\n",
+    )
+    assert "K8S_WRITABLE_ROOT_FS" in _ids(root)
+
+
+def test_readonly_root_fs_not_flagged(tmp_path):
+    root = _write(
+        tmp_path,
+        "apiVersion: v1\nkind: Pod\nmetadata:\n  name: p\n"
+        "spec:\n  containers:\n    - name: c\n      image: nginx:1.2\n"
+        "      securityContext:\n        readOnlyRootFilesystem: true\n",
+    )
+    assert "K8S_WRITABLE_ROOT_FS" not in _ids(root)

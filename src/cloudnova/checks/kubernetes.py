@@ -320,3 +320,75 @@ class MutableImageTag(_K8sCheck):
                     cis_controls=["CIS Kubernetes 5.5.1"],
                     mitre_attack=["T1525"],  # Implant Internal Image
                 )
+
+
+@register
+class DangerousCapabilities(_K8sCheck):
+    id = "K8S_DANGEROUS_CAPABILITIES"
+    title = "Container adds dangerous Linux capabilities"
+    severity = Severity.HIGH
+
+    _DANGEROUS: ClassVar[frozenset[str]] = frozenset(
+        {"ALL", "SYS_ADMIN", "NET_ADMIN", "SYS_PTRACE", "SYS_MODULE", "NET_RAW"}
+    )
+
+    def check_workload(
+        self, resource: CloudResource, pod_spec: dict[str, Any]
+    ) -> Iterator[Finding]:
+        for container in _containers(pod_spec):
+            sec = container.get("securityContext")
+            caps = sec.get("capabilities") if isinstance(sec, dict) else None
+            added = caps.get("add") if isinstance(caps, dict) else None
+            if not isinstance(added, list):
+                continue
+            dangerous = sorted({str(c).upper() for c in added} & self._DANGEROUS)
+            if dangerous:
+                yield Finding(
+                    check_id=self.id,
+                    title=self.title,
+                    severity=self.severity,
+                    confidence=Confidence.HIGH,
+                    location=self._loc(resource, container.get("name")),
+                    description=(
+                        f"Container '{container.get('name')}' adds dangerous capabilities "
+                        f"({', '.join(dangerous)}), which can be used to escape the container or "
+                        "tamper with the host."
+                    ),
+                    remediation="Drop all capabilities and add back only the minimum required "
+                    '(securityContext.capabilities.drop: ["ALL"]).',
+                    evidence=f"capabilities.add: {dangerous}",
+                    cis_controls=["CIS Kubernetes 5.2.8"],
+                    mitre_attack=["T1611"],
+                )
+
+
+@register
+class WritableRootFilesystem(_K8sCheck):
+    id = "K8S_WRITABLE_ROOT_FS"
+    title = "Container root filesystem is writable"
+    severity = Severity.LOW
+
+    def check_workload(
+        self, resource: CloudResource, pod_spec: dict[str, Any]
+    ) -> Iterator[Finding]:
+        for container in _containers(pod_spec):
+            sec = container.get("securityContext")
+            ro = sec.get("readOnlyRootFilesystem") if isinstance(sec, dict) else None
+            if ro is True:
+                continue
+            yield Finding(
+                check_id=self.id,
+                title=self.title,
+                severity=self.severity,
+                confidence=Confidence.MEDIUM,
+                location=self._loc(resource, container.get("name")),
+                description=(
+                    f"Container '{container.get('name')}' does not set "
+                    "readOnlyRootFilesystem: true, so an attacker who lands in it can write to "
+                    "the filesystem and persist."
+                ),
+                remediation="Set securityContext.readOnlyRootFilesystem: true and mount writable "
+                "paths explicitly as volumes.",
+                cis_controls=["CIS Kubernetes 5.2.12"],
+                mitre_attack=["T1611"],
+            )

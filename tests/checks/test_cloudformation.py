@@ -104,3 +104,19 @@ def test_rds_public_flagged(tmp_path):
         "    Properties:\n      PubliclyAccessible: true\n",
     )
     assert "CFN_RDS_PUBLIC" in _ids(root)
+
+
+def test_kms_rotation_disabled_flagged(tmp_path):
+    root = _write(
+        tmp_path,
+        _HEADER + "  K:\n    Type: AWS::KMS::Key\n    Properties:\n      Description: x\n",
+    )
+    assert "CFN_KMS_NO_ROTATION" in _ids(root)
+
+
+def test_kms_rotation_enabled_not_flagged(tmp_path):
+    root = _write(
+        tmp_path,
+        _HEADER + "  K:\n    Type: AWS::KMS::Key\n    Properties:\n      EnableKeyRotation: true\n",
+    )
+    assert "CFN_KMS_NO_ROTATION" not in _ids(root)

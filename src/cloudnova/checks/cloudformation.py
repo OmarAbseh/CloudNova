@@ -212,3 +212,30 @@ class CfnRdsPubliclyAccessible(_CfnCheck):
                 cis_controls=["CIS AWS 2.3.3"],
                 mitre_attack=["T1190"],
             )
+
+
+@register
+class CfnKmsKeyRotationDisabled(_CfnCheck):
+    id = "CFN_KMS_NO_ROTATION"
+    title = "KMS key does not have automatic rotation enabled"
+    severity = Severity.LOW
+
+    def check_resource(self, resource: CloudResource) -> Iterator[Finding]:
+        if resource.type != "AWS::KMS::Key":
+            return
+        if resource.get("EnableKeyRotation") is not True:
+            yield Finding(
+                check_id=self.id,
+                title=self.title,
+                severity=self.severity,
+                confidence=Confidence.HIGH,
+                location=self._loc(resource),
+                description=(
+                    f"KMS key '{resource.name}' does not set EnableKeyRotation: true, so its key "
+                    "material is never rotated automatically."
+                ),
+                remediation="Set EnableKeyRotation: true.",
+                evidence="EnableKeyRotation != true",
+                cis_controls=["CIS AWS 3.8"],
+                mitre_attack=["T1552"],
+            )

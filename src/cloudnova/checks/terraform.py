@@ -237,3 +237,60 @@ class EbsVolumeNotEncrypted(_TerraformCheck):
                 cis_controls=["CIS AWS 2.2.1"],
                 mitre_attack=["T1530"],
             )
+
+
+@register
+class KmsKeyRotationDisabled(_TerraformCheck):
+    id = "TF_KMS_NO_ROTATION"
+    title = "KMS key does not have automatic rotation enabled"
+    severity = Severity.LOW
+
+    def check_resource(self, resource: CloudResource) -> Iterator[Finding]:
+        if resource.type != "aws_kms_key":
+            return
+        if _first(resource.get("enable_key_rotation")) is not True:
+            yield Finding(
+                check_id=self.id,
+                title=self.title,
+                severity=self.severity,
+                confidence=Confidence.HIGH,
+                location=self._loc(resource),
+                description=(
+                    f"KMS key '{resource.name}' does not set enable_key_rotation = true, so the "
+                    "key material is never rotated automatically."
+                ),
+                remediation="Set enable_key_rotation = true.",
+                evidence="enable_key_rotation != true",
+                cis_controls=["CIS AWS 3.8"],
+                mitre_attack=["T1552"],
+            )
+
+
+@register
+class Ec2ImdsV2NotEnforced(_TerraformCheck):
+    id = "TF_EC2_IMDSV2"
+    title = "EC2 instance does not enforce IMDSv2"
+    severity = Severity.MEDIUM
+
+    def check_resource(self, resource: CloudResource) -> Iterator[Finding]:
+        if resource.type != "aws_instance":
+            return
+        meta = _first(resource.get("metadata_options"))
+        http_tokens = meta.get("http_tokens") if isinstance(meta, dict) else None
+        if http_tokens != "required":
+            yield Finding(
+                check_id=self.id,
+                title=self.title,
+                severity=self.severity,
+                confidence=Confidence.MEDIUM,
+                location=self._loc(resource),
+                description=(
+                    f"EC2 instance '{resource.name}' does not require IMDSv2 "
+                    '(metadata_options.http_tokens = "required"). IMDSv1 is exploitable via SSRF '
+                    "to steal the instance's IAM credentials."
+                ),
+                remediation='Add metadata_options { http_tokens = "required" } to enforce IMDSv2.',
+                evidence="metadata_options.http_tokens != required",
+                cis_controls=["CIS AWS 5.6"],
+                mitre_attack=["T1552"],
+            )

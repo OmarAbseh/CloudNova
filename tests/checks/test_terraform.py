@@ -113,3 +113,27 @@ def test_ebs_unencrypted_flagged(tmp_path):
 def test_ebs_encrypted_not_flagged(tmp_path):
     root = _write(tmp_path, 'resource "aws_ebs_volume" "v" {\n  size = 10\n  encrypted = true\n}\n')
     assert "TF_EBS_NO_ENCRYPTION" not in _ids(root)
+
+
+def test_kms_rotation_disabled_flagged(tmp_path):
+    root = _write(tmp_path, 'resource "aws_kms_key" "k" {\n  description = "x"\n}\n')
+    assert "TF_KMS_NO_ROTATION" in _ids(root)
+
+
+def test_kms_rotation_enabled_not_flagged(tmp_path):
+    root = _write(tmp_path, 'resource "aws_kms_key" "k" {\n  enable_key_rotation = true\n}\n')
+    assert "TF_KMS_NO_ROTATION" not in _ids(root)
+
+
+def test_imdsv2_not_enforced_flagged(tmp_path):
+    root = _write(tmp_path, 'resource "aws_instance" "i" {\n  ami = "ami-1"\n}\n')
+    assert "TF_EC2_IMDSV2" in _ids(root)
+
+
+def test_imdsv2_enforced_not_flagged(tmp_path):
+    root = _write(
+        tmp_path,
+        'resource "aws_instance" "i" {\n  ami = "ami-1"\n'
+        '  metadata_options { http_tokens = "required" }\n}\n',
+    )
+    assert "TF_EC2_IMDSV2" not in _ids(root)

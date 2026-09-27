@@ -6,6 +6,13 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### More checks (25 -> 30)
+- Terraform: KMS key rotation disabled (`TF_KMS_NO_ROTATION`), EC2 IMDSv2 not
+  enforced (`TF_EC2_IMDSV2`).
+- CloudFormation: KMS key rotation disabled (`CFN_KMS_NO_ROTATION`).
+- Kubernetes: dangerous Linux capabilities (`K8S_DANGEROUS_CAPABILITIES`),
+  writable root filesystem (`K8S_WRITABLE_ROOT_FS`).
+
 ### AI finding triage
 - `cloudnova triage <path>`: scans, then explains the worst findings in plain
   English — what it is, why it matters (attacker's view + friendly ATT&CK names),
