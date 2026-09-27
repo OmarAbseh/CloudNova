@@ -9,6 +9,8 @@ and MITRE ATT&CK, emittable as SARIF, and gate-able in CI.
 > production-grade security tool. The original prototype is preserved under
 > [`legacy/`](./legacy).
 
+**New here? Read [GETTING_STARTED.md](./GETTING_STARTED.md) — a plain-language walkthrough of every feature.**
+
 [![CI](https://github.com/OmarAbseh/CloudNova/actions/workflows/ci.yml/badge.svg)](https://github.com/OmarAbseh/CloudNova/actions)
 
 ---
