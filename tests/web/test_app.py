@@ -58,6 +58,19 @@ def test_mentor_page(client):
     assert "Foundations" in r.text  # a curriculum module is listed
 
 
+def test_mentor_page_shows_progress(tmp_path, monkeypatch):
+    monkeypatch.setenv("CLOUDNOVA_CONFIG_DIR", str(tmp_path))
+    from cloudnova.range.mentor import mark_done
+
+    mark_done("foundations")
+    c = TestClient(create_app())
+    r = c.get("/mentor")
+    assert r.status_code == 200
+    assert "Progress" in r.text
+    assert "Next up" in r.text
+    assert "1/12" in r.text
+
+
 def test_scan_results_include_explain(tmp_path, client):
     (tmp_path / "main.tf").write_text(
         'resource "aws_s3_bucket" "b" { acl = "public-read" }\n', encoding="utf-8"

@@ -24,7 +24,7 @@ from fastapi.responses import HTMLResponse
 
 from cloudnova import __version__, service
 from cloudnova.range import active_persona
-from cloudnova.range.mentor import learning_path
+from cloudnova.range.mentor import completed, learning_path, next_modules, summary
 from cloudnova.triage import explain_finding
 
 # Three.js (UMD, exposes global THREE). Progressive enhancement only.
@@ -35,7 +35,7 @@ _STYLE = """
 :root {
   --bg:#0a0a0d; --panel:#141419; --panel2:#1b1b22; --line:#26262f;
   --text:#ececef; --muted:#8b8b99;
-  --red:#ff2e4d; --red2:#b3123b; --pink:#ff6b81;
+  --red:#ff2e4d; --red2:#b3123b; --pink:#ff6b81; --ok:#3ddc84;
   --grad:linear-gradient(135deg,#ff2e4d 0%,#b3123b 60%,#7a0b28 100%);
   color-scheme: dark;
 }
@@ -210,17 +210,47 @@ def create_app() -> FastAPI:
 
     @app.get("/mentor", response_class=HTMLResponse)
     def mentor_page() -> str:
+        done = completed()
+        prog = summary()
+        upcoming = {m.id for m in next_modules(1)}
+
+        def _mark(module_id: str) -> str:
+            if module_id in done:
+                return '<span style="color:var(--ok)">✓</span>'
+            if module_id in upcoming:
+                return '<span style="color:var(--pink)">▶</span>'
+            return '<span class="muted">○</span>'
+
         rows = "".join(
-            f"<tr><td>{s.order}</td><td><b>{_e(s.module.title)}</b><br>"
+            f"<tr><td>{_mark(s.module.id)} {s.order}</td>"
+            f"<td><b>{_e(s.module.title)}</b><br>"
             f"<span class='muted'>{_e(s.module.summary)}</span></td>"
             f"<td class='muted'>{_e(s.module.level)}</td></tr>"
             for s in learning_path()
+        )
+        nxt = next_modules(1)
+        nxt_html = (
+            f"<p class='muted' style='margin:12px 0 0'>Next up: <b>{_e(nxt[0].title)}</b></p>"
+            if nxt
+            else "<p class='muted' style='margin:12px 0 0'>All modules complete. 🎉</p>"
         )
         body = f"""
         <div class="kicker">Range · Mentor</div>
         <h1 style="margin:4px 0 4px">Your path to pentester</h1>
         <p class="muted" style="margin-top:0">Foundations to job- and cert-ready. Use
         <code>cloudnova range mentor</code> for topics, cert tracks, and guided labs.</p>
+        <div class="card" style="margin-top:16px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline">
+            <b>Progress</b>
+            <span class="muted">{prog.done}/{prog.total} · {prog.percent}%</span>
+          </div>
+          <div style="height:10px;border-radius:6px;background:#1c1c26;margin-top:8px;
+               overflow:hidden">
+            <div style="height:100%;width:{prog.percent}%;
+                 background:linear-gradient(90deg,var(--red),var(--pink))"></div>
+          </div>
+          {nxt_html}
+        </div>
         <div class="card" style="margin-top:16px">
           <table><thead><tr><th>#</th><th>Module</th><th>Level</th></tr></thead>
           <tbody>{rows}</tbody></table>
