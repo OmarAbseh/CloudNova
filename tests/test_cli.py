@@ -211,3 +211,27 @@ def test_range_report_generation(tmp_path):
     text = out.read_text()
     assert "Penetration Test Report — Acme" in text
     assert "SQLi" in text
+
+
+def test_range_recon_scoped(tmp_path):
+    scope = tmp_path / "scope.yaml"
+    scope.write_text(
+        "authorization:\n  program: P\n  authorized_by: policy\n  acknowledged: true\n"
+        "in_scope:\n  - 10.0.0.0/8\n",
+        encoding="utf-8",
+    )
+    xml = tmp_path / "nmap.xml"
+    xml.write_text(
+        '<?xml version="1.0"?><nmaprun>'
+        '<host><address addr="10.1.2.3" addrtype="ipv4"/><ports>'
+        '<port protocol="tcp" portid="80"><state state="open"/><service name="http"/></port>'
+        "</ports></host>"
+        '<host><address addr="1.2.3.4" addrtype="ipv4"/><ports>'
+        '<port protocol="tcp" portid="22"><state state="open"/><service name="ssh"/></port>'
+        "</ports></host></nmaprun>",
+        encoding="utf-8",
+    )
+    r = runner.invoke(app, ["range", "recon", str(xml), "--scope", str(scope)])
+    assert r.exit_code == 0
+    assert "10.1.2.3" in r.stdout
+    assert "skipped (out of scope): 1.2.3.4" in r.stdout

@@ -6,6 +6,12 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Recon organizer
+- `cloudnova.range.recon`: ingests operator-run `nmap -oX` output, gates every
+  discovered host through the scope engine, and structures open services into an
+  inventory with methodology next-steps per service. Out-of-scope hosts are
+  flagged and their services are never surfaced. CLI: `cloudnova range recon`.
+
 ### Pentest report generation
 - `cloudnova.range.report`: turns an engagement (metadata + findings, as a YAML
   file) into a professional Markdown pentest report — executive summary,

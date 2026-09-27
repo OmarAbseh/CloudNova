@@ -29,11 +29,13 @@ from cloudnova.graph import build_graph, find_attack_paths
 from cloudnova.graph.attack_paths import paths_to_findings
 from cloudnova.iam import GenerationError, analyze_policy, generate_policy
 from cloudnova.range import (
+    ReconParseError,
     Scope,
     ScopeError,
     engagement_from_dict,
     load_scope,
     mentor,
+    organize,
     render_markdown,
 )
 from cloudnova.reporting import render_console, render_html, render_json, render_sarif
@@ -387,6 +389,43 @@ def mentor_lab(
         _console.print(f"[bold cyan]{phase}[/]")
         for s in steps:
             _console.print(f"   • {s}")
+
+
+@range_app.command("recon")
+def range_recon(
+    nmap_xml: Annotated[Path, typer.Argument(help="nmap -oX output file to organize.")],
+    scope_file: Annotated[
+        Path, typer.Option("--scope", "-s", help="Scope file — hosts are gated through it.")
+    ],
+) -> None:
+    """Organize nmap output into a scope-checked service inventory with next-steps."""
+    if not nmap_xml.exists():
+        _console.print(f"[red]nmap output not found: {nmap_xml}[/]")
+        raise typer.Exit(code=2)
+    scope = _load_scope_or_exit(scope_file)
+    try:
+        inventory = organize(nmap_xml.read_text(encoding="utf-8"), scope)
+    except ReconParseError as exc:
+        _console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+
+    for host in inventory.in_scope_hosts:
+        _console.print(f"\n[bold green]{host.address}[/] [dim](in scope)[/]")
+        if not host.services:
+            _console.print("   [dim]no open services in output[/]")
+        for svc in host.services:
+            banner = " ".join(x for x in (svc.product, svc.version) if x)
+            _console.print(
+                f"   [bold]{svc.port}/{svc.protocol}[/] {svc.name}"
+                + (f" [dim]({banner})[/]" if banner else "")
+            )
+            _console.print(f"      ↳ {svc.hint}")
+    for addr in inventory.skipped_out_of_scope:
+        _console.print(f"[red]skipped (out of scope):[/] {addr}")
+    _console.print(
+        f"\n[bold]{len(inventory.in_scope_hosts)}[/] in-scope host(s), "
+        f"[bold]{len(inventory.skipped_out_of_scope)}[/] skipped."
+    )
 
 
 @range_app.command("report")
