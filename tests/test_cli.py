@@ -137,3 +137,30 @@ def test_iam_generate_invalid_spec_errors(tmp_path):
     )
     result = runner.invoke(app, ["iam", "generate", str(spec)])
     assert result.exit_code == 2
+
+
+def test_range_check_allow_and_deny(tmp_path):
+    scope = tmp_path / "scope.yaml"
+    scope.write_text(
+        "authorization:\n  program: P\n  authorized_by: policy\n  acknowledged: true\n"
+        "in_scope:\n  - '*.example.com'\nout_of_scope:\n  - admin.example.com\n",
+        encoding="utf-8",
+    )
+    ok = runner.invoke(app, ["range", "check", "api.example.com", "--scope", str(scope)])
+    assert ok.exit_code == 0 and "ALLOW" in ok.stdout
+    denied = runner.invoke(app, ["range", "check", "evil.com", "--scope", str(scope)])
+    assert denied.exit_code == 1 and "DENY" in denied.stdout
+    excluded = runner.invoke(app, ["range", "check", "admin.example.com", "--scope", str(scope)])
+    assert excluded.exit_code == 1
+
+
+def test_range_scope_show(tmp_path):
+    scope = tmp_path / "scope.yaml"
+    scope.write_text(
+        "authorization:\n  program: MyProgram\n  authorized_by: policy\n  acknowledged: true\n"
+        "in_scope:\n  - '*.example.com'\n",
+        encoding="utf-8",
+    )
+    result = runner.invoke(app, ["range", "scope", str(scope)])
+    assert result.exit_code == 0
+    assert "MyProgram" in result.stdout

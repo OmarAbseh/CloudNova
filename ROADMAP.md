@@ -31,12 +31,16 @@ aggregation) and killed the crash-on-malformed-input bugs.
 - ✅ CloudFormation edges too (Ref / Fn::GetAtt); attack paths across both IaC formats.
 - ⏭️ Next: live-cloud edges, IAM-implied data-access edges, exploitability ranking.
 
-## Phase 4 — Offensive / pentest modules (authorized-only)
+## Phase 4 — Offensive / pentest modules (authorized-only) 🚧
 - Safe, opt-in recon and exploit-*validation* (confirm a finding is real, don't
   weaponize it).
 - Hard guardrails: explicit target authorization, scope allowlist, rate limits,
   full audit log, dry-run default. Refuses to run without written scope.
 - This is what makes CloudNova a portfolio piece a security team recognizes.
+- ✅ `cloudnova.range` scope/authorization engine: deny-by-default gate, exclusions
+  win, attestation required (fails closed). Every capability gates through it.
+- ⏭️ Next (all gated by scope): recon organization (operator-run), finding
+  validation, a practice-lab tutor for TryHackMe/HTB/Juice Shop.
 
 ## Phase 5 — AI agents 🚧
 - ✅ MCP server (`cloudnova-mcp`): exposes scan / list_checks / attack_paths so

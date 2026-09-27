@@ -28,6 +28,7 @@ from cloudnova.core.findings import Severity
 from cloudnova.graph import build_graph, find_attack_paths
 from cloudnova.graph.attack_paths import paths_to_findings
 from cloudnova.iam import GenerationError, analyze_policy, generate_policy
+from cloudnova.range import Scope, ScopeError, load_scope
 from cloudnova.reporting import render_console, render_html, render_json, render_sarif
 
 app = typer.Typer(
@@ -211,6 +212,70 @@ def iam_analyze(
         print(render_json(result))
     else:
         render_console(result, _console)
+
+
+# ---- range subcommands: authorized security testing (authorization-first) ----
+range_app = typer.Typer(
+    help="CloudNova Range — authorized testing. Everything gates through the scope engine.",
+    no_args_is_help=True,
+)
+app.add_typer(range_app, name="range")
+
+
+def _load_scope_or_exit(scope_path: Path) -> Scope:
+    if not scope_path.exists():
+        _console.print(f"[red]Scope file not found: {scope_path}[/]")
+        raise typer.Exit(code=2)
+    try:
+        return load_scope(scope_path)
+    except ScopeError as exc:
+        _console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+
+
+@range_app.command("scope")
+def range_scope(
+    scope_file: Annotated[
+        Path, typer.Argument(help="Scope file (YAML) declaring authorized targets.")
+    ],
+) -> None:
+    """Show a loaded scope and its authorization attestation."""
+    scope = _load_scope_or_exit(scope_file)
+    auth = scope.authorization
+    status = "[green]valid[/]" if auth.is_valid() else "[red]INVALID (fails closed)[/]"
+    _console.print(f"Authorization: {status}")
+    _console.print(f"  program:       {auth.program or '[red]missing[/]'}")
+    _console.print(f"  authorized_by: {auth.authorized_by or '[red]missing[/]'}")
+    _console.print(f"  acknowledged:  {auth.acknowledged}")
+    if auth.reference:
+        _console.print(f"  reference:     {auth.reference}")
+    _console.print(f"\nIn scope ([bold]{len(scope.in_scope)}[/]):")
+    for entry in scope.in_scope:
+        _console.print(f"  [green]+[/] {entry}")
+    if scope.out_of_scope:
+        _console.print(f"Out of scope ([bold]{len(scope.out_of_scope)}[/], exclusions win):")
+        for entry in scope.out_of_scope:
+            _console.print(f"  [red]-[/] {entry}")
+
+
+@range_app.command("check")
+def range_check(
+    target: Annotated[str, typer.Argument(help="Target to authorize (IP, domain, account id).")],
+    scope_file: Annotated[
+        Path, typer.Option("--scope", "-s", help="Scope file (YAML) declaring authorized targets.")
+    ],
+) -> None:
+    """Check whether a target is authorized for testing (deny by default).
+
+    Exit code 0 if ALLOWED, 1 if DENIED — so scripts can gate on it.
+    """
+    scope = _load_scope_or_exit(scope_file)
+    decision = scope.authorize(target)
+    if decision.allowed:
+        _console.print(f"[green]ALLOW[/] {decision.target} — {decision.reason}")
+    else:
+        _console.print(f"[red]DENY[/] {decision.target} — {decision.reason}")
+        raise typer.Exit(code=1)
 
 
 if __name__ == "__main__":

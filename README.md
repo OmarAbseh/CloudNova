@@ -76,6 +76,22 @@ CRITICAL  GRAPH_ATTACK_PATH   aws_instance.web
 
 This runs automatically during `scan` (disable with `--no-graph`).
 
+### CloudNova Range (authorized testing — authorization-first)
+
+`cloudnova.range` is the offensive / validation side, built so the **scope engine
+is the only entry point**. It decides whether a target is authorized *before*
+anything can act on it — deny-by-default, exclusions win, and it refuses
+everything unless a scope file carries an authorization attestation.
+
+```bash
+cloudnova range scope scope.yaml                 # show authorized scope + attestation
+cloudnova range check api.example.com -s scope.yaml   # ALLOW/DENY (exit 0/1) — deny by default
+```
+
+Everything future (recon organization, finding validation, a practice-lab tutor,
+authorized cloud probing) gates through this. Nothing here attacks anything on its
+own. ([ADR 0011](docs/adr/0011-range-authorization-first.md))
+
 ### Author & audit IAM
 
 CloudNova doesn't just find bad IAM — it can write good IAM and audit any policy:

@@ -6,6 +6,14 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### CloudNova Range (authorized testing)
+- New `cloudnova.range` module, authorization-first. Scope engine is a
+  deny-by-default gate: a target is authorized only on an explicit in-scope
+  match, exclusions always win, and a scope file must carry an authorization
+  attestation or the engine authorizes nothing (fails closed). Supports IPs,
+  CIDRs, exact/wildcard domains, and account IDs.
+- CLI: `cloudnova range scope <file>` and `cloudnova range check <target> --scope`.
+
 ### IAM authoring & analysis
 - `cloudnova iam generate`: authors a least-privilege IAM policy from a
   high-level grant spec (service + access + resource ARNs); refuses wildcard
