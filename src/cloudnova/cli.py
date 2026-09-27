@@ -518,6 +518,19 @@ def mentor_done(
     )
 
 
+@mentor_app.command("undone")
+def mentor_undone(
+    module_id: Annotated[str, typer.Argument(help="Module id to un-mark (see `mentor progress`).")],
+) -> None:
+    """Un-mark a curriculum module (undo a `mentor done`)."""
+    mentor.mark_undone(module_id)
+    prog = mentor.summary()
+    _console.print(
+        f"[yellow]○[/] Un-marked [bold]{module_id}[/]. "
+        f"Progress: {prog.done}/{prog.total} ({prog.percent}%)."
+    )
+
+
 @mentor_app.command("progress")
 def mentor_progress() -> None:
     """Show your progress and what's next."""

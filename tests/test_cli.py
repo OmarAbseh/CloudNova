@@ -319,3 +319,10 @@ def test_mentor_progress_flow(tmp_path, monkeypatch):
 def test_mentor_done_unknown(tmp_path, monkeypatch):
     monkeypatch.setenv("CLOUDNOVA_CONFIG_DIR", str(tmp_path))
     assert runner.invoke(app, ["range", "mentor", "done", "nope"]).exit_code == 2
+
+
+def test_mentor_undone(tmp_path, monkeypatch):
+    monkeypatch.setenv("CLOUDNOVA_CONFIG_DIR", str(tmp_path))
+    runner.invoke(app, ["range", "mentor", "done", "foundations"])
+    r = runner.invoke(app, ["range", "mentor", "undone", "foundations"])
+    assert r.exit_code == 0 and "0/12" in r.stdout
