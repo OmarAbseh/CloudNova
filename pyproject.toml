@@ -76,6 +76,11 @@ select = [
     "RUF",           # ruff-specific
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# The web app is presentation-heavy: long CSS/HTML string literals are clearer
+# left intact than wrapped, so the line-length rule is relaxed for it only.
+"src/cloudnova/web/app.py" = ["E501"]
+
 # ---- mypy: strict typing on our source ----
 [tool.mypy]
 python_version = "3.11"

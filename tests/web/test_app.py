@@ -54,4 +54,5 @@ def test_scan_escapes_html(tmp_path, client):
 def test_mentor_page(client):
     r = client.get("/mentor")
     assert r.status_code == 200
-    assert "learning path" in r.text.lower()
+    assert "pentester" in r.text.lower()
+    assert "Foundations" in r.text  # a curriculum module is listed

@@ -6,6 +6,12 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Web dashboard redesign
+- Professional dark UI with a red-accented palette (not the default warm tones), a
+  Three.js 3D animated hero (wireframe icosahedron) with a CSS orb fallback,
+  gradient buttons, capability cards, and a responsive layout. All content stays
+  HTML-escaped and server-rendered; the 3D is progressive enhancement.
+
 ### Web dashboard (the website)
 - `cloudnova.web`: a local FastAPI dashboard (optional `web` extra, `cloudnova-web`).
   Run a scan from the browser and view findings, the posture grade, and attack
