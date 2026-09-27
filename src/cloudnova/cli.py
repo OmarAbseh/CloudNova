@@ -26,6 +26,7 @@ from cloudnova.core.baseline import Baseline
 from cloudnova.core.check import registry
 from cloudnova.core.engine import Engine, ScanResult, filter_by_severity
 from cloudnova.core.findings import Severity
+from cloudnova.diff import diff_reports
 from cloudnova.graph import build_graph, find_attack_paths
 from cloudnova.graph.attack_paths import paths_to_findings
 from cloudnova.iam import GenerationError, analyze_policy, generate_policy
@@ -177,6 +178,57 @@ def triage(
         _console.print(
             f"\n[dim]… {len(findings) - shown} more finding(s). Raise --limit to see them.[/]"
         )
+
+
+@app.command()
+def diff(
+    old_report: Annotated[
+        Path, typer.Argument(help="Previous scan JSON (from `scan --format json`).")
+    ],
+    path: Annotated[Path, typer.Argument(help="Current file or directory to scan and compare.")],
+    fail_on_new: Annotated[
+        bool, typer.Option("--fail-on-new", help="Exit non-zero if any new finding was introduced.")
+    ] = False,
+) -> None:
+    """Show what changed vs a previous scan: newly introduced and fixed findings."""
+    if not old_report.exists():
+        _console.print(f"[red]Old report not found: {old_report}[/]")
+        raise typer.Exit(code=2)
+    if not path.exists():
+        _console.print(f"[red]Path not found: {path}[/]")
+        raise typer.Exit(code=2)
+    try:
+        old = json.loads(old_report.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        _console.print(f"[red]Could not parse {old_report}: {exc}[/]")
+        raise typer.Exit(code=2) from exc
+    new = service.scan(str(path))
+    delta = diff_reports(old, new)
+
+    if delta.introduced:
+        _console.print(f"[bold red]Introduced ({len(delta.introduced)}):[/]")
+        for f in delta.introduced:
+            loc = f["location"].get("resource") or f["location"]["path"]
+            _console.print(f"  [red]+[/] [{f['severity'].upper()}] {f['title']} — {loc}")
+    if delta.fixed:
+        _console.print(f"[bold green]Fixed ({len(delta.fixed)}):[/]")
+        for f in delta.fixed:
+            loc = f["location"].get("resource") or f["location"]["path"]
+            _console.print(f"  [green]-[/] [{f['severity'].upper()}] {f['title']} — {loc}")
+    if not delta.introduced and not delta.fixed:
+        _console.print("No change in findings.")
+
+    arrow = (
+        "▲ worse"
+        if delta.score_delta > 0
+        else ("▼ better" if delta.score_delta < 0 else "no change")
+    )
+    _console.print(
+        f"\nPosture: {delta.old_score} → {delta.new_score} "
+        f"([bold]{delta.score_delta:+d}[/], {arrow}) · {delta.unchanged} unchanged."
+    )
+    if fail_on_new and delta.introduced:
+        raise typer.Exit(code=1)
 
 
 @app.command()

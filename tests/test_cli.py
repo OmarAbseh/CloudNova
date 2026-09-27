@@ -283,3 +283,25 @@ def test_triage_clean_scan(tmp_path):
     r = runner.invoke(app, ["triage", str(tmp_path)])
     assert r.exit_code == 0
     assert "No findings" in r.stdout
+
+
+def test_diff_command(tmp_path):
+    import json as _json
+
+    # First scan -> save JSON with only the public-access finding.
+    cfg = tmp_path / "c.yaml"
+    cfg.write_text("access_control:\n  public: true\n", encoding="utf-8")
+    first = runner.invoke(app, ["scan", str(tmp_path), "--format", "json", "--no-graph"])
+    old = tmp_path / "old.json"
+    old.write_text(first.stdout, encoding="utf-8")
+    _json.loads(old.read_text())  # valid JSON
+
+    # Introduce a second issue, then diff.
+    cfg.write_text(
+        "access_control:\n  public: true\nauthentication:\n  password_required: false\n",
+        encoding="utf-8",
+    )
+    r = runner.invoke(app, ["diff", str(old), str(tmp_path), "--fail-on-new"])
+    assert r.exit_code == 1  # a new finding was introduced
+    assert "Introduced" in r.stdout
+    assert "IAC_AUTH_NO_PASSWORD" in r.stdout or "Password" in r.stdout

@@ -6,6 +6,12 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Scan diff (posture over time)
+- `cloudnova diff <old.json> <path>`: compares a saved scan against a fresh one and
+  shows newly introduced vs fixed findings and the posture-score delta, matching by
+  the baseline's stable fingerprint. `--fail-on-new` exits non-zero when a PR
+  introduces any finding. `cloudnova.diff` is the reusable API.
+
 ### More checks (25 -> 30)
 - Terraform: KMS key rotation disabled (`TF_KMS_NO_ROTATION`), EC2 IMDSv2 not
   enforced (`TF_EC2_IMDSV2`).
