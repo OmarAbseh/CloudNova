@@ -30,6 +30,17 @@ cloudnova baseline .             # accept current findings as a baseline
 cloudnova scan . --baseline .cloudnova-baseline.json  # report only NEW findings
 ```
 
+### Web dashboard
+
+A local browser dashboard (optional `web` extra) — run a scan and see findings,
+the posture grade, and attack paths, and browse the pentest mentor:
+
+```bash
+pip install -e ".[web]"
+cloudnova-web            # serves http://127.0.0.1:8000 (local operator tool)
+```
+
+
 Example output:
 
 ```

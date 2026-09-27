@@ -41,10 +41,15 @@ mcp = [
 agent = [
     "anthropic>=0.40",
 ]
+web = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+]
 
 [project.scripts]
 cloudnova = "cloudnova.cli:app"
 cloudnova-mcp = "cloudnova.mcp_server:main"
+cloudnova-web = "cloudnova.web.server:main"
 
 [project.urls]
 Homepage = "https://github.com/OmarAbseh/CloudNova"

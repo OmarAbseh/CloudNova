@@ -6,6 +6,13 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Web dashboard (the website)
+- `cloudnova.web`: a local FastAPI dashboard (optional `web` extra, `cloudnova-web`).
+  Run a scan from the browser and view findings, the posture grade, and attack
+  paths; browse the pentest-mentor learning path. Server-rendered, HTML-escaped,
+  binds to 127.0.0.1, reuses the tested service/engine — exposes only the
+  defensive scanner and mentor over HTTP, never Range's target-facing commands.
+
 ### Range personas
 - `cloudnova.range.persona`: switchable operator identity — `cloudnova` (the
   professional product face) and `gh0st` (personal handle). Cosmetic only: it

@@ -53,9 +53,11 @@ aggregation) and killed the crash-on-malformed-input bugs.
 - ⏭️ Next: Claude-powered finding triage (explain a finding, propose a fix PR) and
   attack-graph narration.
 
-## Phase 6 — SaaS
-- FastAPI service, multi-tenant, scan history + trend dashboards, scheduled
-  scans, Slack/Jira integration. Only after the engine has proven itself.
+## Phase 6 — SaaS / Web 🚧
+- ✅ Local FastAPI dashboard (`cloudnova-web`): run scans and view findings, the
+  posture grade, and attack paths in the browser; browse the mentor path.
+- ⏭️ Next: multi-tenant, scan history + trend dashboards, scheduled scans,
+  Slack/Jira integration. Only after the engine has proven itself.
 
 ---
 
