@@ -92,6 +92,21 @@ Everything future (recon organization, finding validation, a practice-lab tutor,
 authorized cloud probing) gates through this. Nothing here attacks anything on its
 own. ([ADR 0011](docs/adr/0011-range-authorization-first.md))
 
+**Mentor — your pentest tutor** (`cloudnova range mentor`): a structured
+curriculum that takes you from foundations to job- and cert-ready, grounded in
+real cert domains (eJPT / PNPT / OSCP / CEH) and pentest job requirements.
+
+```bash
+cloudnova range mentor path                 # ordered learning path (prereqs first)
+cloudnova range mentor topic burp-suite     # concepts, tools, practice resources, certs
+cloudnova range mentor cert OSCP            # a certification prep track
+cloudnova range mentor jobs junior          # skills a hiring level expects
+cloudnova range mentor lab box.example.com -s scope.yaml   # guided lab (scope-gated)
+```
+
+It teaches you to *become* the operator — guided labs only run against targets your
+scope file authorizes. ([ADR 0012](docs/adr/0012-mentor-tutor.md))
+
 ### Author & audit IAM
 
 CloudNova doesn't just find bad IAM — it can write good IAM and audit any policy:

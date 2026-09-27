@@ -28,7 +28,7 @@ from cloudnova.core.findings import Severity
 from cloudnova.graph import build_graph, find_attack_paths
 from cloudnova.graph.attack_paths import paths_to_findings
 from cloudnova.iam import GenerationError, analyze_policy, generate_policy
-from cloudnova.range import Scope, ScopeError, load_scope
+from cloudnova.range import Scope, ScopeError, load_scope, mentor
 from cloudnova.reporting import render_console, render_html, render_json, render_sarif
 
 app = typer.Typer(
@@ -276,6 +276,110 @@ def range_check(
     else:
         _console.print(f"[red]DENY[/] {decision.target} — {decision.reason}")
         raise typer.Exit(code=1)
+
+
+# ---- mentor subcommands: the pentest tutor (learning is safe/ungated) ----
+mentor_app = typer.Typer(
+    help="CloudNova Mentor — your pentest tutor: learning paths, cert tracks, guided labs.",
+    no_args_is_help=True,
+)
+range_app.add_typer(mentor_app, name="mentor")
+
+
+def _print_module(module: mentor.Module, *, order: int | None = None) -> None:
+    prefix = f"[bold]{order}.[/] " if order is not None else ""
+    _console.print(
+        f"{prefix}[bold cyan]{module.title}[/]  [dim]({module.level}, id={module.id})[/]"
+    )
+    _console.print(f"   {module.summary}")
+
+
+@mentor_app.command("path")
+def mentor_path(
+    level: Annotated[
+        str | None,
+        typer.Option("--level", help="Cap the path: foundation, junior, intermediate, senior."),
+    ] = None,
+) -> None:
+    """Show the ordered learning path (prerequisites first)."""
+    cap = mentor.Level(level.lower()) if level else None
+    for step in mentor.learning_path(cap):
+        _print_module(step.module, order=step.order)
+
+
+@mentor_app.command("topic")
+def mentor_topic(
+    module_id: Annotated[str, typer.Argument(help="Module id (see `mentor path`).")],
+) -> None:
+    """Explain one topic: concepts, tools, practice resources, and related certs."""
+    module = mentor.get_module(module_id)
+    if module is None:
+        ids = ", ".join(m.id for m in mentor.all_modules())
+        _console.print(f"[red]Unknown topic {module_id!r}. Available: {ids}[/]")
+        raise typer.Exit(code=2)
+    _print_module(module)
+    _console.print("\n[bold]Key concepts:[/]")
+    for c in module.concepts:
+        _console.print(f"   • {c}")
+    _console.print(f"\n[bold]Tools:[/] {', '.join(module.tools)}")
+    _console.print("[bold]Practice & references:[/]")
+    for r in module.resources:
+        _console.print(f"   • {r.name} [dim]({r.kind})[/] — {r.url}")
+    if module.certs:
+        _console.print(f"[bold]Counts toward:[/] {', '.join(module.certs)}")
+
+
+@mentor_app.command("cert")
+def mentor_cert(
+    name: Annotated[str, typer.Argument(help="Certification (e.g. OSCP, PNPT, eJPT, CEH, eWPT).")],
+) -> None:
+    """Show the prep track for a certification."""
+    try:
+        modules = mentor.cert_track(name)
+    except KeyError as exc:
+        _console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    _console.print(f"[bold]Prep track — {name.upper()}[/] ({len(modules)} modules):\n")
+    for i, m in enumerate(modules, 1):
+        _print_module(m, order=i)
+
+
+@mentor_app.command("jobs")
+def mentor_jobs(
+    level: Annotated[str, typer.Argument(help="Hiring level: junior, mid, or senior.")],
+) -> None:
+    """Show the skills a hiring level expects (your readiness map)."""
+    try:
+        modules = mentor.job_track(level)
+    except KeyError as exc:
+        _console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    _console.print(f"[bold]{level.capitalize()} pentester — expected skills[/] ({len(modules)}):\n")
+    for i, m in enumerate(modules, 1):
+        _print_module(m, order=i)
+
+
+@mentor_app.command("lab")
+def mentor_lab(
+    target: Annotated[str, typer.Argument(help="Practice target (must be in your scope file).")],
+    scope_file: Annotated[
+        Path, typer.Option("--scope", "-s", help="Scope file authorizing the practice target.")
+    ],
+) -> None:
+    """Start a guided, methodology-driven lab session against an authorized practice target."""
+    scope = _load_scope_or_exit(scope_file)
+    plan = mentor.start_lab_session(target, scope)
+    if not plan.authorized:
+        _console.print(f"[red]DENY[/] {plan.target} — {plan.decision.reason}")
+        _console.print(
+            "[yellow]Add the target to your scope file only if you're authorized to test it.[/]"
+        )
+        raise typer.Exit(code=1)
+    _console.print(f"[green]Authorized[/] — guided lab plan for [bold]{plan.target}[/]:\n")
+    for phase, steps in plan.phases:
+        _console.print(f"[bold cyan]{phase}[/]")
+        for s in steps:
+            _console.print(f"   • {s}")
 
 
 if __name__ == "__main__":

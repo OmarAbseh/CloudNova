@@ -6,6 +6,14 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### CloudNova Mentor (pentest tutor)
+- New `cloudnova.range.mentor`: a prereq-linked curriculum (foundations → web/Burp
+  → privesc → AD → cloud → reporting) mapped to tools, legitimate practice
+  platforms, and certs; a coach that builds ordered learning paths, cert prep
+  tracks (eJPT/PNPT/OSCP/CEH/eWPT), and job-readiness maps; and scope-gated guided
+  lab sessions.
+- CLI: `cloudnova range mentor path|topic|cert|jobs|lab`.
+
 ### CloudNova Range (authorized testing)
 - New `cloudnova.range` module, authorization-first. Scope engine is a
   deny-by-default gate: a target is authorized only on an explicit in-scope

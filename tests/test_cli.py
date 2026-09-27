@@ -164,3 +164,33 @@ def test_range_scope_show(tmp_path):
     result = runner.invoke(app, ["range", "scope", str(scope)])
     assert result.exit_code == 0
     assert "MyProgram" in result.stdout
+
+
+def test_mentor_path_and_topic():
+    p = runner.invoke(app, ["range", "mentor", "path"])
+    assert p.exit_code == 0 and "Foundations" in p.stdout
+    t = runner.invoke(app, ["range", "mentor", "topic", "burp-suite"])
+    assert t.exit_code == 0 and "Repeater" in t.stdout
+
+
+def test_mentor_cert_track():
+    r = runner.invoke(app, ["range", "mentor", "cert", "OSCP"])
+    assert r.exit_code == 0 and "OSCP" in r.stdout
+
+
+def test_mentor_unknown_topic_errors():
+    r = runner.invoke(app, ["range", "mentor", "topic", "nope"])
+    assert r.exit_code == 2
+
+
+def test_mentor_lab_gated(tmp_path):
+    scope = tmp_path / "scope.yaml"
+    scope.write_text(
+        "authorization:\n  program: P\n  authorized_by: policy\n  acknowledged: true\n"
+        "in_scope:\n  - '*.example.com'\n",
+        encoding="utf-8",
+    )
+    ok = runner.invoke(app, ["range", "mentor", "lab", "box.example.com", "--scope", str(scope)])
+    assert ok.exit_code == 0 and "guided lab plan" in ok.stdout
+    denied = runner.invoke(app, ["range", "mentor", "lab", "evil.com", "--scope", str(scope)])
+    assert denied.exit_code == 1
