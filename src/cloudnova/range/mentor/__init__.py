@@ -20,6 +20,7 @@ from cloudnova.range.mentor.lab import LabPlan, start_lab_session
 from cloudnova.range.mentor.progress import (
     completed,
     mark_done,
+    mark_undone,
     next_modules,
     reset,
     summary,
@@ -42,6 +43,7 @@ __all__ = [
     "job_track",
     "learning_path",
     "mark_done",
+    "mark_undone",
     "next_modules",
     "reset",
     "start_lab_session",

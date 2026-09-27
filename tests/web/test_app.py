@@ -71,6 +71,24 @@ def test_mentor_page_shows_progress(tmp_path, monkeypatch):
     assert "1/12" in r.text
 
 
+def test_mentor_toggle_marks_and_unmarks(tmp_path, monkeypatch):
+    monkeypatch.setenv("CLOUDNOVA_CONFIG_DIR", str(tmp_path))
+    from cloudnova.range.mentor import completed
+
+    c = TestClient(create_app())
+    c.post("/mentor/toggle", data={"module_id": "foundations"}, follow_redirects=False)
+    assert "foundations" in completed()
+    c.post("/mentor/toggle", data={"module_id": "foundations"}, follow_redirects=False)
+    assert "foundations" not in completed()
+
+
+def test_mentor_toggle_unknown_id_is_safe(tmp_path, monkeypatch):
+    monkeypatch.setenv("CLOUDNOVA_CONFIG_DIR", str(tmp_path))
+    c = TestClient(create_app())
+    r = c.post("/mentor/toggle", data={"module_id": "nope"}, follow_redirects=False)
+    assert r.status_code == 303
+
+
 def test_scan_results_include_explain(tmp_path, client):
     (tmp_path / "main.tf").write_text(
         'resource "aws_s3_bucket" "b" { acl = "public-read" }\n', encoding="utf-8"

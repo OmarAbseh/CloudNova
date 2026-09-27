@@ -20,11 +20,18 @@ import html
 from typing import Any
 
 from fastapi import FastAPI, Form
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 from cloudnova import __version__, service
 from cloudnova.range import active_persona
-from cloudnova.range.mentor import completed, learning_path, next_modules, summary
+from cloudnova.range.mentor import (
+    completed,
+    learning_path,
+    mark_done,
+    mark_undone,
+    next_modules,
+    summary,
+)
 from cloudnova.triage import explain_finding
 
 # Three.js (UMD, exposes global THREE). Progressive enhancement only.
@@ -221,11 +228,21 @@ def create_app() -> FastAPI:
                 return '<span style="color:var(--pink)">▶</span>'
             return '<span class="muted">○</span>'
 
+        def _toggle(module_id: str) -> str:
+            label = "Undo" if module_id in done else "Mark done"
+            return (
+                f"<form method='post' action='/mentor/toggle' style='margin:0'>"
+                f"<input type='hidden' name='module_id' value='{_e(module_id)}'>"
+                f"<button class='btn ghost' type='submit' "
+                f"style='padding:4px 10px;font-size:13px'>{label}</button></form>"
+            )
+
         rows = "".join(
             f"<tr><td>{_mark(s.module.id)} {s.order}</td>"
             f"<td><b>{_e(s.module.title)}</b><br>"
             f"<span class='muted'>{_e(s.module.summary)}</span></td>"
-            f"<td class='muted'>{_e(s.module.level)}</td></tr>"
+            f"<td class='muted'>{_e(s.module.level)}</td>"
+            f"<td>{_toggle(s.module.id)}</td></tr>"
             for s in learning_path()
         )
         nxt = next_modules(1)
@@ -252,10 +269,21 @@ def create_app() -> FastAPI:
           {nxt_html}
         </div>
         <div class="card" style="margin-top:16px">
-          <table><thead><tr><th>#</th><th>Module</th><th>Level</th></tr></thead>
+          <table><thead><tr><th>#</th><th>Module</th><th>Level</th><th></th></tr></thead>
           <tbody>{rows}</tbody></table>
         </div>"""
         return _page("Mentor", body)
+
+    @app.post("/mentor/toggle")
+    def mentor_toggle(module_id: str = Form(...)) -> RedirectResponse:
+        try:
+            if module_id in completed():
+                mark_undone(module_id)
+            else:
+                mark_done(module_id)
+        except KeyError:
+            pass  # unknown id: ignore, just return to the page
+        return RedirectResponse("/mentor", status_code=303)
 
     return app
 
