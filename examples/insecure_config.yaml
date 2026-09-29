@@ -1,0 +1,7 @@
+project_name: secure-api
+access_control:
+  public: true
+authentication:
+  password_required: false
+session:
+  timeout: 0

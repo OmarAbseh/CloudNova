@@ -1,0 +1,24 @@
+# CloudNova Range scope file.
+#
+# This declares the targets you are AUTHORIZED to test. The engine denies
+# everything not listed here, and exclusions always win. It refuses to authorize
+# anything unless the authorization block below is fully filled in and
+# acknowledged — that block is your accountability record.
+#
+# Only add targets you are genuinely cleared to test: your own lab, a practice
+# platform, or a bug-bounty program's published in-scope assets.
+
+authorization:
+  program: "Example Corp Public Bug Bounty"   # engagement / program name
+  authorized_by: "HackerOne program policy"     # who/what authorizes it
+  reference: "https://hackerone.com/example"     # link to the scope/policy
+  acknowledged: true                             # you affirm you are cleared
+
+in_scope:
+  - "*.example.com"          # all subdomains of example.com
+  - "api.example.com"
+  - "203.0.113.0/24"         # an authorized IP range
+
+out_of_scope:
+  - "admin.example.com"      # explicitly carved out — exclusions win
+  - "internal.example.com"

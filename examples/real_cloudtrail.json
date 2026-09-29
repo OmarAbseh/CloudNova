@@ -1,0 +1,18 @@
+{
+  "Records": [
+    {
+      "eventSource": "iam.amazonaws.com",
+      "eventName": "PutRolePolicy",
+      "requestParameters": {
+        "roleName": "AdminRole",
+        "policyName": "god-mode",
+        "policyDocument": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}]}"
+      }
+    },
+    {
+      "eventSource": "s3.amazonaws.com",
+      "eventName": "PutObject",
+      "requestParameters": {"bucketName": "company-data", "x-amz-acl": "public-read"}
+    }
+  ]
+}

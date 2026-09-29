@@ -1,0 +1,16 @@
+# Describe what your app needs; `cloudnova iam generate` emits a
+# least-privilege IAM policy scoped to exactly these actions and ARNs.
+grants:
+  - service: s3
+    access: [read, list]
+    resources:
+      - "arn:aws:s3:::my-app-data"
+      - "arn:aws:s3:::my-app-data/*"
+  - service: dynamodb
+    access: [read, write]
+    resources:
+      - "arn:aws:dynamodb:us-east-1:123456789012:table/Orders"
+  - service: secretsmanager
+    access: read
+    resources:
+      - "arn:aws:secretsmanager:us-east-1:123456789012:secret:prod/db-*"

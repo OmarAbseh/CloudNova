@@ -1,0 +1,88 @@
+"""Scan orchestration: discover files, parse them, run matching checks.
+
+The engine is deliberately dumb — all the security knowledge lives in the
+checks. Its job is to be robust: a bad file or a throwing check is isolated and
+reported, never fatal. This is what makes the scanner safe to point at a large,
+messy repository.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from pathlib import Path
+
+from cloudnova.core.check import CheckRegistry
+from cloudnova.core.check import registry as default_registry
+from cloudnova.core.findings import Finding, Severity
+from cloudnova.core.loader import LoadError, discover, load_file
+from cloudnova.core.resource import CloudResource
+
+#: Artifact kinds whose data payload is a list of CloudResource objects.
+_RESOURCE_KINDS = {"terraform", "cloudformation", "kubernetes"}
+
+
+@dataclass
+class ScanResult:
+    """Everything a scan produced: findings plus operational metadata."""
+
+    findings: list[Finding] = field(default_factory=list)
+    files_scanned: int = 0
+    checks_run: int = 0
+    errors: list[str] = field(default_factory=list)
+    #: Every normalized resource seen, for cross-file analysis (the attack graph).
+    resources: list[CloudResource] = field(default_factory=list)
+
+    def sorted_findings(self) -> list[Finding]:
+        return sorted(self.findings, key=lambda f: f.sort_key())
+
+    @property
+    def has_findings(self) -> bool:
+        return bool(self.findings)
+
+
+def filter_by_severity(result: ScanResult, threshold: Severity) -> ScanResult:
+    """Return a copy of ``result`` keeping only findings at/above ``threshold``.
+
+    Operational metadata (files/checks/errors/resources) is preserved so a
+    filtered view still reports what was scanned, only fewer findings.
+    """
+    kept = [f for f in result.findings if f.severity.rank >= threshold.rank]
+    return ScanResult(
+        findings=kept,
+        files_scanned=result.files_scanned,
+        checks_run=result.checks_run,
+        errors=list(result.errors),
+        resources=list(result.resources),
+    )
+
+
+class Engine:
+    """Runs the registered checks against a target path."""
+
+    def __init__(self, checks: CheckRegistry | None = None) -> None:
+        self._registry = checks or default_registry
+
+    def scan_path(self, root: Path) -> ScanResult:
+        result = ScanResult()
+        for path in discover(root):
+            try:
+                artifact = load_file(path)
+            except LoadError as exc:
+                result.errors.append(str(exc))
+                continue
+
+            result.files_scanned += 1
+            if artifact.kind in _RESOURCE_KINDS and isinstance(artifact.data, list):
+                result.resources.extend(r for r in artifact.data if isinstance(r, CloudResource))
+            # Kind-specific checks plus universal ("*") checks that run on every
+            # artifact regardless of type (e.g. secret scanning on raw text).
+            for check in [
+                *self._registry.for_target(artifact.kind),
+                *self._registry.for_target("*"),
+            ]:
+                result.checks_run += 1
+                try:
+                    result.findings.extend(check.run(artifact))
+                except Exception as exc:
+                    result.errors.append(f"check {check.id} failed on {path}: {exc}")
+        return result
