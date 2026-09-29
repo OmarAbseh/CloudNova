@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: prod
+spec:
+  template:
+    spec:
+      hostNetwork: true
+      containers:
+        - name: app
+          image: nginx
+          securityContext:
+            privileged: true
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: safe-pod
+spec:
+  containers:
+    - name: app
+      image: nginx
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        allowPrivilegeEscalation: false
+        privileged: false
