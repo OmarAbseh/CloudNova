@@ -454,6 +454,66 @@ def range_webassess(
         _console.print(f"         [dim]fix:[/] {finding.remediation}\n")
 
 
+@range_app.command("checklist")
+def range_checklist(
+    url: Annotated[str, typer.Argument(help="Target URL (http/https) to assess.")],
+    scope_file: Annotated[
+        Path | None,
+        typer.Option("--scope", "-s", help="Scope file (YAML) declaring authorized targets."),
+    ] = None,
+    i_am_authorized: Annotated[
+        str,
+        typer.Option(
+            "--i-am-authorized",
+            help="No scope file: attest you own/are authorized to test this target "
+            "(pass your name). Recorded in the report as your responsibility.",
+        ),
+    ] = "",
+    active: Annotated[
+        bool,
+        typer.Option("--active", help="Opt in to intrusive DETECTION (XSS/SQLi/traversal)."),
+    ] = False,
+    out: Annotated[
+        Path | None, typer.Option("--out", "-o", help="Write the full report (Markdown) here.")
+    ] = None,
+) -> None:
+    """Run the blackbox pentest checklist (PTES + OWASP WSTG) against an authorized target.
+
+    Passive items run automatically; --active opts in to non-destructive intrusive
+    detection; manual items are tracked with methodology. Either pass a --scope file
+    or self-attest authorization with --i-am-authorized "<your name>".
+    """
+    from cloudnova.range.checklist import render_report, run_checklist
+    from cloudnova.range.checklist.report import render_summary_line
+    from cloudnova.range.scope import self_authorized_scope
+
+    if scope_file is not None:
+        scope = _load_scope_or_exit(scope_file)
+    elif i_am_authorized.strip():
+        scope = self_authorized_scope(url, i_am_authorized.strip())
+        _console.print(
+            f"[yellow]Self-authorized[/] by {i_am_authorized.strip()} — you accept "
+            "responsibility for testing this target."
+        )
+    else:
+        _console.print('[red]Refusing:[/] provide --scope FILE or --i-am-authorized "<name>".')
+        raise typer.Exit(code=2)
+
+    run = run_checklist(url, scope, active=active)
+    if not run.authorized:
+        _console.print(f"[red]DENY[/] {run.target} — {run.attestation}")
+        raise typer.Exit(code=1)
+
+    _console.print(f"[bold]Checklist:[/] {render_summary_line(run)}\n")
+    _colors = {"FAIL": "red", "PASS": "green", "TODO": "yellow", "N/A": "dim", "INFO": "cyan"}
+    for ri in run.items:
+        color = _colors.get(ri.state.value, "white")
+        _console.print(f"[{color}]{ri.state.value:5}[/] {ri.item.id:9} {ri.item.test_case}")
+    if out is not None:
+        out.write_text(render_report(run), encoding="utf-8")
+        _console.print(f"\n[green]Report written[/] to {out}")
+
+
 # ---- mentor subcommands: the pentest tutor (learning is safe/ungated) ----
 mentor_app = typer.Typer(
     help="CloudNova Mentor — your pentest tutor: learning paths, cert tracks, guided labs.",

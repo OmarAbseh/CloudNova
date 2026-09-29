@@ -160,6 +160,27 @@ def _authorization_from(data: dict[str, Any]) -> Authorization:
     )
 
 
+SELF_AUTH_PROGRAM = "Self-authorized (operator responsibility)"
+
+
+def self_authorized_scope(target: str, operator: str) -> Scope:
+    """Build a scope from an explicit self-authorization ("no scope" responsibility tick).
+
+    This is not a bypass: it records an accountability attestation stating the
+    operator asserts they own or are authorized to test ``target`` and accept full
+    responsibility. The attestation is written into every report. It authorizes
+    exactly the one target given — nothing wildcard, nothing broad.
+    """
+    operator = operator.strip() or "unknown-operator"
+    auth = Authorization(
+        program=SELF_AUTH_PROGRAM,
+        authorized_by=operator,
+        acknowledged=True,
+        reference="operator-attested",
+    )
+    return Scope(authorization=auth, in_scope=[target], out_of_scope=[])
+
+
 def load_scope(path: Path) -> Scope:
     """Load and validate a scope file (YAML)."""
     try:
