@@ -78,6 +78,20 @@ def fetch(url: str, scope: Scope) -> HttpSnapshot:
         )
 
 
+def get_body(url: str, scope: Scope, max_bytes: int = 200_000) -> tuple[int, str]:
+    """Authorized GET returning (status, decoded body). Body is size-bounded."""
+    _require_authorized(url, scope)
+    try:
+        response = _open(url, "GET")
+    except urllib.error.HTTPError as exc:
+        response = exc  # type: ignore[assignment]
+    except (urllib.error.URLError, OSError, ValueError) as exc:
+        raise ProbeError(f"Could not reach {url}: {exc}") from exc
+    with response:
+        raw = response.read(max_bytes)
+    return response.status, raw.decode("utf-8", errors="replace")
+
+
 def find_exposed_paths(
     base_url: str, scope: Scope, paths: tuple[str, ...] = COMMON_SENSITIVE_PATHS
 ) -> list[str]:
@@ -99,3 +113,29 @@ def find_exposed_paths(
         except (urllib.error.URLError, OSError, ValueError):
             continue
     return reachable
+
+
+# Risky HTTP methods that should not be enabled on a production web server.
+_RISKY_METHODS = frozenset({"PUT", "DELETE", "TRACE", "CONNECT", "PATCH"})
+
+
+def allowed_methods(url: str, scope: Scope) -> set[str]:
+    """Return the methods the server advertises via an OPTIONS request (passive)."""
+    _require_authorized(url, scope)
+    try:
+        with _open(url, "OPTIONS") as response:
+            allow = response.headers.get("Allow") or response.headers.get(
+                "Access-Control-Allow-Methods"
+            )
+    except urllib.error.HTTPError as exc:
+        allow = exc.headers.get("Allow") if exc.headers else None
+    except (urllib.error.URLError, OSError, ValueError):
+        return set()
+    if not allow:
+        return set()
+    return {m.strip().upper() for m in allow.split(",") if m.strip()}
+
+
+def risky_methods(url: str, scope: Scope) -> set[str]:
+    """The subset of advertised methods that are risky on a production server."""
+    return allowed_methods(url, scope) & _RISKY_METHODS

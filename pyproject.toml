@@ -80,6 +80,8 @@ select = [
 # The web app is presentation-heavy: long CSS/HTML string literals are clearer
 # left intact than wrapped, so the line-length rule is relaxed for it only.
 "src/cloudnova/web/app.py" = ["E501"]
+# The checklist is a wide data table (methodology rows); rows read better on one line.
+"src/cloudnova/range/checklist/blackbox.py" = ["E501"]
 
 # ---- mypy: strict typing on our source ----
 [tool.mypy]

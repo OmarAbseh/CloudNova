@@ -6,6 +6,18 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Blackbox pentest checklist + active detection (Range)
+- `cloudnova range checklist <url>`: runs the full PTES + OWASP WSTG blackbox
+  methodology against an authorized target. Passive items resolve automatically;
+  `--active` opts in to non-destructive intrusive *detection* (reflected XSS, SQL
+  errors, path traversal); manual items are tracked with methodology. Either pass
+  `--scope FILE` or self-attest with `--i-am-authorized "<name>"` (recorded in the
+  report as operator responsibility). `-o report.md` writes an engagement report
+  in the DarkShield layout with a vulnerability summary table.
+- New `cloudnova.range.webassess.active`: opt-in active detection primitives, pure
+  signature logic separated from networked probing, all scope-gated. No
+  weaponization — detection only. ([ADR 0014](docs/adr/0014-active-detection.md))
+
 ### Authorized web assessment (Range)
 - `cloudnova range webassess <url> -s scope.yaml`: a passive, non-destructive web
   posture scan that authorizes the target through the scope engine *before* any
