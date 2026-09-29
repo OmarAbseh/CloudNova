@@ -6,6 +6,15 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Authorized web assessment (Range)
+- `cloudnova range webassess <url> -s scope.yaml`: a passive, non-destructive web
+  posture scan that authorizes the target through the scope engine *before* any
+  request, then reports missing security headers, weak cookie flags, permissive
+  CORS, plaintext transport, version disclosure, and reachable sensitive paths.
+  Read-only GET/HEAD only — no payloads, credential guessing, brute forcing, or
+  exploitation. Fetch (`probe`) is isolated from pure analysis (`checks`), so the
+  ruleset is fully testable offline. ([ADR 0013](docs/adr/0013-authorized-web-assessment.md))
+
 ### Mentor progress tracking
 - The Mentor now remembers where you are: `cloudnova range mentor done <module>`
   marks a curriculum module complete, `progress` shows your completion bar, and
