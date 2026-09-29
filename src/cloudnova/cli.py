@@ -417,6 +417,43 @@ def range_check(
         raise typer.Exit(code=1)
 
 
+@range_app.command("webassess")
+def range_webassess(
+    url: Annotated[str, typer.Argument(help="Target URL (http/https) to assess.")],
+    scope_file: Annotated[
+        Path, typer.Option("--scope", "-s", help="Scope file (YAML) declaring authorized targets.")
+    ],
+    no_paths: Annotated[
+        bool, typer.Option("--no-paths", help="Skip the sensitive-path check.")
+    ] = False,
+) -> None:
+    """Passive, authorized web posture assessment — scope-gated and non-destructive.
+
+    Makes benign read-only requests to an in-scope target and reports missing
+    security headers, weak cookies, permissive CORS, plaintext transport, version
+    disclosure, and reachable sensitive paths. Never sends payloads or exploits.
+    """
+    from cloudnova.range.webassess import assess
+
+    scope = _load_scope_or_exit(scope_file)
+    result = assess(url, scope, check_paths=not no_paths)
+    if not result.authorized:
+        _console.print(f"[red]DENY[/] {result.target} — {result.reason}")
+        raise typer.Exit(code=1)
+    if not result.findings:
+        _console.print(f"[green]No passive findings[/] for {result.target}. ({result.reason})")
+        return
+    _colors = {"critical": "red", "high": "red", "medium": "yellow", "low": "cyan", "info": "dim"}
+    _console.print(f"[bold]Web assessment:[/] {result.target}\n")
+    for finding in result.findings:
+        color = _colors.get(finding.severity.value, "white")
+        _console.print(
+            f"[{color}]{finding.severity.value.upper():8}[/] {finding.id}  {finding.title}"
+        )
+        _console.print(f"         [dim]{finding.detail}[/]")
+        _console.print(f"         [dim]fix:[/] {finding.remediation}\n")
+
+
 # ---- mentor subcommands: the pentest tutor (learning is safe/ungated) ----
 mentor_app = typer.Typer(
     help="CloudNova Mentor — your pentest tutor: learning paths, cert tracks, guided labs.",

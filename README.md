@@ -135,6 +135,18 @@ cloudnova range check api.example.com -s scope.yaml       # ALLOW/DENY (exit 0/1
 Nothing here attacks anything on its own.
 ([ADR 0011](docs/adr/0011-range-authorization-first.md))
 
+**Authorized web assessment** (`cloudnova range webassess`): a passive,
+non-destructive posture scan of an in-scope web target — missing security
+headers, weak cookies, permissive CORS, plaintext transport, version disclosure,
+and reachable sensitive paths. It authorizes the target *before* any request and
+does read-only GET/HEAD only — no payloads, brute forcing, or exploitation.
+
+```bash
+cloudnova range webassess https://app.example.com -s scope.yaml
+```
+
+([ADR 0013](docs/adr/0013-authorized-web-assessment.md))
+
 **Mentor — your pentest tutor** (`cloudnova range mentor`): a structured
 curriculum from foundations to job- and cert-ready, grounded in real cert
 domains (eJPT / PNPT / OSCP / CEH) and pentest job requirements — now with
