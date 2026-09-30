@@ -20,9 +20,10 @@ aggregation) and killed the crash-on-malformed-input bugs.
 ## Phase 2 — Live cloud posture ✅
 - ✅ Read-only AWS scanning via boto3 (S3, IAM, security groups, RDS).
 - ✅ Read-only Azure scanning (storage, NSGs, SQL) behind the same check/collect seam.
-- ✅ Credentials via each SDK's own provider chain (profile/role, DefaultAzureCredential)
-  — never pasted secrets. Collectors are read-only and resilient to partial perms.
-- ⏭️ Next: GCP, more services, feed live findings into the posture score + graph.
+- ✅ Read-only GCP scanning (Cloud Storage, firewalls, Cloud SQL) behind the same seam.
+- ✅ Credentials via each SDK's own provider chain (profile/role, DefaultAzureCredential,
+  GCP ADC) — never pasted secrets. Collectors are read-only and resilient to partial perms.
+- ⏭️ Next: more services per provider; feed live findings into the posture score + graph.
 
 ## Phase 3 — Attack-path graph 🚧
 - ✅ Resource graph (`cloudnova.graph`): nodes tagged with security roles,

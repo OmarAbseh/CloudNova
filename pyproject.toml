@@ -54,6 +54,10 @@ azure = [
     "azure-mgmt-network>=25.0",
     "azure-mgmt-sql>=3.0",
 ]
+gcp = [
+    "google-cloud-storage>=2.10",
+    "google-cloud-compute>=1.14",
+]
 
 [project.scripts]
 cloudnova = "cloudnova.cli:app"
@@ -120,7 +124,11 @@ disable_error_code = ["misc", "untyped-decorator"]
 # The cloud collectors wrap optional, untyped vendor SDKs (boto3, azure-*). Their
 # import and dynamic responses are Any by nature; the typed logic is in the checks.
 [[tool.mypy.overrides]]
-module = ["cloudnova.cloud._aws_collect", "cloudnova.cloud._azure_collect"]
+module = [
+    "cloudnova.cloud._aws_collect",
+    "cloudnova.cloud._azure_collect",
+    "cloudnova.cloud._gcp_collect",
+]
 disable_error_code = ["misc", "no-any-return", "import-not-found", "import-untyped"]
 
 # ---- pytest ----

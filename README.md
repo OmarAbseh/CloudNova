@@ -101,9 +101,10 @@ Beyond config files, CloudNova can log in to a **live account** (read-only, your
 own credentials) and audit the actual resources:
 
 ```bash
-pip install -e ".[aws]"     # or ".[azure]"
+pip install -e ".[aws]"     # or ".[azure]" / ".[gcp]"
 cloudnova cloud aws --profile prod --region eu-west-1
 cloudnova cloud azure --subscription <id>
+cloudnova cloud gcp --project <id>
 ```
 
 Public buckets/storage, IAM users without MFA, stale keys, security groups/NSGs

@@ -6,6 +6,12 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Live GCP scanning
+- `cloudnova cloud gcp --project <id>`: read-only audit of a live GCP project —
+  public Cloud Storage buckets, firewall rules open to the internet on sensitive
+  ports, Cloud SQL public IP / no-SSL. Same Finding contract; pure checks tested
+  offline; lazy `[gcp]` collector. Completes AWS + Azure + GCP coverage.
+
 ### Scheduled scanning (history + drift)
 - `cloudnova monitor <path>`: scans, compares to the previous snapshot (introduced
   vs fixed findings + score delta), and records a timestamped snapshot. `--fail-on-new`
