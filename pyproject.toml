@@ -89,6 +89,8 @@ select = [
 # The web app is presentation-heavy: long CSS/HTML string literals are clearer
 # left intact than wrapped, so the line-length rule is relaxed for it only.
 "src/cloudnova/web/app.py" = ["E501"]
+# Presentation-heavy: long HTML/CSS string literals for the print-ready report.
+"src/cloudnova/range/checklist/report.py" = ["E501"]
 # The checklist is a wide data table (methodology rows); rows read better on one line.
 "src/cloudnova/range/checklist/blackbox.py" = ["E501"]
 # The cloud collectors defensively swallow per-service SDK errors so partial

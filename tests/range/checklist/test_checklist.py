@@ -2,7 +2,12 @@
 
 import pytest
 
-from cloudnova.range.checklist import render_report, run_checklist, summary_counts
+from cloudnova.range.checklist import (
+    render_report,
+    render_report_html,
+    run_checklist,
+    summary_counts,
+)
 from cloudnova.range.checklist.model import State
 from cloudnova.range.scope import (
     SELF_AUTH_PROGRAM,
@@ -97,3 +102,20 @@ def test_self_authorized_scope():
     assert scope.authorize("myserver.local").allowed is True
     assert scope.authorization.program == SELF_AUTH_PROGRAM
     assert scope.authorization.authorized_by == "Omar"
+
+
+def test_html_report_renders(stub_probes):
+    run = run_checklist("https://example.com", _scope("example.com"))
+    doc = render_report_html(run, client="Acme")
+    assert doc.startswith("<!doctype html>")
+    assert "Vulnerability Report" in doc and "Acme" in doc
+    assert "Methodology Checklist" in doc
+    assert "DS-001" in doc  # at least one finding tabled
+
+
+def test_html_report_escapes_client():
+    from cloudnova.range.checklist.model import ChecklistRun
+
+    run = ChecklistRun(target="t", authorized=True, attestation="x")
+    doc = render_report_html(run, client="<script>alert(1)</script>")
+    assert "<script>alert(1)</script>" not in doc

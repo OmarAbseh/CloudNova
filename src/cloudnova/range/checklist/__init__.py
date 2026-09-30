@@ -8,7 +8,7 @@ DarkShield layout with a vulnerability summary table.
 
 from cloudnova.range.checklist.blackbox import BLACKBOX_CHECKLIST, phases
 from cloudnova.range.checklist.model import ChecklistItem, ChecklistRun, Mode, RunItem, State
-from cloudnova.range.checklist.report import render_report, summary_counts
+from cloudnova.range.checklist.report import render_report, render_report_html, summary_counts
 from cloudnova.range.checklist.runner import run_checklist
 
 __all__ = [
@@ -20,6 +20,7 @@ __all__ = [
     "State",
     "phases",
     "render_report",
+    "render_report_html",
     "run_checklist",
     "summary_counts",
 ]
