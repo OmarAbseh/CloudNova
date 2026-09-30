@@ -70,3 +70,14 @@ def test_soc2_encryption_maps_to_cc67():
     report = assess(["AWS_S3_NO_ENCRYPTION"], Framework.SOC_2)
     cc67 = next(c for c in report.controls if c.control_id == "CC6.7")
     assert cc67.state.value == "FAIL"
+
+
+def test_render_markdown_report():
+    from cloudnova.compliance import assess_all
+    from cloudnova.compliance.report import render_markdown
+
+    reports = assess_all(["AWS_S3_PUBLIC", "AWS_IAM_NO_MFA"])
+    md = render_markdown(reports, target="infra", client="Acme")
+    assert "# Compliance Report" in md and "Acme" in md
+    assert "ISO/IEC 27001" in md and "SOC 2" in md
+    assert "Summary" in md

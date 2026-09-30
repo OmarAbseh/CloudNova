@@ -343,10 +343,14 @@ def compliance_cmd(
         str,
         typer.Option("--framework", "-f", help="iso27001 | nist | pci | soc2 | cis | all."),
     ] = "all",
+    out: Annotated[
+        Path | None, typer.Option("--out", "-o", help="Write a Markdown compliance report here.")
+    ] = None,
 ) -> None:
     """Map scan findings onto compliance controls (ISO 27001 / NIST / PCI / SOC 2 / CIS)."""
     from cloudnova import service
     from cloudnova.compliance import Framework, assess, assess_all
+    from cloudnova.compliance.report import render_markdown
 
     try:
         result = service.scan(path)
@@ -356,13 +360,17 @@ def compliance_cmd(
     check_ids = [f["check_id"] for f in result["findings"]]
 
     if framework == "all":
-        reports = list(assess_all(check_ids).values())
+        report_map = assess_all(check_ids)
     else:
         try:
-            reports = [assess(check_ids, Framework(framework))]
+            fw = Framework(framework)
         except ValueError:
-            _console.print("[red]Unknown framework.[/] Use iso27001 | nist | pci | all.")
+            _console.print(
+                "[red]Unknown framework.[/] Use iso27001 | nist | pci | soc2 | cis | all."
+            )
             raise typer.Exit(code=2) from None
+        report_map = {fw: assess(check_ids, fw)}
+    reports = list(report_map.values())
 
     _state_color = {"PASS": "green", "FAIL": "red", "NOT_ASSESSED": "dim"}
     for report in reports:
@@ -375,6 +383,9 @@ def compliance_cmd(
             color = _state_color[c.state.value]
             extra = f"  [dim]{', '.join(c.failing_checks)}[/]" if c.failing_checks else ""
             _console.print(f"  [{color}]{c.state.value:13}[/] {c.control_id:9} {c.title}{extra}")
+    if out is not None:
+        out.write_text(render_markdown(report_map, target=path), encoding="utf-8")
+        _console.print(f"\n[green]Compliance report written[/] to {out}")
 
 
 @app.command("monitor")
