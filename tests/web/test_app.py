@@ -97,3 +97,23 @@ def test_scan_results_include_explain(tmp_path, client):
     assert r.status_code == 200
     assert "Explain" in r.text  # per-finding expandable explanation
     assert "How to fix it:" in r.text
+
+
+def test_security_headers_present(client):
+    r = client.get("/")
+    assert r.headers["X-Frame-Options"] == "DENY"
+    assert r.headers["X-Content-Type-Options"] == "nosniff"
+    assert "Content-Security-Policy" in r.headers
+
+
+def test_auth_required_when_password_set(monkeypatch):
+    monkeypatch.setenv("CLOUDNOVA_WEB_PASSWORD", "s3cret")
+    monkeypatch.setenv("CLOUDNOVA_WEB_USER", "omar")
+    c = TestClient(create_app())
+    # /health stays open for liveness probes
+    assert c.get("/health").status_code == 200
+    # protected route rejects missing/bad creds
+    assert c.get("/").status_code == 401
+    assert c.get("/", auth=("omar", "wrong")).status_code == 401
+    # correct creds pass
+    assert c.get("/", auth=("omar", "s3cret")).status_code == 200

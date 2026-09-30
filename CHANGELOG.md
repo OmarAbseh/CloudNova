@@ -6,6 +6,15 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Dashboard auth + hardening + deploy config
+- The web dashboard now supports HTTP Basic auth: set `CLOUDNOVA_WEB_PASSWORD`
+  (and optional `CLOUDNOVA_WEB_USER`) to require login on every route except
+  `/health`. Security headers (CSP, X-Frame-Options, HSTS, nosniff, Referrer-Policy)
+  are set on every response.
+- The server reads `$PORT` (Render/Railway/Heroku) and refuses to bind a public
+  interface without a password set.
+- Added `Procfile`, `render.yaml`, and `DEPLOY.md` for one-click hosting.
+
 ### Tool orchestration (Range)
 - `cloudnova range tool nmap|nuclei|ffuf <target>`: drive the real tools against an
   authorized target and get their output back as normalized findings. Scope is
