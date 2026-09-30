@@ -258,6 +258,66 @@ iam_app = typer.Typer(help="Author and audit IAM policies.", no_args_is_help=Tru
 app.add_typer(iam_app, name="iam")
 
 
+# ---- cloud subcommands: live read-only account scanning ----
+cloud_app = typer.Typer(
+    help="Scan a LIVE cloud account (read-only) with your own credentials.",
+    no_args_is_help=True,
+)
+app.add_typer(cloud_app, name="cloud")
+
+
+def _print_findings(findings: list, target: str) -> None:  # type: ignore[type-arg]
+    if not findings:
+        _console.print(f"[green]No findings[/] for {target}.")
+        return
+    colors = {"critical": "red", "high": "red", "medium": "yellow", "low": "cyan", "info": "dim"}
+    _console.print(f"[bold]Live scan:[/] {target} — {len(findings)} findings\n")
+    for f in findings:
+        color = colors.get(f.severity.value, "white")
+        _console.print(f"[{color}]{f.severity.value.upper():8}[/] {f.check_id}  {f.title}")
+        _console.print(f"         [dim]{f.location.path}[/]")
+        _console.print(f"         [dim]{f.description}[/]\n")
+
+
+@cloud_app.command("aws")
+def cloud_aws(
+    profile: Annotated[str, typer.Option("--profile", help="AWS profile name.")] = "",
+    region: Annotated[str, typer.Option("--region", help="AWS region.")] = "",
+) -> None:
+    """Scan a live AWS account read-only (needs the 'aws' extra + credentials)."""
+    try:
+        from cloudnova.cloud import scan_aws
+    except ImportError:
+        _console.print('[red]Install the AWS extra:[/] pip install -e ".[aws]"')
+        raise typer.Exit(code=2) from None
+    try:
+        findings = scan_aws(profile=profile or None, region=region or None)
+    except Exception as exc:
+        _console.print(f"[red]AWS scan failed:[/] {exc}")
+        raise typer.Exit(code=1) from None
+    _print_findings(findings, "AWS account")
+
+
+@cloud_app.command("azure")
+def cloud_azure(
+    subscription: Annotated[
+        str, typer.Option("--subscription", help="Azure subscription id.")
+    ] = "",
+) -> None:
+    """Scan a live Azure subscription read-only (needs the 'azure' extra + credentials)."""
+    try:
+        from cloudnova.cloud import scan_azure
+    except ImportError:
+        _console.print('[red]Install the Azure extra:[/] pip install -e ".[azure]"')
+        raise typer.Exit(code=2) from None
+    try:
+        findings = scan_azure(subscription_id=subscription or None)
+    except Exception as exc:
+        _console.print(f"[red]Azure scan failed:[/] {exc}")
+        raise typer.Exit(code=1) from None
+    _print_findings(findings, "Azure subscription")
+
+
 def _load_structured(path: Path) -> object:
     """Load a JSON or YAML file into Python data."""
     text = path.read_text(encoding="utf-8")
