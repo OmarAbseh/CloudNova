@@ -26,8 +26,8 @@ releases, so entries are grouped by development phase.
 - `cloudnova history <path>`: posture trend across recorded scans.
   ([ADR 0018](docs/adr/0018-scheduled-scanning.md))
 
-### Compliance mapping (ISO 27001 / NIST CSF / PCI DSS)
-- `cloudnova compliance <path> --framework iso27001|nist|pci|all`: maps scan
+### Compliance mapping (ISO 27001 / NIST CSF / PCI DSS / SOC 2 / CIS v8)
+- `cloudnova compliance <path> --framework iso27001|nist|pci|soc2|cis|all`: maps scan
   findings onto framework controls and reports each control as PASS / FAIL /
   NOT_ASSESSED, with a coverage-honest score (never counts controls it doesn't
   test). Findings are classified by category so new checks are covered

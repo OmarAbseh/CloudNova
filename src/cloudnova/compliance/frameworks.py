@@ -16,6 +16,8 @@ class Framework(StrEnum):
     ISO_27001 = "iso27001"
     NIST_CSF = "nist"
     PCI_DSS = "pci"
+    SOC_2 = "soc2"
+    CIS_V8 = "cis"
 
 
 class Category(StrEnum):
@@ -57,6 +59,21 @@ CATALOGS: dict[Framework, dict[str, str]] = {
         "Req.8": "Identify users and authenticate access",
         "Req.10": "Log and monitor all access",
     },
+    Framework.SOC_2: {
+        "CC6.1": "Logical access security controls",
+        "CC6.3": "Access is added/modified/removed appropriately",
+        "CC6.6": "Protection against threats from outside the boundary",
+        "CC6.7": "Data is protected in transit",
+        "CC7.2": "Monitoring for anomalies and security events",
+    },
+    Framework.CIS_V8: {
+        "CIS.3": "Data protection",
+        "CIS.4": "Secure configuration of assets",
+        "CIS.5": "Account management",
+        "CIS.6": "Access control management",
+        "CIS.8": "Audit log management",
+        "CIS.12": "Network infrastructure management",
+    },
 }
 
 # category -> controls it touches, per framework.
@@ -81,6 +98,20 @@ CATEGORY_CONTROLS: dict[Framework, dict[Category, list[str]]] = {
         Category.IDENTITY: ["Req.7", "Req.8"],
         Category.LOGGING: ["Req.10"],
         Category.SECRETS: ["Req.3", "Req.8"],
+    },
+    Framework.SOC_2: {
+        Category.EXPOSURE: ["CC6.6"],
+        Category.ENCRYPTION: ["CC6.7"],
+        Category.IDENTITY: ["CC6.1", "CC6.3"],
+        Category.LOGGING: ["CC7.2"],
+        Category.SECRETS: ["CC6.1"],
+    },
+    Framework.CIS_V8: {
+        Category.EXPOSURE: ["CIS.4", "CIS.12"],
+        Category.ENCRYPTION: ["CIS.3"],
+        Category.IDENTITY: ["CIS.5", "CIS.6"],
+        Category.LOGGING: ["CIS.8"],
+        Category.SECRETS: ["CIS.3"],
     },
 }
 
