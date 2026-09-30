@@ -15,8 +15,34 @@ you MUST set a password (the server refuses otherwise).
   optionally `CLOUDNOVA_WEB_USER=<name>`.
 
 ## Landing page (Vercel)
-Host a static/Next.js marketing page on Vercel and link "Launch app" to the Render
-URL. Point your domain's root at Vercel and `app.` at Render.
+The marketing page lives in `site/` (static HTML, dark/red, 3D hero, pricing).
+1. Vercel → New Project → import this repo.
+2. Set **Root Directory** to `site`, framework preset **Other** (no build step).
+3. Deploy. Point your domain's root at Vercel and `app.` at the Render dashboard URL.
+4. Edit "Launch app" links in `site/index.html` to your Render URL.
+
+## CI security gate (GitHub Action)
+`action.yml` is a reusable action. In any repo:
+
+```yaml
+# .github/workflows/security.yml
+name: CloudNova
+on: [push, pull_request]
+permissions:
+  contents: read
+  security-events: write   # for SARIF upload
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: OmarAbseh/CloudNova@main
+        with:
+          path: .
+          fail-on: high
+```
+It scans, uploads findings to GitHub code scanning (SARIF), and fails the build on
+high-severity findings.
 
 ## Security notes
 - HTTP Basic auth protects every route except `/health`.
