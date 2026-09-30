@@ -17,11 +17,12 @@ aggregation) and killed the crash-on-malformed-input bugs.
 - ✅ Baseline / suppression by content fingerprint (`cloudnova baseline`).
 - ⏭️ Next: broaden the AWS rule packs (RDS, KMS, VPC flow logs, public AMIs).
 
-## Phase 2 — Live cloud posture
-- Read-only AWS scanning via boto3 (S3, IAM, SG, RDS, CloudTrail config).
-- Pluggable providers so Azure/GCP slot in behind the same `Artifact` seam.
-- Credentials via the SDK's own provider chain (SSO / assumed role) — never
-  pasted secrets.
+## Phase 2 — Live cloud posture ✅
+- ✅ Read-only AWS scanning via boto3 (S3, IAM, security groups, RDS).
+- ✅ Read-only Azure scanning (storage, NSGs, SQL) behind the same check/collect seam.
+- ✅ Credentials via each SDK's own provider chain (profile/role, DefaultAzureCredential)
+  — never pasted secrets. Collectors are read-only and resilient to partial perms.
+- ⏭️ Next: GCP, more services, feed live findings into the posture score + graph.
 
 ## Phase 3 — Attack-path graph 🚧
 - ✅ Resource graph (`cloudnova.graph`): nodes tagged with security roles,
@@ -41,8 +42,13 @@ aggregation) and killed the crash-on-malformed-input bugs.
   win, attestation required (fails closed). Every capability gates through it.
 - ✅ Mentor: scope-aware pentest tutor (curriculum, cert tracks, guided labs).
 - ✅ Report generator: engagement notes -> professional Markdown report.
-- ⏭️ Next (all gated by scope): recon organization (operator-run, ingest tool
-  output), finding validation, Claude-backed mentor Q&A at runtime.
+- ✅ Authorized web assessment (`range webassess`): passive posture scan, scope-gated.
+- ✅ Blackbox checklist (`range checklist`): PTES + OWASP WSTG, passive + opt-in active
+  detection, DarkShield-style report; self-authorization ("no scope" responsibility tick).
+- ✅ Tool orchestration (`range tool nmap|nuclei|ffuf`): drive real tools, scope-gated,
+  output normalized to Findings. (Autonomous exploitation/credential attacks are
+  deliberately out of scope — operator-run only. See ADR 0016.)
+- ⏭️ Next: ingest operator tool output (hydra/sqlmap results) into reports.
 
 ## Phase 5 — AI agents 🚧
 - ✅ MCP server (`cloudnova-mcp`): exposes scan / list_checks / attack_paths so
@@ -57,8 +63,24 @@ aggregation) and killed the crash-on-malformed-input bugs.
 ## Phase 6 — SaaS / Web 🚧
 - ✅ Local FastAPI dashboard (`cloudnova-web`): run scans and view findings, the
   posture grade, and attack paths in the browser; browse the mentor path.
-- ⏭️ Next: multi-tenant, scan history + trend dashboards, scheduled scans,
-  Slack/Jira integration. Only after the engine has proven itself.
+- ✅ Dashboard auth (HTTP Basic) + security headers; `$PORT` support; refuses to bind
+  a public interface without a password. `render.yaml` / `Procfile` / `DEPLOY.md`.
+- ✅ Marketing landing page (`site/`) for Vercel; GitHub Action for CI scanning.
+- ⏭️ Next: see Phase 7.
+
+## Phase 7 — Growth & scale (next build phase) 🔜
+The high-value features that turn the platform into a sellable SaaS. Tackled after
+the current phase lands, then we look for more.
+- **Multi-tenant auth + RBAC** (Supabase): per-user accounts, org/teams, isolation —
+  the prerequisite for exposing cloud + pentest features in the web UI safely.
+- **Scan history + trend dashboards**: posture over time, per-target.
+- **Scheduled / continuous scanning** with drift alerts.
+- **Integrations**: Slack + email alerts, Jira/Linear ticket creation, GitHub PR checks.
+- **PDF/branded report export** (the DarkShield engagement layout as a real document).
+- **GCP scanning**; broaden AWS/Azure service coverage.
+- **Compliance dashboards**: PCI DSS 4.0.1, SOC 2, NIS2, CIS mappings + evidence.
+- **Operator tool-output ingestion**: import hydra/sqlmap/nuclei results into reports.
+- **Billing**: Stripe + the tier plan (Community / Starter / Pro / Team).
 
 ---
 

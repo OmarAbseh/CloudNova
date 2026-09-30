@@ -6,6 +6,15 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Landing page + CI Action + roadmap Phase 7
+- `site/index.html`: a professional dark/red marketing landing page with a 3D hero
+  and pricing tiers, deployable to Vercel (root dir `site/`).
+- `action.yml`: a reusable GitHub Action that scans IaC, uploads SARIF to code
+  scanning, and fails the build on a severity threshold.
+- ROADMAP: marked Phase 2 (live cloud), toolkit, auth/deploy done; added Phase 7
+  (growth & scale: multi-tenant, scheduled scans, integrations, PDF reports, GCP,
+  compliance, billing).
+
 ### Dashboard auth + hardening + deploy config
 - The web dashboard now supports HTTP Basic auth: set `CLOUDNOVA_WEB_PASSWORD`
   (and optional `CLOUDNOVA_WEB_USER`) to require login on every route except

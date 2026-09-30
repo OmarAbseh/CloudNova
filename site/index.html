@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CloudNova — Cloud security + authorized pentesting</title>
+<meta name="description" content="Find cloud misconfigurations before attackers do — IaC + live AWS/Azure scanning, attack-path graphs, and an authorization-first pentest toolkit and mentor." />
+<style>
+  :root{
+    --bg:#0a0a0d; --panel:#141419; --panel2:#1b1b22; --line:#26262f;
+    --text:#ececef; --muted:#8b8b99;
+    --red:#ff2e4d; --red2:#b3123b; --pink:#ff6b81; --ok:#3ddc84;
+    --grad:linear-gradient(135deg,#ff2e4d 0%,#b3123b 60%,#7a0b28 100%);
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--text);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+  a{color:var(--pink);text-decoration:none}
+  a:hover{color:var(--red)}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+  header{position:sticky;top:0;z-index:10;backdrop-filter:blur(10px);
+    background:rgba(10,10,13,.7);border-bottom:1px solid var(--line)}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .logo{font-weight:800;letter-spacing:.5px;font-size:20px}
+  .logo b{color:var(--red)}
+  nav a{margin-left:22px;color:var(--muted);font-size:14px}
+  nav a:hover{color:var(--text)}
+  .btn{display:inline-block;background:var(--grad);color:#fff;font-weight:700;
+    padding:11px 20px;border-radius:10px;border:0;cursor:pointer;font-size:15px}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+  .hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+  #bg3d{position:absolute;inset:0;width:100%;height:100%;opacity:.5}
+  .hero .wrap{position:relative;padding:96px 20px 88px;text-align:center}
+  .kicker{color:var(--red);font-weight:700;font-size:13px;letter-spacing:3px;
+    text-transform:uppercase}
+  h1{font-size:clamp(34px,6vw,60px);line-height:1.05;margin:14px 0 10px;font-weight:800}
+  h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent}
+  .sub{color:var(--muted);font-size:clamp(16px,2.4vw,20px);max-width:680px;margin:0 auto 28px}
+  .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  section{padding:72px 0}
+  h2{font-size:clamp(26px,4vw,36px);margin:0 0 8px;font-weight:800}
+  .lead{color:var(--muted);margin:0 0 34px;max-width:620px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:24px;transition:.2s}
+  .card:hover{border-color:var(--red2);transform:translateY(-3px)}
+  .card h3{margin:0 0 8px;font-size:19px}
+  .card p{color:var(--muted);margin:0;font-size:15px}
+  .tag{display:inline-block;font-size:12px;color:var(--red);font-weight:700;
+    letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+  .price{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+  .tier{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px}
+  .tier.pop{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,46,77,.12)}
+  .tier .amt{font-size:34px;font-weight:800;margin:6px 0}
+  .tier .amt span{font-size:15px;color:var(--muted);font-weight:500}
+  .tier ul{list-style:none;padding:0;margin:16px 0 0;color:var(--muted);font-size:14px}
+  .tier li{padding:6px 0;border-top:1px solid var(--line)}
+  .tier li::before{content:"✓ ";color:var(--ok)}
+  .banner{background:linear-gradient(135deg,rgba(255,46,77,.12),rgba(122,11,40,.12));
+    border:1px solid var(--red2);border-radius:16px;padding:28px;text-align:center}
+  footer{border-top:1px solid var(--line);color:var(--muted);font-size:14px;padding:34px 0}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+  .note{color:var(--muted);font-size:13px;margin-top:14px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="logo">Cloud<b>Nova</b></div>
+  <nav>
+    <a href="#features">Features</a>
+    <a href="#pricing">Pricing</a>
+    <a href="https://github.com/OmarAbseh/CloudNova">GitHub</a>
+    <a class="btn ghost" href="#app" style="padding:8px 16px">Launch app</a>
+  </nav>
+</div></header>
+
+<div class="hero">
+  <canvas id="bg3d"></canvas>
+  <div class="wrap">
+    <div class="kicker">Cloud security · authorized offense</div>
+    <h1>Find cloud risk before<br><span class="g">attackers do.</span></h1>
+    <p class="sub">CloudNova scans your infrastructure — config <em>and</em> live AWS/Azure —
+      maps exploitable attack paths, and runs an authorization-first pentest toolkit and
+      mentor. One engine, from misconfig to proof.</p>
+    <div class="cta">
+      <a class="btn" href="#app">Get started</a>
+      <a class="btn ghost" href="https://github.com/OmarAbseh/CloudNova">View the code</a>
+    </div>
+    <div class="note">Open-core · CIS + MITRE ATT&CK mapped · SARIF · CI-native</div>
+  </div>
+</div>
+
+<section id="features"><div class="wrap">
+  <h2>Everything, one engine</h2>
+  <p class="lead">The same validated finding contract flows from IaC to live cloud to
+    authorized web testing — so nothing is a black box.</p>
+  <div class="grid">
+    <div class="card"><div class="tag">Scan</div><h3>IaC misconfig</h3>
+      <p>Terraform, CloudFormation, Kubernetes, CloudTrail — 30+ checks mapped to CIS
+        &amp; MITRE, emitted as SARIF for GitHub code scanning.</p></div>
+    <div class="card"><div class="tag">Live</div><h3>AWS &amp; Azure</h3>
+      <p>Read-only account audit: public buckets/storage, IAM without MFA, world-open
+        security groups/NSGs, public databases.</p></div>
+    <div class="card"><div class="tag">Graph</div><h3>Attack paths</h3>
+      <p>Not a flat checklist — a graph that reports exploitable chains from an exposed
+        resource to admin or data, as one narrated finding.</p></div>
+    <div class="card"><div class="tag">Range</div><h3>Authorized pentest</h3>
+      <p>Scope-gated web assessment, a PTES/OWASP-WSTG blackbox checklist, and real-tool
+        orchestration (nmap/nuclei/ffuf) — findings, not chaos.</p></div>
+    <div class="card"><div class="tag">Mentor</div><h3>Learn as you go</h3>
+      <p>A curriculum from foundations to cert-ready (eJPT/PNPT/OSCP), with progress
+        tracking. The tool levels up the human, too.</p></div>
+    <div class="card"><div class="tag">Report</div><h3>Client-ready</h3>
+      <p>Posture score, vulnerability summary, and a professional engagement report —
+        the deliverable is part of the product.</p></div>
+  </div>
+</div></section>
+
+<section style="background:var(--panel2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+  <div class="banner">
+    <h2 style="margin-top:0">Authorization-first, by design</h2>
+    <p class="lead" style="margin:0 auto">Every target-facing action passes a deny-by-default
+      scope engine before anything runs. Authorized testing only — no autonomous
+      exploitation. Legitimate by construction.</p>
+  </div>
+  </div>
+</section>
+
+<section id="pricing"><div class="wrap">
+  <h2>Pricing</h2>
+  <p class="lead">Open-core: the engine is free forever. Pay for the hosted platform,
+    cloud connectors, and reporting.</p>
+  <div class="price">
+    <div class="tier"><div class="tag">Community</div><div class="amt">$0</div>
+      <ul><li>CLI + IaC scanning</li><li>SARIF + CI gate</li><li>Attack paths</li>
+      <li>Mentor curriculum</li></ul></div>
+    <div class="tier"><div class="tag">Starter</div><div class="amt">$79<span>/mo</span></div>
+      <ul><li>Hosted dashboard</li><li>Live AWS/Azure scan</li><li>Scheduled scans</li>
+      <li>3 targets</li></ul></div>
+    <div class="tier pop"><div class="tag">Pro</div><div class="amt">$299<span>/mo</span></div>
+      <ul><li>Authorized web testing</li><li>Engagement reports</li><li>API access</li>
+      <li>25 targets</li></ul></div>
+    <div class="tier"><div class="tag">Team</div><div class="amt">Custom</div>
+      <ul><li>SSO + RBAC</li><li>Compliance (PCI/SOC2/NIS2)</li><li>Unlimited targets</li>
+      <li>Mentor seats</li></ul></div>
+  </div>
+</div></section>
+
+<section id="app"><div class="wrap" style="text-align:center">
+  <h2>Ready to see your risk?</h2>
+  <p class="lead" style="margin:0 auto 24px">Deploy the dashboard in minutes, or run the
+    CLI against your infrastructure today.</p>
+  <div class="cta">
+    <a class="btn" href="https://github.com/OmarAbseh/CloudNova">Start on GitHub</a>
+    <a class="btn ghost" href="https://github.com/OmarAbseh/CloudNova/blob/main/DEPLOY.md">Deploy guide</a>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div>© <span id="yr"></span> CloudNova. Open-core cloud security.</div>
+  <div>Built for security teams · <a href="https://github.com/OmarAbseh/CloudNova">GitHub</a></div>
+</div></footer>
+
+<script>document.getElementById('yr').textContent=new Date().getFullYear();</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Progressive enhancement: a slow-spinning wireframe icosahedron behind the hero.
+(function(){
+  if(!window.THREE){return;}
+  var c=document.getElementById('bg3d');
+  try{
+    var renderer=new THREE.WebGLRenderer({canvas:c,alpha:true,antialias:true});
+    var scene=new THREE.Scene();
+    var cam=new THREE.PerspectiveCamera(60,c.clientWidth/c.clientHeight,0.1,100);
+    cam.position.z=3.2;
+    var geo=new THREE.IcosahedronGeometry(1.35,1);
+    var mat=new THREE.MeshBasicMaterial({color:0xff2e4d,wireframe:true,transparent:true,opacity:.55});
+    var mesh=new THREE.Mesh(geo,mat);scene.add(mesh);
+    function size(){renderer.setSize(c.clientWidth,c.clientHeight,false);
+      cam.aspect=c.clientWidth/c.clientHeight;cam.updateProjectionMatrix();}
+    size();window.addEventListener('resize',size);
+    (function loop(){requestAnimationFrame(loop);
+      mesh.rotation.x+=0.0016;mesh.rotation.y+=0.0022;renderer.render(scene,cam);})();
+  }catch(e){/* no-op: page works without the 3D hero */}
+})();
+</script>
+</body>
+</html>

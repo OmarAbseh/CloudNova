@@ -1,0 +1,45 @@
+name: "CloudNova Scan"
+description: "Scan IaC (Terraform/CFN/K8s) for security misconfigurations, gate CI, upload SARIF."
+branding:
+  icon: "shield"
+  color: "red"
+
+inputs:
+  path:
+    description: "Path to scan."
+    default: "."
+  fail-on:
+    description: "Fail the build if a finding at or above this severity is found (critical/high/medium/low)."
+    default: "high"
+  min-severity:
+    description: "Only report findings at or above this severity."
+    default: "low"
+  ref:
+    description: "CloudNova git ref to install."
+    default: "main"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install CloudNova
+      shell: bash
+      run: pip install "cloudnova @ git+https://github.com/OmarAbseh/CloudNova@${{ inputs.ref }}"
+
+    - name: Scan (SARIF)
+      shell: bash
+      run: cloudnova scan "${{ inputs.path }}" --format sarif > cloudnova.sarif || true
+
+    - name: Upload SARIF to code scanning
+      if: always()
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: cloudnova.sarif
+
+    - name: Gate on severity
+      shell: bash
+      run: cloudnova scan "${{ inputs.path }}" --min-severity "${{ inputs.min-severity }}" --fail-on "${{ inputs.fail-on }}"
