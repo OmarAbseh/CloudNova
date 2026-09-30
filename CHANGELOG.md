@@ -6,6 +6,12 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Webhook alerting on drift
+- `cloudnova monitor <path> --notify` posts an alert to a Slack-compatible incoming
+  webhook (`CLOUDNOVA_SLACK_WEBHOOK`) when new findings appear — turning scheduled
+  scans into continuous monitoring with paging. Delivery is injectable and tested
+  offline.
+
 ### Live GCP scanning
 - `cloudnova cloud gcp --project <id>`: read-only audit of a live GCP project —
   public Cloud Storage buckets, firewall rules open to the internet on sensitive
