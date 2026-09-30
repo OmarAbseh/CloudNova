@@ -45,6 +45,15 @@ web = [
     "fastapi>=0.110",
     "uvicorn[standard]>=0.27",
 ]
+aws = [
+    "boto3>=1.34",
+]
+azure = [
+    "azure-identity>=1.16",
+    "azure-mgmt-storage>=21.0",
+    "azure-mgmt-network>=25.0",
+    "azure-mgmt-sql>=3.0",
+]
 
 [project.scripts]
 cloudnova = "cloudnova.cli:app"
@@ -82,6 +91,10 @@ select = [
 "src/cloudnova/web/app.py" = ["E501"]
 # The checklist is a wide data table (methodology rows); rows read better on one line.
 "src/cloudnova/range/checklist/blackbox.py" = ["E501"]
+# The cloud collectors defensively swallow per-service SDK errors so partial
+# credentials still yield a partial inventory — that pattern is intentional here.
+"src/cloudnova/cloud/_aws_collect.py" = ["BLE001", "SIM105"]
+"src/cloudnova/cloud/_azure_collect.py" = ["BLE001", "SIM105"]
 
 # ---- mypy: strict typing on our source ----
 [tool.mypy]
@@ -101,6 +114,12 @@ disallow_untyped_defs = false
 [[tool.mypy.overrides]]
 module = "cloudnova.mcp_server"
 disable_error_code = ["misc", "untyped-decorator"]
+
+# The cloud collectors wrap optional, untyped vendor SDKs (boto3, azure-*). Their
+# import and dynamic responses are Any by nature; the typed logic is in the checks.
+[[tool.mypy.overrides]]
+module = ["cloudnova.cloud._aws_collect", "cloudnova.cloud._azure_collect"]
+disable_error_code = ["misc", "no-any-return", "import-not-found", "import-untyped"]
 
 # ---- pytest ----
 [tool.pytest.ini_options]

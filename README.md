@@ -95,6 +95,22 @@ live list. Highlights:
 | **Runtime logs** | auth log | SSH brute force **aggregated per source IP**, severity by volume |
 | **Secrets** | any | Hard-coded credentials and keys |
 
+### Live cloud scanning (AWS + Azure)
+
+Beyond config files, CloudNova can log in to a **live account** (read-only, your
+own credentials) and audit the actual resources:
+
+```bash
+pip install -e ".[aws]"     # or ".[azure]"
+cloudnova cloud aws --profile prod --region eu-west-1
+cloudnova cloud azure --subscription <id>
+```
+
+Public buckets/storage, IAM users without MFA, stale keys, security groups/NSGs
+open to the world, public/unencrypted databases — as the same findings, mapped to
+CIS + MITRE. Read-only only; nothing is created or changed.
+([ADR 0015](docs/adr/0015-live-cloud-scanning.md))
+
 ### Attack paths (the differentiator)
 
 ```

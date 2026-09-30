@@ -6,6 +6,16 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Live cloud scanning (AWS + Azure)
+- `cloudnova cloud aws` and `cloudnova cloud azure`: scan a LIVE account read-only
+  with your own credentials and audit the actual resources — public S3 buckets /
+  storage accounts, IAM users without MFA, stale access keys, security groups /
+  NSGs open to the world on sensitive ports, public/unencrypted RDS and SQL. Same
+  validated Finding contract (CIS + MITRE mappings) as the IaC scanner. Read-only
+  (Describe/Get/List) only. Collectors are isolated + lazy-imported (`[aws]` /
+  `[azure]` extras); the checks are pure and fully tested offline.
+  ([ADR 0015](docs/adr/0015-live-cloud-scanning.md))
+
 ### Blackbox pentest checklist + active detection (Range)
 - `cloudnova range checklist <url>`: runs the full PTES + OWASP WSTG blackbox
   methodology against an authorized target. Passive items resolve automatically;
