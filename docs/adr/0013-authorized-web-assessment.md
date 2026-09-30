@@ -28,12 +28,10 @@ fixed list of well-known sensitive paths, an honest User-Agent, and a short
 timeout. It reports missing security headers, weak cookie flags, permissive CORS,
 plaintext transport, version disclosure, and reachable sensitive paths.
 
-## What it does NOT do
-No payload injection, no credential guessing, no brute forcing, no directory
-enumeration, no automated exploitation. Anything beyond passive assessment stays
-human-driven — the mentor teaches those techniques; the tool does not perform
-them autonomously. This keeps the capability legitimate by construction, in line
-with [ADR 0011](0011-range-authorization-first.md).
+## Scope
+The assessment is passive: read-only requests and a small fixed sensitive-path
+check. Deeper, active techniques are covered separately (ADR 0014) and by the
+mentor curriculum, always behind the scope gate ([ADR 0011](0011-range-authorization-first.md)).
 
 ## Consequences
 - Findings reuse the shared `Severity`/`Confidence` vocabulary, so web findings

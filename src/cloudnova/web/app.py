@@ -40,7 +40,7 @@ from cloudnova.triage import explain_finding
 # Three.js (UMD, exposes global THREE). Progressive enhancement only.
 _THREE_CDN = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
 
-# Dark, red-accented palette — deliberately not the default warm Claude tones.
+# Dark, red-accented security palette.
 _STYLE = """
 :root {
   --bg:#0a0a0d; --panel:#141419; --panel2:#1b1b22; --line:#26262f;

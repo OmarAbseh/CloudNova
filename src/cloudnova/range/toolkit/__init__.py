@@ -2,9 +2,8 @@
 
 CloudNova drives industry-standard tools (nmap, nuclei, ffuf) rather than
 reimplementing them, authorizes every target through the scope engine first, and
-normalizes each tool's output into the shared Finding contract. Adapters are
-recon/detection only. Credential attacks and exploitation are deliberately not
-built as autonomous features — those stay operator-run, outside this package.
+normalizes each tool's output into the shared Finding contract. Adapters cover
+recon and detection; aggressive tools require explicit operator confirmation.
 """
 
 from cloudnova.range.toolkit import ffuf, nmap, nuclei

@@ -2,9 +2,9 @@
 
 This is real DAST, the same category as OWASP ZAP's active scan or Nuclei: it
 sends a crafted-but-safe probe to a query parameter and inspects the response to
-*confirm a bug exists*. It does not weaponize anything — no shell, no data
-exfiltration, no destructive write. Every function authorizes the target through
-the scope engine first (via :mod:`probe`), and the caller must opt in explicitly.
+*confirm a bug exists*, using read-only requests. Every function authorizes the
+target through the scope engine first (via :mod:`probe`), and the caller opts in
+explicitly.
 
 The detection primitives (`body_reflects_marker`, `sql_error_signature`,
 `body_reads_passwd`) are pure functions so the logic is testable offline.

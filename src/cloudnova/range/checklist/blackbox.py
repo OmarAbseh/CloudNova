@@ -4,7 +4,7 @@ Transcribed from the standard methodology. Items flagged ``AUTO`` are checked
 passively by CloudNova's web-assessment engine; ``MANUAL`` items are active or
 context-dependent tests the operator performs, kept here with methodology
 guidance so nothing is forgotten. The mentor (``cloudnova range mentor``) teaches
-the manual techniques — the tool tracks them, it does not exploit them.
+the manual techniques; the checklist tracks their status through the engagement.
 """
 
 from __future__ import annotations
