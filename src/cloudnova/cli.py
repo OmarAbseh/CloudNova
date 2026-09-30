@@ -318,6 +318,24 @@ def cloud_azure(
     _print_findings(findings, "Azure subscription")
 
 
+@cloud_app.command("gcp")
+def cloud_gcp(
+    project: Annotated[str, typer.Option("--project", help="GCP project id.")] = "",
+) -> None:
+    """Scan a live GCP project read-only (needs the 'gcp' extra + credentials)."""
+    try:
+        from cloudnova.cloud import scan_gcp
+    except ImportError:
+        _console.print('[red]Install the GCP extra:[/] pip install -e ".[gcp]"')
+        raise typer.Exit(code=2) from None
+    try:
+        findings = scan_gcp(project=project or None)
+    except Exception as exc:
+        _console.print(f"[red]GCP scan failed:[/] {exc}")
+        raise typer.Exit(code=1) from None
+    _print_findings(findings, "GCP project")
+
+
 @app.command("compliance")
 def compliance_cmd(
     path: Annotated[str, typer.Argument(help="Path to scan (IaC/config).")],
