@@ -536,6 +536,9 @@ def range_checklist(
     out: Annotated[
         Path | None, typer.Option("--out", "-o", help="Write the full report (Markdown) here.")
     ] = None,
+    html_out: Annotated[
+        Path | None, typer.Option("--html", help="Write a print-ready HTML report (Print → PDF).")
+    ] = None,
 ) -> None:
     """Run the blackbox pentest checklist (PTES + OWASP WSTG) against an authorized target.
 
@@ -543,7 +546,7 @@ def range_checklist(
     detection; manual items are tracked with methodology. Either pass a --scope file
     or self-attest authorization with --i-am-authorized "<your name>".
     """
-    from cloudnova.range.checklist import render_report, run_checklist
+    from cloudnova.range.checklist import render_report, render_report_html, run_checklist
     from cloudnova.range.checklist.report import render_summary_line
     from cloudnova.range.scope import self_authorized_scope
 
@@ -572,6 +575,9 @@ def range_checklist(
     if out is not None:
         out.write_text(render_report(run), encoding="utf-8")
         _console.print(f"\n[green]Report written[/] to {out}")
+    if html_out is not None:
+        html_out.write_text(render_report_html(run), encoding="utf-8")
+        _console.print(f"[green]HTML report written[/] to {html_out} (open + Print → PDF)")
 
 
 # ---- tool subcommands: orchestrate real tools (scope-gated) ----
