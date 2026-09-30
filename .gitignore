@@ -40,3 +40,4 @@ coverage.xml
 
 # Private gh0st edition — kept out of the public repo (export to a private repo)
 /gh0st/
+/VISION.md
