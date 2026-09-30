@@ -359,6 +359,62 @@ def compliance_cmd(
             _console.print(f"  [{color}]{c.state.value:13}[/] {c.control_id:9} {c.title}{extra}")
 
 
+@app.command("monitor")
+def monitor_cmd(
+    path: Annotated[str, typer.Argument(help="Path to scan and track over time.")],
+    data_dir: Annotated[str, typer.Option("--data-dir", help="Where to store scan history.")] = "",
+    fail_on_new: Annotated[
+        bool, typer.Option("--fail-on-new", help="Exit non-zero if new findings appeared.")
+    ] = False,
+) -> None:
+    """Scan, compare to the previous run, and record a snapshot (cron/CI-friendly)."""
+    from cloudnova import monitor, service
+
+    dd = data_dir or None
+    try:
+        report = service.scan(path)
+    except FileNotFoundError as exc:
+        _console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=1) from None
+
+    drift = monitor.diff_against_latest(path, report, data_dir=dd)
+    monitor.record_scan(path, report, data_dir=dd)
+
+    score = report["summary"].get("posture_score", 0)
+    grade = report["summary"].get("grade", "?")
+    _console.print(f"[bold]Monitor:[/] {path} — score {score} ({grade})")
+    if drift is None:
+        _console.print("[dim]First snapshot recorded — no baseline to compare yet.[/]")
+        return
+    _console.print(
+        f"  [red]+{len(drift.introduced)} new[/] · [green]-{len(drift.fixed)} fixed[/] · "
+        f"{drift.unchanged} unchanged · score delta {drift.score_delta:+d}"
+    )
+    for f in drift.introduced[:10]:
+        _console.print(f"  [red]NEW[/] {f.get('check_id')} — {f.get('title')}")
+    if fail_on_new and drift.introduced:
+        raise typer.Exit(code=1)
+
+
+@app.command("history")
+def history_cmd(
+    path: Annotated[str, typer.Argument(help="Path whose scan history to show.")],
+    data_dir: Annotated[str, typer.Option("--data-dir", help="Scan history location.")] = "",
+) -> None:
+    """Show the posture trend for a target across recorded scans."""
+    from cloudnova import monitor
+
+    points = monitor.trend(path, data_dir=data_dir or None)
+    if not points:
+        _console.print("[dim]No history yet. Run `cloudnova monitor` first.[/]")
+        return
+    _console.print(f"[bold]History:[/] {path}\n")
+    for p in points:
+        _console.print(
+            f"  {p['timestamp']}  score {p['score']!s:>3} ({p['grade']})  {p['findings']} findings"
+        )
+
+
 def _load_structured(path: Path) -> object:
     """Load a JSON or YAML file into Python data."""
     text = path.read_text(encoding="utf-8")
