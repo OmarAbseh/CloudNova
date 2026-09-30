@@ -341,10 +341,10 @@ def compliance_cmd(
     path: Annotated[str, typer.Argument(help="Path to scan (IaC/config).")],
     framework: Annotated[
         str,
-        typer.Option("--framework", "-f", help="iso27001 | nist | pci | all."),
+        typer.Option("--framework", "-f", help="iso27001 | nist | pci | soc2 | cis | all."),
     ] = "all",
 ) -> None:
-    """Map scan findings onto compliance controls (ISO 27001 / NIST CSF / PCI DSS)."""
+    """Map scan findings onto compliance controls (ISO 27001 / NIST / PCI / SOC 2 / CIS)."""
     from cloudnova import service
     from cloudnova.compliance import Framework, assess, assess_all
 

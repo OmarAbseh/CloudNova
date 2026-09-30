@@ -49,3 +49,24 @@ def test_assess_all_covers_every_framework():
     assert set(reports) == set(Framework)
     for report in reports.values():
         assert report.failed  # both an exposure and identity finding fail something
+
+
+def test_soc2_and_cis_frameworks_present():
+    from cloudnova.compliance import Framework
+
+    reports = assess_all(["AWS_S3_PUBLIC", "AWS_IAM_NO_MFA", "CFN_S3_NO_ENCRYPTION"])
+    assert Framework.SOC_2 in reports
+    assert Framework.CIS_V8 in reports
+    soc2 = reports[Framework.SOC_2]
+    # exposure + identity + encryption findings should fail several SOC 2 controls
+    assert soc2.failed
+    cis = reports[Framework.CIS_V8]
+    assert any(c.control_id == "CIS.6" for c in cis.failed) or cis.failed
+
+
+def test_soc2_encryption_maps_to_cc67():
+    from cloudnova.compliance import Framework
+
+    report = assess(["AWS_S3_NO_ENCRYPTION"], Framework.SOC_2)
+    cc67 = next(c for c in report.controls if c.control_id == "CC6.7")
+    assert cc67.state.value == "FAIL"
