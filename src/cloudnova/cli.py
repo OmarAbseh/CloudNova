@@ -574,6 +574,77 @@ def range_checklist(
         _console.print(f"\n[green]Report written[/] to {out}")
 
 
+# ---- tool subcommands: orchestrate real tools (scope-gated) ----
+tool_app = typer.Typer(
+    help="Run real tools (nmap/nuclei/ffuf) against authorized targets, output as findings.",
+    no_args_is_help=True,
+)
+range_app.add_typer(tool_app, name="tool")
+
+
+def _tool_scope(target: str, scope_file: Path | None, i_am_authorized: str) -> Scope:
+    from cloudnova.range.scope import self_authorized_scope
+
+    if scope_file is not None:
+        return _load_scope_or_exit(scope_file)
+    if i_am_authorized.strip():
+        _console.print(
+            f"[yellow]Self-authorized[/] by {i_am_authorized.strip()} — you accept responsibility."
+        )
+        return self_authorized_scope(target, i_am_authorized.strip())
+    _console.print('[red]Refusing:[/] provide --scope FILE or --i-am-authorized "<name>".')
+    raise typer.Exit(code=2)
+
+
+def _emit_tool_result(result: object) -> None:
+    r = result  # ToolResult
+    if not r.ran:  # type: ignore[attr-defined]
+        _console.print(f"[yellow]Not run:[/] {r.note}")  # type: ignore[attr-defined]
+        raise typer.Exit(code=1)
+    _print_findings(r.findings, r.target)  # type: ignore[attr-defined]
+
+
+@tool_app.command("nmap")
+def tool_nmap(
+    target: Annotated[str, typer.Argument(help="Host/IP to scan.")],
+    scope_file: Annotated[Path | None, typer.Option("--scope", "-s")] = None,
+    i_am_authorized: Annotated[str, typer.Option("--i-am-authorized")] = "",
+    full: Annotated[bool, typer.Option("--full", help="All ports (-p-), slower.")] = False,
+) -> None:
+    """Run nmap service discovery against an authorized host."""
+    from cloudnova.range.toolkit import nmap
+
+    scope = _tool_scope(target, scope_file, i_am_authorized)
+    _emit_tool_result(nmap.run(target, scope, full=full))
+
+
+@tool_app.command("nuclei")
+def tool_nuclei(
+    url: Annotated[str, typer.Argument(help="URL to scan.")],
+    scope_file: Annotated[Path | None, typer.Option("--scope", "-s")] = None,
+    i_am_authorized: Annotated[str, typer.Option("--i-am-authorized")] = "",
+) -> None:
+    """Run nuclei template checks against an authorized URL."""
+    from cloudnova.range.toolkit import nuclei
+
+    scope = _tool_scope(url, scope_file, i_am_authorized)
+    _emit_tool_result(nuclei.run(url, scope))
+
+
+@tool_app.command("ffuf")
+def tool_ffuf(
+    url: Annotated[str, typer.Argument(help="URL containing FUZZ, e.g. https://t/FUZZ")],
+    wordlist: Annotated[Path, typer.Option("--wordlist", "-w", help="Wordlist file.")],
+    scope_file: Annotated[Path | None, typer.Option("--scope", "-s")] = None,
+    i_am_authorized: Annotated[str, typer.Option("--i-am-authorized")] = "",
+) -> None:
+    """Run ffuf content discovery against an authorized URL."""
+    from cloudnova.range.toolkit import ffuf
+
+    scope = _tool_scope(url, scope_file, i_am_authorized)
+    _emit_tool_result(ffuf.run(url, scope, wordlist=str(wordlist)))
+
+
 # ---- mentor subcommands: the pentest tutor (learning is safe/ungated) ----
 mentor_app = typer.Typer(
     help="CloudNova Mentor — your pentest tutor: learning paths, cert tracks, guided labs.",

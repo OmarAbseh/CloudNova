@@ -6,6 +6,14 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Tool orchestration (Range)
+- `cloudnova range tool nmap|nuclei|ffuf <target>`: drive the real tools against an
+  authorized target and get their output back as normalized findings. Scope is
+  checked before any process spawns (`--scope FILE` or `--i-am-authorized "<name>"`).
+  Adapters are recon/detection only; parsing is pure and tested offline via an
+  injected runner. Credential attacks / exploitation are intentionally NOT shipped
+  as autonomous adapters. ([ADR 0016](docs/adr/0016-tool-orchestration.md))
+
 ### Live cloud scanning (AWS + Azure)
 - `cloudnova cloud aws` and `cloudnova cloud azure`: scan a LIVE account read-only
   with your own credentials and audit the actual resources — public S3 buckets /
