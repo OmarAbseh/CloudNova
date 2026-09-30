@@ -6,6 +6,13 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Compliance mapping (ISO 27001 / NIST CSF / PCI DSS)
+- `cloudnova compliance <path> --framework iso27001|nist|pci|all`: maps scan
+  findings onto framework controls and reports each control as PASS / FAIL /
+  NOT_ASSESSED, with a coverage-honest score (never counts controls it doesn't
+  test). Findings are classified by category so new checks are covered
+  automatically. ([ADR 0017](docs/adr/0017-compliance-mapping.md))
+
 ### Landing page + CI Action + roadmap Phase 7
 - `site/index.html`: a professional dark/red marketing landing page with a 3D hero
   and pricing tiers, deployable to Vercel (root dir `site/`).

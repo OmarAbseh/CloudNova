@@ -318,6 +318,47 @@ def cloud_azure(
     _print_findings(findings, "Azure subscription")
 
 
+@app.command("compliance")
+def compliance_cmd(
+    path: Annotated[str, typer.Argument(help="Path to scan (IaC/config).")],
+    framework: Annotated[
+        str,
+        typer.Option("--framework", "-f", help="iso27001 | nist | pci | all."),
+    ] = "all",
+) -> None:
+    """Map scan findings onto compliance controls (ISO 27001 / NIST CSF / PCI DSS)."""
+    from cloudnova import service
+    from cloudnova.compliance import Framework, assess, assess_all
+
+    try:
+        result = service.scan(path)
+    except FileNotFoundError as exc:
+        _console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=1) from None
+    check_ids = [f["check_id"] for f in result["findings"]]
+
+    if framework == "all":
+        reports = list(assess_all(check_ids).values())
+    else:
+        try:
+            reports = [assess(check_ids, Framework(framework))]
+        except ValueError:
+            _console.print("[red]Unknown framework.[/] Use iso27001 | nist | pci | all.")
+            raise typer.Exit(code=2) from None
+
+    _state_color = {"PASS": "green", "FAIL": "red", "NOT_ASSESSED": "dim"}
+    for report in reports:
+        _console.print(
+            f"\n[bold]{report.framework.value.upper()}[/] — compliance score "
+            f"[bold]{report.score}%[/] ({len(report.passed)} pass / "
+            f"{len(report.failed)} fail / {len(report.assessed)} assessed)"
+        )
+        for c in report.controls:
+            color = _state_color[c.state.value]
+            extra = f"  [dim]{', '.join(c.failing_checks)}[/]" if c.failing_checks else ""
+            _console.print(f"  [{color}]{c.state.value:13}[/] {c.control_id:9} {c.title}{extra}")
+
+
 def _load_structured(path: Path) -> object:
     """Load a JSON or YAML file into Python data."""
     text = path.read_text(encoding="utf-8")
