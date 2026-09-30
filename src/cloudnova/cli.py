@@ -384,6 +384,12 @@ def monitor_cmd(
     fail_on_new: Annotated[
         bool, typer.Option("--fail-on-new", help="Exit non-zero if new findings appeared.")
     ] = False,
+    notify: Annotated[
+        bool,
+        typer.Option(
+            "--notify", help="Send a webhook alert on new findings (CLOUDNOVA_SLACK_WEBHOOK)."
+        ),
+    ] = False,
 ) -> None:
     """Scan, compare to the previous run, and record a snapshot (cron/CI-friendly)."""
     from cloudnova import monitor, service
@@ -410,6 +416,13 @@ def monitor_cmd(
     )
     for f in drift.introduced[:10]:
         _console.print(f"  [red]NEW[/] {f.get('check_id')} — {f.get('title')}")
+    if notify and drift.introduced:
+        from cloudnova import notify as _notify
+
+        if _notify.notify_drift(path, drift):
+            _console.print("  [green]alert sent[/] to the configured webhook.")
+        else:
+            _console.print("  [dim]no webhook configured (set CLOUDNOVA_SLACK_WEBHOOK).[/]")
     if fail_on_new and drift.introduced:
         raise typer.Exit(code=1)
 
