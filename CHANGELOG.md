@@ -6,6 +6,14 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Scheduled scanning (history + drift)
+- `cloudnova monitor <path>`: scans, compares to the previous snapshot (introduced
+  vs fixed findings + score delta), and records a timestamped snapshot. `--fail-on-new`
+  exits non-zero when new findings appear — wire it into cron / a systemd timer / a
+  scheduled GitHub Action for continuous monitoring with alerting.
+- `cloudnova history <path>`: posture trend across recorded scans.
+  ([ADR 0018](docs/adr/0018-scheduled-scanning.md))
+
 ### Compliance mapping (ISO 27001 / NIST CSF / PCI DSS)
 - `cloudnova compliance <path> --framework iso27001|nist|pci|all`: maps scan
   findings onto framework controls and reports each control as PASS / FAIL /
