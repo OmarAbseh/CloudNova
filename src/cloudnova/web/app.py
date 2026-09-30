@@ -16,10 +16,13 @@ defensive scanner and mentor over HTTP — never Range's target-facing commands.
 
 from __future__ import annotations
 
+import base64
 import html
+import os
+import secrets
 from typing import Any
 
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, Form, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from cloudnova import __version__, service
@@ -167,8 +170,48 @@ def _page(title: str, body: str, *, hero: bool = False) -> str:
 </body></html>"""
 
 
+_CSP = (
+    "default-src 'self'; "
+    "script-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; "
+    "style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+    "base-uri 'none'; frame-ancestors 'none'"
+)
+
+
 def create_app() -> FastAPI:
     app = FastAPI(title="CloudNova", version=__version__)
+    # Optional HTTP Basic auth: set CLOUDNOVA_WEB_PASSWORD to require login. Without
+    # it the app stays open (fine for 127.0.0.1); the server refuses to bind a public
+    # interface unless a password is set. See server.py.
+    password = os.environ.get("CLOUDNOVA_WEB_PASSWORD", "")
+    user = os.environ.get("CLOUDNOVA_WEB_USER", "admin")
+
+    def _authorized(header: str) -> bool:
+        if not header.startswith("Basic "):
+            return False
+        try:
+            decoded = base64.b64decode(header[6:]).decode("utf-8")
+        except (ValueError, UnicodeDecodeError):
+            return False
+        got_user, _, got_pass = decoded.partition(":")
+        return secrets.compare_digest(got_user, user) and secrets.compare_digest(got_pass, password)
+
+    @app.middleware("http")
+    async def _security(request: Request, call_next: Any) -> Response:
+        needs_auth = bool(password) and request.url.path != "/health"
+        if needs_auth and not _authorized(request.headers.get("Authorization", "")):
+            return Response(
+                "Unauthorized",
+                status_code=401,
+                headers={"WWW-Authenticate": 'Basic realm="CloudNova"'},
+            )
+        response: Response = await call_next(request)
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Content-Security-Policy"] = _CSP
+        response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+        return response
 
     @app.get("/health")
     def health() -> dict[str, Any]:

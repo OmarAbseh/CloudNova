@@ -1,0 +1,18 @@
+# Render blueprint for the CloudNova dashboard.
+# Deploy: push to GitHub, then New > Blueprint on render.com and pick this repo.
+services:
+  - type: web
+    name: cloudnova
+    runtime: python
+    plan: starter
+    buildCommand: pip install -e ".[web]"
+    startCommand: cloudnova-web
+    envVars:
+      - key: CLOUDNOVA_WEB_HOST
+        value: 0.0.0.0
+      - key: CLOUDNOVA_WEB_USER
+        value: admin
+      - key: CLOUDNOVA_WEB_PASSWORD
+        sync: false   # set this in the Render dashboard (a strong secret)
+      - key: PYTHON_VERSION
+        value: "3.12"
