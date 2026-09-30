@@ -3,7 +3,7 @@
 Authorization is the only gate and is checked first. Automatable items are
 resolved from a single passive web assessment (headers, cookies, CORS, transport,
 metafiles, backup/admin paths, HTTP methods). Manual items are returned as TODO
-with their methodology, for the operator to perform — the tool does not exploit.
+with their methodology, for the operator to perform.
 """
 
 from __future__ import annotations

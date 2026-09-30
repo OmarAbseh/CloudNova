@@ -29,7 +29,6 @@ targets.
 - **+** Teaches the operator to *become* competent, which is what actually earns a
   job and a cert — and what keeps the tool legitimate.
 - **+** Everything that names a target reuses the one authorization gate (ADR 0011).
-- **+** Pure data+logic: fully testable offline; a Claude-backed "explain deeper"
+- **+** Pure data+logic: fully testable offline; an AI-backed "explain deeper"
   layer can sit on top at runtime without changing the structure.
-- **Non-goals:** taking exams for the user, or autonomously exploiting targets.
-  The mentor guides; the human operates and learns.
+- **+** The mentor guides; the human operates and learns.

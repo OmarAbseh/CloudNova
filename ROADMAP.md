@@ -33,10 +33,9 @@ aggregation) and killed the crash-on-malformed-input bugs.
 - ⏭️ Next: live-cloud edges, IAM-implied data-access edges, exploitability ranking.
 
 ## Phase 4 — Offensive / pentest modules (authorized-only) 🚧
-- Safe, opt-in recon and exploit-*validation* (confirm a finding is real, don't
-  weaponize it).
+- Opt-in recon and vulnerability *validation* (confirm a finding is real).
 - Hard guardrails: explicit target authorization, scope allowlist, rate limits,
-  full audit log, dry-run default. Refuses to run without written scope.
+  full audit log. Requires written scope before running.
 - This is what makes CloudNova a portfolio piece a security team recognizes.
 - ✅ `cloudnova.range` scope/authorization engine: deny-by-default gate, exclusions
   win, attestation required (fails closed). Every capability gates through it.
@@ -46,8 +45,7 @@ aggregation) and killed the crash-on-malformed-input bugs.
 - ✅ Blackbox checklist (`range checklist`): PTES + OWASP WSTG, passive + opt-in active
   detection, DarkShield-style report; self-authorization ("no scope" responsibility tick).
 - ✅ Tool orchestration (`range tool nmap|nuclei|ffuf`): drive real tools, scope-gated,
-  output normalized to Findings. (Autonomous exploitation/credential attacks are
-  deliberately out of scope — operator-run only. See ADR 0016.)
+  output normalized to Findings.
 - ⏭️ Next: ingest operator tool output (hydra/sqlmap results) into reports.
 
 ## Phase 5 — AI agents 🚧

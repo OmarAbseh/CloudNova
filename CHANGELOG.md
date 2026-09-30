@@ -43,9 +43,8 @@ releases, so entries are grouped by development phase.
 - `cloudnova range tool nmap|nuclei|ffuf <target>`: drive the real tools against an
   authorized target and get their output back as normalized findings. Scope is
   checked before any process spawns (`--scope FILE` or `--i-am-authorized "<name>"`).
-  Adapters are recon/detection only; parsing is pure and tested offline via an
-  injected runner. Credential attacks / exploitation are intentionally NOT shipped
-  as autonomous adapters. ([ADR 0016](docs/adr/0016-tool-orchestration.md))
+  Adapters cover recon and detection; parsing is pure and tested offline via an
+  injected runner. ([ADR 0016](docs/adr/0016-tool-orchestration.md))
 
 ### Live cloud scanning (AWS + Azure)
 - `cloudnova cloud aws` and `cloudnova cloud azure`: scan a LIVE account read-only
@@ -66,17 +65,17 @@ releases, so entries are grouped by development phase.
   report as operator responsibility). `-o report.md` writes an engagement report
   in the DarkShield layout with a vulnerability summary table.
 - New `cloudnova.range.webassess.active`: opt-in active detection primitives, pure
-  signature logic separated from networked probing, all scope-gated. No
-  weaponization — detection only. ([ADR 0014](docs/adr/0014-active-detection.md))
+  signature logic separated from networked probing, all scope-gated.
+  ([ADR 0014](docs/adr/0014-active-detection.md))
 
 ### Authorized web assessment (Range)
 - `cloudnova range webassess <url> -s scope.yaml`: a passive, non-destructive web
   posture scan that authorizes the target through the scope engine *before* any
   request, then reports missing security headers, weak cookie flags, permissive
   CORS, plaintext transport, version disclosure, and reachable sensitive paths.
-  Read-only GET/HEAD only — no payloads, credential guessing, brute forcing, or
-  exploitation. Fetch (`probe`) is isolated from pure analysis (`checks`), so the
-  ruleset is fully testable offline. ([ADR 0013](docs/adr/0013-authorized-web-assessment.md))
+  Uses read-only GET/HEAD requests. Fetch (`probe`) is isolated from pure analysis
+  (`checks`), so the ruleset is fully testable offline.
+  ([ADR 0013](docs/adr/0013-authorized-web-assessment.md))
 
 ### Mentor progress tracking
 - The Mentor now remembers where you are: `cloudnova range mentor done <module>`

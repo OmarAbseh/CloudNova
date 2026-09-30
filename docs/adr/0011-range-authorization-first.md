@@ -27,7 +27,5 @@ this engine before acting. The engine only decides; it never touches a target.
 - **+** Deny-by-default + exclusions-win mirror how real rules-of-engagement and
   bug-bounty scopes work, so the model maps to reality.
 - **+** The attestation is a human accountability record findings can reference.
-- **−** It intentionally can't do anything offensive on its own yet — that's the
-  point. Capabilities are added on top of the gate, never around it.
-- **Non-goals:** autonomous exploitation of arbitrary targets, or any capability
-  that bypasses the scope gate. Those will not be built.
+- **+** Capabilities are always added on top of the gate, never around it, so every
+  new feature inherits authorization for free.
