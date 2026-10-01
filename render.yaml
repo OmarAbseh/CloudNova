@@ -10,9 +10,14 @@ services:
     envVars:
       - key: CLOUDNOVA_WEB_HOST
         value: 0.0.0.0
-      - key: CLOUDNOVA_WEB_USER
-        value: admin
-      - key: CLOUDNOVA_WEB_PASSWORD
-        sync: false   # set this in the Render dashboard (a strong secret)
+      # Accounts and per-org isolation come from the Floatly Platform. The
+      # server refuses to bind a public interface without these, so a deploy
+      # missing them fails fast rather than coming up unauthenticated.
+      - key: SUPABASE_URL
+        sync: false   # set in the Render dashboard
+      - key: SUPABASE_ANON_KEY
+        sync: false   # publishable key; RLS still filters every request
+      # Deliberately absent: SUPABASE_SERVICE_ROLE_KEY. It bypasses RLS and the
+      # dashboard never uses it.
       - key: PYTHON_VERSION
         value: "3.12"

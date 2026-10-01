@@ -62,17 +62,23 @@ aggregation) and killed the crash-on-malformed-input bugs.
 ## Phase 6 — SaaS / Web 🚧
 - ✅ Local FastAPI dashboard (`cloudnova-web`): run scans and view findings, the
   posture grade, and attack paths in the browser; browse the mentor path.
-- ✅ Dashboard auth (HTTP Basic) + security headers; `$PORT` support; refuses to bind
-  a public interface without a password. `render.yaml` / `Procfile` / `DEPLOY.md`.
+- ✅ Dashboard auth + security headers; `$PORT` support; refuses to bind a public
+  interface unauthenticated. `render.yaml` / `Procfile` / `DEPLOY.md`.
+- ✅ Multi-tenant accounts (Supabase): sign-up / sign-in / sessions replaced the
+  original HTTP Basic password.
+- ✅ Organizations with roles (owner / admin / member / viewer), invitations by
+  email, and member management — every row scoped by Row-Level Security.
+- ✅ Scans, findings and targets persisted per organization; scan history in the
+  dashboard.
 - ✅ Marketing landing page (`site/`) for Vercel; GitHub Action for CI scanning.
 - ⏭️ Next: see Phase 7.
 
 ## Phase 7 — Growth & scale (next build phase) 🔜
 The high-value features that turn the platform into a sellable SaaS. Tackled after
 the current phase lands, then we look for more.
-- **Multi-tenant auth + RBAC** (Supabase): per-user accounts, org/teams, isolation —
-  the prerequisite for exposing cloud + pentest features in the web UI safely.
-- **Scan history + trend dashboards**: posture over time, per-target.
+- ✅ **Multi-tenant auth + RBAC** (Supabase): per-user accounts, orgs, roles and
+  isolation — the prerequisite for exposing cloud + pentest features safely.
+- **Scan history + trend dashboards**: history landed; trend charts still to do.
 - **Scheduled / continuous scanning** with drift alerts.
 - **Integrations**: Slack + email alerts, Jira/Linear ticket creation, GitHub PR checks.
 - **PDF/branded report export** (the DarkShield engagement layout as a real document).
