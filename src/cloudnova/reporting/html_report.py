@@ -1,6 +1,6 @@
 """Self-contained HTML report formatter.
 
-Produces a single shareable ``.html`` file — no external CSS/JS/fonts — with the
+Produces a single shareable ``.html`` file - no external CSS/JS/fonts - with the
 posture score, a severity summary, and every finding. Useful for attaching to a
 ticket, emailing a team, or showing off a scan. All styling is inline so the
 file works offline and can't leak data to a CDN.

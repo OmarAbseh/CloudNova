@@ -1,6 +1,6 @@
 """Org lifecycle: members, invitations, roles.
 
-The database is the enforcement point — proven against the live project in
+The database is the enforcement point - proven against the live project in
 the migrations. What these pin down is the layer above: the right request,
 under the caller's own token, and a denial surfaced rather than swallowed.
 """

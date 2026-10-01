@@ -34,7 +34,7 @@ from cloudnova.range.webassess.probe import (
 def _attestation(scope: Scope) -> str:
     a = scope.authorization
     ref = f" (ref {a.reference})" if a.reference else ""
-    return f"{a.program} — authorized by {a.authorized_by}{ref}"
+    return f"{a.program} - authorized by {a.authorized_by}{ref}"
 
 
 def _fail_or_pass(condition: bool, evidence: str = "") -> tuple[State, list[str]]:
@@ -47,7 +47,7 @@ def run_checklist(url: str, scope: Scope, *, active: bool = False) -> ChecklistR
     """Run the blackbox checklist against an authorized URL.
 
     ``active=True`` opts in to intrusive *detection* (reflected XSS, SQL errors,
-    path traversal) — still scope-gated and non-destructive. Off by default.
+    path traversal) - still scope-gated and non-destructive. Off by default.
     """
     from urllib.parse import urlparse
 
@@ -79,7 +79,7 @@ def run_checklist(url: str, scope: Scope, *, active: bool = False) -> ChecklistR
             run.items.append(RunItem(item, state, evidence))
         elif item.mode is Mode.ACTIVE:
             run.items.append(
-                RunItem(item, State.TODO, ["Intrusive — re-run with --active to auto-detect"])
+                RunItem(item, State.TODO, ["Intrusive - re-run with --active to auto-detect"])
             )
         else:
             run.items.append(RunItem(item, State.TODO, [f"Manual: {item.description}"]))

@@ -22,7 +22,7 @@ def _events(data: Any) -> list[dict[str, Any]]:
     """Normalise CloudTrail input to a flat list of event dicts.
 
     Accepts the real ``{"Records": [...]}`` envelope, a bare list, or a single
-    event dict — so we are robust to however the log was exported.
+    event dict - so we are robust to however the log was exported.
     """
     if isinstance(data, dict) and isinstance(data.get("Records"), list):
         return [e for e in data["Records"] if isinstance(e, dict)]
@@ -89,7 +89,7 @@ class WildcardIamPolicy(Check):
                         location=Location(path=artifact.path, resource=str(role)),
                         description=(
                             f"An IAM policy attached to '{role}' allows Action:'*' on "
-                            "Resource:'*' — full administrative access, the classic "
+                            "Resource:'*' - full administrative access, the classic "
                             "privilege-escalation primitive."
                         ),
                         remediation=(
@@ -122,7 +122,7 @@ class PublicS3Write(Check):
                 continue
             params = event.get("requestParameters") or {}
             # The grant is expressed via the x-amz-acl canned ACL, NOT the
-            # bucket's *name* — the prototype's fatal confusion.
+            # bucket's *name* - the prototype's fatal confusion.
             acl = params.get("x-amz-acl") or params.get("acl")
             if acl in self._PUBLIC_ACLS:
                 bucket = params.get("bucketName", "unknown")

@@ -1,7 +1,7 @@
 """Shared fixtures for the platform tests.
 
 Everything runs through ``httpx.MockTransport``, so real request building,
-header signing and response parsing are exercised — only the socket is faked.
+header signing and response parsing are exercised - only the socket is faked.
 """
 
 from __future__ import annotations

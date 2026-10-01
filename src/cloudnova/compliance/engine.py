@@ -5,7 +5,7 @@ Given the check ids that fired in a scan, mark each catalog control as:
 - PASS: the control is one CloudNova assesses and nothing failed it,
 - NOT_ASSESSED: in the catalog but outside what CloudNova currently checks.
 
-The compliance score is passed / (passed + failed) — honest about coverage: it
+The compliance score is passed / (passed + failed) - honest about coverage: it
 never counts controls we don't actually test.
 """
 

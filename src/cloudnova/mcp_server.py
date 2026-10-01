@@ -1,7 +1,7 @@
 """Model Context Protocol server exposing CloudNova to AI agents.
 
 An agent (Claude or any MCP client) can call these tools to scan infrastructure,
-list the ruleset, and reason about attack paths — turning CloudNova from a CLI
+list the ruleset, and reason about attack paths - turning CloudNova from a CLI
 into something an autonomous security agent drives.
 
 The ``mcp`` package is an optional dependency (``pip install cloudnova[mcp]``);

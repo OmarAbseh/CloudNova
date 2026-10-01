@@ -3,7 +3,7 @@
 A manifest file often holds several documents separated by ``---``. Each
 document with an ``apiVersion`` and a ``kind`` becomes one
 :class:`CloudResource` whose ``type`` is the Kubernetes kind (``Deployment``,
-``Pod``, …) and whose ``config`` is the full document, so checks can walk into
+``Pod``, ...) and whose ``config`` is the full document, so checks can walk into
 ``spec`` freely.
 """
 

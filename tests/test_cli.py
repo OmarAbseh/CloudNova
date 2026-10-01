@@ -209,7 +209,7 @@ def test_range_report_generation(tmp_path):
     assert r.exit_code == 0
     assert out.exists()
     text = out.read_text()
-    assert "Penetration Test Report — Acme" in text
+    assert "Penetration Test Report - Acme" in text
     assert "SQLi" in text
 
 

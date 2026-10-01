@@ -3,7 +3,7 @@
 Mirrors the states in the source checklist (PASS / FAIL / N/A) and adds a TODO
 state for manual items an operator must still perform. Automatable items are run
 passively by the web-assessment engine; manual items carry methodology guidance
-and stay the operator's responsibility — the tool never exploits on its own.
+and stay the operator's responsibility - the tool never exploits on its own.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ class State(StrEnum):
 
 class Mode(StrEnum):
     AUTO = "auto"  # CloudNova checks this passively (always run)
-    ACTIVE = "active"  # Intrusive *detection* — opt-in (--active), scope-gated
+    ACTIVE = "active"  # Intrusive *detection* - opt-in (--active), scope-gated
     MANUAL = "manual"  # Needs operator judgment/context; tracked, never auto-exploited
 
 

@@ -15,4 +15,4 @@ pre-commit install
 ## Never
 - Commit secrets. `.env` is gitignored and a pre-commit hook scans for keys.
 - Add a check that guesses (name matching) without marking it LOW confidence.
-- Put file I/O inside a check — parsing belongs in the loader.
+- Put file I/O inside a check - parsing belongs in the loader.

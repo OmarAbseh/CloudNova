@@ -1,12 +1,12 @@
-"""Operator personas for Range — the identity the tool wears.
+"""Operator personas for Range - the identity the tool wears.
 
 Range can present two faces, switchable and purely cosmetic:
 
-- **cloudnova** — the professional product face, part of CloudNova's services.
-- **gh0st** — the operator's personal handle.
+- **cloudnova** - the professional product face, part of CloudNova's services.
+- **gh0st** - the operator's personal handle.
 
 A persona changes how the tool greets you and the default report byline. It has
-no effect on any security behavior — the scope engine, checks, and gating are
+no effect on any security behavior - the scope engine, checks, and gating are
 identical whichever persona is active. Selection: the ``CLOUDNOVA_PERSONA`` env
 var wins, else a saved choice in the config dir, else the default.
 """
@@ -30,7 +30,7 @@ class Persona:
     tagline: str
 
     def banner(self) -> str:
-        return f"{self.display_name} — {self.tagline}"
+        return f"{self.display_name} - {self.tagline}"
 
 
 _PERSONAS: dict[str, Persona] = {

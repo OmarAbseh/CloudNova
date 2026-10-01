@@ -87,7 +87,7 @@ class SupabaseClient:
     def _headers(self, access_token: str | None = None) -> dict[str, str]:
         # `apikey` identifies the project; the bearer decides who you are. With
         # no user token the anon key is its own bearer, which RLS treats as the
-        # `anon` role — and that role is granted nothing in 0001_platform.sql.
+        # `anon` role - and that role is granted nothing in 0001_platform.sql.
         return {
             "apikey": self.config.anon_key,
             "Authorization": f"Bearer {access_token or self.config.anon_key}",
@@ -151,7 +151,7 @@ class SupabaseClient:
     def sign_up(self, email: str, password: str) -> Session | None:
         """Register an account.
 
-        Returns ``None`` when the project requires email confirmation — the
+        Returns ``None`` when the project requires email confirmation - the
         account exists but there is no session yet, which the caller must tell
         the user rather than treating as a failed sign-up.
         """
@@ -202,7 +202,7 @@ class SupabaseClient:
 
     def get_user(self, access_token: str) -> dict[str, Any]:
         """Resolve a token to its user. This is the authoritative check that a
-        session cookie is real — we never trust the token's own contents."""
+        session cookie is real - we never trust the token's own contents."""
         payload = self._request(
             "GET",
             f"{self.config.auth_url}/user",
@@ -236,7 +236,7 @@ class SupabaseClient:
 
     def rpc(self, name: str, access_token: str, args: dict[str, Any] | None = None) -> Any:
         """Call a Postgres function. Used where a policy cannot express the
-        rule — accepting an invitation, where the caller has no rights in the
+        rule - accepting an invitation, where the caller has no rights in the
         target org yet and the check has to run inside the database."""
         return self._request(
             "POST",

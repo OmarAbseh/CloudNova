@@ -21,8 +21,8 @@ from cloudnova.core.findings import Finding
 def fingerprint(finding: Finding) -> str:
     """A stable id for a finding, independent of when or how it was reported.
 
-    Built from the rule, the file, the specific resource, and the evidence — the
-    things that identify *this* issue — hashed so the baseline file is compact
+    Built from the rule, the file, the specific resource, and the evidence - the
+    things that identify *this* issue - hashed so the baseline file is compact
     and doesn't leak long strings.
     """
     parts = "|".join(

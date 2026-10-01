@@ -2,7 +2,7 @@
 
 Every function here takes the signed-in user's access token and nothing else
 that grants authority. None of them filter by ``org_id`` in application code
-for security purposes — RLS already does that, and duplicating the rule in
+for security purposes - RLS already does that, and duplicating the rule in
 Python would create two places for it to drift. Where an ``org_id`` does appear
 in a query it is there to narrow a result set the database has *already*
 restricted to orgs the caller belongs to.

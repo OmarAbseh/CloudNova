@@ -1,10 +1,10 @@
-"""Live AWS account scanning (read-only) — the same Finding contract as everything else.
+"""Live AWS account scanning (read-only) - the same Finding contract as everything else.
 
 Split like the rest of CloudNova: a boto3 *collector* gathers a plain
 :class:`AwsInventory` (read-only API calls), and pure *check* functions turn that
 inventory into findings. The checks never call AWS, so they are fully testable
 offline; the collector is the only part that needs credentials, and it only ever
-reads (Describe/Get/List) — it never creates, modifies, or deletes anything.
+reads (Describe/Get/List) - it never creates, modifies, or deletes anything.
 """
 
 from __future__ import annotations

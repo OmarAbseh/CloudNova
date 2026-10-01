@@ -1,7 +1,7 @@
 """Read-only GCP SDK collector. Isolated + lazy-imported so checks stay light.
 
 Uses Application Default Credentials (gcloud auth / service account). Every call is
-a list/get — nothing is created or modified. Each service is wrapped so partial
+a list/get - nothing is created or modified. Each service is wrapped so partial
 permissions still yield a partial inventory.
 """
 

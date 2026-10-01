@@ -1,7 +1,7 @@
 """Read-only Azure SDK collector. Isolated + lazy-imported so checks stay light.
 
 Uses DefaultAzureCredential (env, managed identity, or `az login`). Every call is a
-list/get — nothing is created or modified. Each service is wrapped so partial
+list/get - nothing is created or modified. Each service is wrapped so partial
 permissions still yield a partial inventory.
 """
 

@@ -1,6 +1,6 @@
 """The coach: turns the curriculum into a personalised learning path.
 
-Pure logic over :mod:`curriculum` — ordering modules by prerequisite, building
+Pure logic over :mod:`curriculum` - ordering modules by prerequisite, building
 certification tracks, and mapping job levels to the skills employers expect. No
 network, no LLM required; a Claude-backed "explain this deeper" layer can sit on
 top later, but the structure and guidance are all here and fully testable.
@@ -87,7 +87,7 @@ def learning_path(target_level: Level | None = None) -> list[LearningStep]:
     remaining = list(modules)
     while remaining:
         batch = [m for m in remaining if ready(m)]
-        if not batch:  # prereq cycle or out-of-cap prereq — emit the rest as-is
+        if not batch:  # prereq cycle or out-of-cap prereq - emit the rest as-is
             batch = remaining
         batch.sort(key=lambda m: (_LEVEL_ORDER[m.level], m.id))
         for m in batch:

@@ -1,5 +1,5 @@
 # An internet-exposed EC2 instance that can assume an admin role which can
-# read a sensitive S3 bucket — a full attack chain, not just isolated findings.
+# read a sensitive S3 bucket - a full attack chain, not just isolated findings.
 
 resource "aws_security_group" "web" {
   name = "web-sg"

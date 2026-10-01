@@ -1,7 +1,7 @@
 """Dashboard authentication: gating, sign-in/up/out, sessions, cookies.
 
-Covers both modes — local single-user (no platform configured) and
-multi-tenant (Supabase wired up) — because the difference between them is a
+Covers both modes - local single-user (no platform configured) and
+multi-tenant (Supabase wired up) - because the difference between them is a
 security boundary, not a feature flag.
 """
 

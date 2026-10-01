@@ -1,5 +1,5 @@
 -- =============================================================================
--- 0002_profiles_trigger.sql — provision a profile when a user signs up
+-- 0002_profiles_trigger.sql - provision a profile when a user signs up
 -- =============================================================================
 -- 0001 deliberately left this out: a trigger on `auth.users` needs rights on
 -- the auth schema, so it belongs in its own migration that can fail loudly
@@ -8,7 +8,7 @@
 -- Until now the first authenticated request created the profile row from the
 -- application (`tenancy.ensure_profile`). That works, but it is best-effort
 -- and only runs if the user reaches a page. Doing it in the database means a
--- profile exists from the moment the account does, for every sign-up path —
+-- profile exists from the moment the account does, for every sign-up path -
 -- including ones the dashboard never sees, like an invite accepted through
 -- Supabase's own flows.
 -- =============================================================================

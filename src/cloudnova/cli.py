@@ -48,7 +48,7 @@ from cloudnova.triage import triage_findings
 
 app = typer.Typer(
     add_completion=False,
-    help="CloudNova — cloud security scanning engine.",
+    help="CloudNova - cloud security scanning engine.",
     no_args_is_help=True,
 )
 _console = Console()
@@ -176,7 +176,7 @@ def triage(
     shown = len(notes)
     if len(findings) > shown:
         _console.print(
-            f"\n[dim]… {len(findings) - shown} more finding(s). Raise --limit to see them.[/]"
+            f"\n[dim]... {len(findings) - shown} more finding(s). Raise --limit to see them.[/]"
         )
 
 
@@ -209,12 +209,12 @@ def diff(
         _console.print(f"[bold red]Introduced ({len(delta.introduced)}):[/]")
         for f in delta.introduced:
             loc = f["location"].get("resource") or f["location"]["path"]
-            _console.print(f"  [red]+[/] [{f['severity'].upper()}] {f['title']} — {loc}")
+            _console.print(f"  [red]+[/] [{f['severity'].upper()}] {f['title']} - {loc}")
     if delta.fixed:
         _console.print(f"[bold green]Fixed ({len(delta.fixed)}):[/]")
         for f in delta.fixed:
             loc = f["location"].get("resource") or f["location"]["path"]
-            _console.print(f"  [green]-[/] [{f['severity'].upper()}] {f['title']} — {loc}")
+            _console.print(f"  [green]-[/] [{f['severity'].upper()}] {f['title']} - {loc}")
     if not delta.introduced and not delta.fixed:
         _console.print("No change in findings.")
 
@@ -234,7 +234,7 @@ def diff(
 @app.command()
 def checks() -> None:
     """List every loaded check in the ruleset."""
-    table = Table(title=f"CloudNova ruleset — {len(registry)} checks")
+    table = Table(title=f"CloudNova ruleset - {len(registry)} checks")
     table.add_column("ID", no_wrap=True)
     table.add_column("Severity", no_wrap=True)
     table.add_column("Target", no_wrap=True)
@@ -271,7 +271,7 @@ def _print_findings(findings: list, target: str) -> None:  # type: ignore[type-a
         _console.print(f"[green]No findings[/] for {target}.")
         return
     colors = {"critical": "red", "high": "red", "medium": "yellow", "low": "cyan", "info": "dim"}
-    _console.print(f"[bold]Live scan:[/] {target} — {len(findings)} findings\n")
+    _console.print(f"[bold]Live scan:[/] {target} - {len(findings)} findings\n")
     for f in findings:
         color = colors.get(f.severity.value, "white")
         _console.print(f"[{color}]{f.severity.value.upper():8}[/] {f.check_id}  {f.title}")
@@ -375,7 +375,7 @@ def compliance_cmd(
     _state_color = {"PASS": "green", "FAIL": "red", "NOT_ASSESSED": "dim"}
     for report in reports:
         _console.print(
-            f"\n[bold]{report.framework.value.upper()}[/] — compliance score "
+            f"\n[bold]{report.framework.value.upper()}[/] - compliance score "
             f"[bold]{report.score}%[/] ({len(report.passed)} pass / "
             f"{len(report.failed)} fail / {len(report.assessed)} assessed)"
         )
@@ -417,16 +417,16 @@ def monitor_cmd(
 
     score = report["summary"].get("posture_score", 0)
     grade = report["summary"].get("grade", "?")
-    _console.print(f"[bold]Monitor:[/] {path} — score {score} ({grade})")
+    _console.print(f"[bold]Monitor:[/] {path} - score {score} ({grade})")
     if drift is None:
-        _console.print("[dim]First snapshot recorded — no baseline to compare yet.[/]")
+        _console.print("[dim]First snapshot recorded - no baseline to compare yet.[/]")
         return
     _console.print(
         f"  [red]+{len(drift.introduced)} new[/] · [green]-{len(drift.fixed)} fixed[/] · "
         f"{drift.unchanged} unchanged · score delta {drift.score_delta:+d}"
     )
     for f in drift.introduced[:10]:
-        _console.print(f"  [red]NEW[/] {f.get('check_id')} — {f.get('title')}")
+        _console.print(f"  [red]NEW[/] {f.get('check_id')} - {f.get('title')}")
     if notify and drift.introduced:
         from cloudnova import notify as _notify
 
@@ -519,7 +519,7 @@ def iam_analyze(
 
 # ---- range subcommands: authorized security testing (authorization-first) ----
 range_app = typer.Typer(
-    help="CloudNova Range — authorized testing. Everything gates through the scope engine.",
+    help="CloudNova Range - authorized testing. Everything gates through the scope engine.",
     no_args_is_help=True,
 )
 app.add_typer(range_app, name="range")
@@ -544,7 +544,7 @@ def persona_list() -> None:
     active = active_persona().id
     for p in list_personas():
         mark = "[green]*[/]" if p.id == active else " "
-        _console.print(f"{mark} [bold]{p.id}[/] — {p.display_name}: {p.tagline}")
+        _console.print(f"{mark} [bold]{p.id}[/] - {p.display_name}: {p.tagline}")
 
 
 @persona_app.command("use")
@@ -605,14 +605,14 @@ def range_check(
 ) -> None:
     """Check whether a target is authorized for testing (deny by default).
 
-    Exit code 0 if ALLOWED, 1 if DENIED — so scripts can gate on it.
+    Exit code 0 if ALLOWED, 1 if DENIED - so scripts can gate on it.
     """
     scope = _load_scope_or_exit(scope_file)
     decision = scope.authorize(target)
     if decision.allowed:
-        _console.print(f"[green]ALLOW[/] {decision.target} — {decision.reason}")
+        _console.print(f"[green]ALLOW[/] {decision.target} - {decision.reason}")
     else:
-        _console.print(f"[red]DENY[/] {decision.target} — {decision.reason}")
+        _console.print(f"[red]DENY[/] {decision.target} - {decision.reason}")
         raise typer.Exit(code=1)
 
 
@@ -626,7 +626,7 @@ def range_webassess(
         bool, typer.Option("--no-paths", help="Skip the sensitive-path check.")
     ] = False,
 ) -> None:
-    """Passive, authorized web posture assessment — scope-gated and non-destructive.
+    """Passive, authorized web posture assessment - scope-gated and non-destructive.
 
     Makes benign read-only requests to an in-scope target and reports missing
     security headers, weak cookies, permissive CORS, plaintext transport, version
@@ -637,7 +637,7 @@ def range_webassess(
     scope = _load_scope_or_exit(scope_file)
     result = assess(url, scope, check_paths=not no_paths)
     if not result.authorized:
-        _console.print(f"[red]DENY[/] {result.target} — {result.reason}")
+        _console.print(f"[red]DENY[/] {result.target} - {result.reason}")
         raise typer.Exit(code=1)
     if not result.findings:
         _console.print(f"[green]No passive findings[/] for {result.target}. ({result.reason})")
@@ -694,7 +694,7 @@ def range_checklist(
     elif i_am_authorized.strip():
         scope = self_authorized_scope(url, i_am_authorized.strip())
         _console.print(
-            f"[yellow]Self-authorized[/] by {i_am_authorized.strip()} — you accept "
+            f"[yellow]Self-authorized[/] by {i_am_authorized.strip()} - you accept "
             "responsibility for testing this target."
         )
     else:
@@ -703,7 +703,7 @@ def range_checklist(
 
     run = run_checklist(url, scope, active=active)
     if not run.authorized:
-        _console.print(f"[red]DENY[/] {run.target} — {run.attestation}")
+        _console.print(f"[red]DENY[/] {run.target} - {run.attestation}")
         raise typer.Exit(code=1)
 
     _console.print(f"[bold]Checklist:[/] {render_summary_line(run)}\n")
@@ -734,7 +734,7 @@ def _tool_scope(target: str, scope_file: Path | None, i_am_authorized: str) -> S
         return _load_scope_or_exit(scope_file)
     if i_am_authorized.strip():
         _console.print(
-            f"[yellow]Self-authorized[/] by {i_am_authorized.strip()} — you accept responsibility."
+            f"[yellow]Self-authorized[/] by {i_am_authorized.strip()} - you accept responsibility."
         )
         return self_authorized_scope(target, i_am_authorized.strip())
     _console.print('[red]Refusing:[/] provide --scope FILE or --i-am-authorized "<name>".')
@@ -792,7 +792,7 @@ def tool_ffuf(
 
 # ---- mentor subcommands: the pentest tutor (learning is safe/ungated) ----
 mentor_app = typer.Typer(
-    help="CloudNova Mentor — your pentest tutor: learning paths, cert tracks, guided labs.",
+    help="CloudNova Mentor - your pentest tutor: learning paths, cert tracks, guided labs.",
     no_args_is_help=True,
 )
 range_app.add_typer(mentor_app, name="mentor")
@@ -836,7 +836,7 @@ def mentor_topic(
     _console.print(f"\n[bold]Tools:[/] {', '.join(module.tools)}")
     _console.print("[bold]Practice & references:[/]")
     for r in module.resources:
-        _console.print(f"   • {r.name} [dim]({r.kind})[/] — {r.url}")
+        _console.print(f"   • {r.name} [dim]({r.kind})[/] - {r.url}")
     if module.certs:
         _console.print(f"[bold]Counts toward:[/] {', '.join(module.certs)}")
 
@@ -851,7 +851,7 @@ def mentor_cert(
     except KeyError as exc:
         _console.print(f"[red]{exc}[/]")
         raise typer.Exit(code=2) from exc
-    _console.print(f"[bold]Prep track — {name.upper()}[/] ({len(modules)} modules):\n")
+    _console.print(f"[bold]Prep track - {name.upper()}[/] ({len(modules)} modules):\n")
     for i, m in enumerate(modules, 1):
         _print_module(m, order=i)
 
@@ -866,7 +866,7 @@ def mentor_jobs(
     except KeyError as exc:
         _console.print(f"[red]{exc}[/]")
         raise typer.Exit(code=2) from exc
-    _console.print(f"[bold]{level.capitalize()} pentester — expected skills[/] ({len(modules)}):\n")
+    _console.print(f"[bold]{level.capitalize()} pentester - expected skills[/] ({len(modules)}):\n")
     for i, m in enumerate(modules, 1):
         _print_module(m, order=i)
 
@@ -916,7 +916,7 @@ def mentor_progress() -> None:
     nxt = mentor.next_modules(1)
     if nxt:
         _console.print(
-            f"\n[bold]Next up:[/] {nxt[0].title} — `cloudnova range mentor topic {nxt[0].id}`"
+            f"\n[bold]Next up:[/] {nxt[0].title} - `cloudnova range mentor topic {nxt[0].id}`"
         )
     else:
         _console.print("\n[green]All modules complete. 🎓[/]")
@@ -929,7 +929,7 @@ def mentor_next(
     """Show the next module(s) to study, based on your progress."""
     nxt = mentor.next_modules(count)
     if not nxt:
-        _console.print("[green]All caught up — every module is complete. 🎓[/]")
+        _console.print("[green]All caught up - every module is complete. 🎓[/]")
         return
     for m in nxt:
         _print_module(m)
@@ -961,12 +961,12 @@ def mentor_lab(
     scope = _load_scope_or_exit(scope_file)
     plan = mentor.start_lab_session(target, scope)
     if not plan.authorized:
-        _console.print(f"[red]DENY[/] {plan.target} — {plan.decision.reason}")
+        _console.print(f"[red]DENY[/] {plan.target} - {plan.decision.reason}")
         _console.print(
             "[yellow]Add the target to your scope file only if you're authorized to test it.[/]"
         )
         raise typer.Exit(code=1)
-    _console.print(f"[green]Authorized[/] — guided lab plan for [bold]{plan.target}[/]:\n")
+    _console.print(f"[green]Authorized[/] - guided lab plan for [bold]{plan.target}[/]:\n")
     for phase, steps in plan.phases:
         _console.print(f"[bold cyan]{phase}[/]")
         for s in steps:
@@ -977,7 +977,7 @@ def mentor_lab(
 def range_recon(
     nmap_xml: Annotated[Path, typer.Argument(help="nmap -oX output file to organize.")],
     scope_file: Annotated[
-        Path, typer.Option("--scope", "-s", help="Scope file — hosts are gated through it.")
+        Path, typer.Option("--scope", "-s", help="Scope file - hosts are gated through it.")
     ],
 ) -> None:
     """Organize nmap output into a scope-checked service inventory with next-steps."""

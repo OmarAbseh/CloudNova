@@ -2,7 +2,7 @@
 
 The assessment is deliberately split like the rest of CloudNova: a passive
 ``HttpSnapshot`` (what a single non-destructive request observed) and pure
-analysis functions over it. Nothing here touches the network — see ``probe`` for
+analysis functions over it. Nothing here touches the network - see ``probe`` for
 the only networked code, which authorizes a target through the scope engine
 before it makes any request.
 """
@@ -26,7 +26,7 @@ class WebFinding:
     remediation: str
 
     def __str__(self) -> str:
-        return f"[{self.severity.value.upper()}] {self.id} — {self.title}"
+        return f"[{self.severity.value.upper()}] {self.id} - {self.title}"
 
 
 @dataclass(frozen=True)

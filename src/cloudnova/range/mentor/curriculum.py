@@ -1,13 +1,13 @@
 """The Mentor's curriculum: a structured pentest learning path.
 
-This is education content as data — a skill tree covering the penetration-testing
+This is education content as data - a skill tree covering the penetration-testing
 domain, each module mapped to the tools it uses, legitimate practice resources
 (PortSwigger Web Security Academy, TryHackMe, HackTheBox, OWASP), the industry
 certifications it counts toward, and the job level that expects it.
 
 It is deliberately methodology- and learning-oriented (the same material CEH /
 OSCP / PNPT teach): *how to think like a tester and how to use the tools*, pointed
-at authorized and practice targets — never a copy-paste attack cookbook aimed at
+at authorized and practice targets - never a copy-paste attack cookbook aimed at
 arbitrary systems.
 """
 
@@ -78,7 +78,7 @@ CURRICULUM: tuple[Module, ...] = (
         id="foundations",
         title="Security & Networking Foundations",
         level=Level.FOUNDATION,
-        summary="TCP/IP, HTTP, Linux, and the CIA triad — the groundwork everything builds on.",
+        summary="TCP/IP, HTTP, Linux, and the CIA triad - the groundwork everything builds on.",
         concepts=[
             "TCP/IP, ports, the OSI model, DNS",
             "HTTP/HTTPS requests, responses, status codes, headers, cookies",
@@ -93,7 +93,7 @@ CURRICULUM: tuple[Module, ...] = (
         id="methodology",
         title="Pentest Methodology & Rules of Engagement",
         level=Level.FOUNDATION,
-        summary="How an engagement is structured — and why scope and authorization come first.",
+        summary="How an engagement is structured - and why scope and authorization come first.",
         concepts=[
             "Phases: recon → scanning → exploitation → post-exploitation → reporting",
             "Scope, rules of engagement, and written authorization (never test out of scope)",
@@ -143,7 +143,7 @@ CURRICULUM: tuple[Module, ...] = (
         level=Level.JUNIOR,
         summary="Finding and understanding the most common web vulnerability classes.",
         concepts=[
-            "Injection (SQLi, command injection) — cause, detection, impact, fix",
+            "Injection (SQLi, command injection) - cause, detection, impact, fix",
             "Broken access control & IDOR",
             "XSS (reflected/stored/DOM) and CSRF",
             "Authentication & session management flaws; SSRF",
@@ -217,7 +217,7 @@ CURRICULUM: tuple[Module, ...] = (
         id="active-directory",
         title="Active Directory Attacks",
         level=Level.SENIOR,
-        summary="Where most enterprise engagements live — enumeration and common attack paths.",
+        summary="Where most enterprise engagements live - enumeration and common attack paths.",
         concepts=[
             "AD structure: domains, OUs, GPOs, Kerberos",
             "Enumeration with BloodHound; attack paths as a graph",

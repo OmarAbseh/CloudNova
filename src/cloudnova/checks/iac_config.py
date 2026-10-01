@@ -20,7 +20,7 @@ def _as_mapping(data: Any) -> dict[str, Any]:
     """Return ``data`` if it is a dict, else an empty dict.
 
     Guards every check against a config file whose top level is a scalar or a
-    list — the exact input that made the old prototype throw ``AttributeError``.
+    list - the exact input that made the old prototype throw ``AttributeError``.
     """
     return data if isinstance(data, dict) else {}
 
@@ -66,7 +66,7 @@ class PasswordAuthDisabled(Check):
     def run(self, artifact: Artifact) -> Iterator[Finding]:
         cfg = _as_mapping(artifact.data)
         auth = _as_mapping(cfg.get("authentication"))
-        # Only flag an explicit `false` — a missing key is not evidence of a
+        # Only flag an explicit `false` - a missing key is not evidence of a
         # weakness and would be a false positive.
         if auth.get("password_required") is False:
             yield Finding(

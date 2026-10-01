@@ -1,4 +1,4 @@
-"""Operator personas: selection, persistence, env override — cosmetic only."""
+"""Operator personas: selection, persistence, env override - cosmetic only."""
 
 import pytest
 

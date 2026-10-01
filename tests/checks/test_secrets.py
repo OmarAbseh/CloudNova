@@ -25,7 +25,7 @@ def test_evidence_is_redacted(tmp_path):
     s = _secrets(_scan(tmp_path, 'key = "AKIAIOSFODNN7EXAMPLE"\n'))
     # The raw secret must never appear in the report.
     assert "AKIAIOSFODNN7EXAMPLE" not in (s[0].evidence or "")
-    assert "…" in (s[0].evidence or "")
+    assert "..." in (s[0].evidence or "")
 
 
 def test_private_key_block_detected(tmp_path):

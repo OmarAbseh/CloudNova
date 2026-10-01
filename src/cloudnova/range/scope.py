@@ -1,4 +1,4 @@
-"""The scope / authorization engine — the gate every Range capability passes through.
+"""The scope / authorization engine - the gate every Range capability passes through.
 
 Design principles, in priority order:
 
@@ -36,7 +36,7 @@ class Verdict(StrEnum):
 
 @dataclass(frozen=True)
 class Decision:
-    """The result of an authorization check — always with a human-readable reason."""
+    """The result of an authorization check - always with a human-readable reason."""
 
     verdict: Verdict
     target: str
@@ -119,7 +119,7 @@ def authorize(target: str, scope: Scope) -> Decision:
         return Decision(
             Verdict.DENY,
             target,
-            "No valid authorization attestation — refusing all targets (fail closed).",
+            "No valid authorization attestation - refusing all targets (fail closed).",
         )
     if not target or not target.strip():
         return Decision(Verdict.DENY, target, "Empty target.")
@@ -141,7 +141,7 @@ def authorize(target: str, scope: Scope) -> Decision:
     return Decision(
         Verdict.DENY,
         target,
-        "Not in scope — no in-scope rule matches (deny by default).",
+        "Not in scope - no in-scope rule matches (deny by default).",
     )
 
 
@@ -169,7 +169,7 @@ def self_authorized_scope(target: str, operator: str) -> Scope:
     This is not a bypass: it records an accountability attestation stating the
     operator asserts they own or are authorized to test ``target`` and accept full
     responsibility. The attestation is written into every report. It authorizes
-    exactly the one target given — nothing wildcard, nothing broad.
+    exactly the one target given - nothing wildcard, nothing broad.
     """
     operator = operator.strip() or "unknown-operator"
     auth = Authorization(

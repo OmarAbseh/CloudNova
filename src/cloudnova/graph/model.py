@@ -2,7 +2,7 @@
 
 Kept deliberately small and dependency-free (no networkx) so it's easy to reason
 about and test. A node wraps a :class:`CloudResource` and carries a set of
-security *roles* (exposed, privileged, data-store …) that the builder tags on;
+security *roles* (exposed, privileged, data-store ...) that the builder tags on;
 attack-path search then reduces to a walk from an exposed node to a sensitive
 one.
 """
@@ -37,9 +37,9 @@ class NodeRole(StrEnum):
     INTERNET_EXPOSED = "internet_exposed"
     #: Carries excessive permissions (e.g. a wildcard IAM policy).
     PRIVILEGED = "privileged"
-    #: Holds or fronts sensitive data (S3, RDS, …).
+    #: Holds or fronts sensitive data (S3, RDS, ...).
     DATA_STORE = "data_store"
-    #: A compute identity that can act (EC2, Lambda, …).
+    #: A compute identity that can act (EC2, Lambda, ...).
     COMPUTE = "compute"
 
 

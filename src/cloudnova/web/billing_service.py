@@ -1,7 +1,7 @@
 """The Stripe webhook endpoint, as its own ASGI app and process.
 
 Separate from the dashboard on purpose. Writing `subscriptions` needs the
-service-role key, which bypasses Row-Level Security entirely — so if it lived
+service-role key, which bypasses Row-Level Security entirely - so if it lived
 in the dashboard's environment, any bug in any dashboard route could reach
 every tenant's data. Running the webhook alone means the key exists in one
 small process that serves exactly one route.

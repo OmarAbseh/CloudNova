@@ -8,7 +8,7 @@ Two complementary capabilities:
   high-level grant spec.
 
 Together they let CloudNova both *write* scoped IAM and *prove* a policy (yours or
-generated) is free of the dangerous patterns — the generator's output is
+generated) is free of the dangerous patterns - the generator's output is
 validated by the analyzer in tests.
 """
 

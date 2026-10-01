@@ -1,13 +1,13 @@
 """A transparent, explainable security-posture score.
 
 The original thesis produced an "AI risk score" from a decision tree that had
-collapsed to a single feature — a number nobody could explain. This replaces it
+collapsed to a single feature - a number nobody could explain. This replaces it
 with an honest, documented formula: a weighted sum of findings by severity, plus
 a penalty for each exploitable attack path, normalized to 0-100 (higher = worse)
 and mapped to a letter grade.
 
-Every input to the score is returned in the ``breakdown`` so a human — or an
-agent — can see exactly why the number is what it is. No black box.
+Every input to the score is returned in the ``breakdown`` so a human - or an
+agent - can see exactly why the number is what it is. No black box.
 """
 
 from __future__ import annotations

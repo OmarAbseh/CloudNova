@@ -85,7 +85,7 @@ def render_report(run: ChecklistRun, *, client: str = "[CLIENT NAME]") -> str:
     ds = [f"DS-{i + 1:03d}" for i in range(len(fails))]
 
     lines: list[str] = []
-    lines.append(f"# Vulnerability Report — {client} — {date.today():%B %Y}\n")
+    lines.append(f"# Vulnerability Report - {client} - {date.today():%B %Y}\n")
     lines.append("## 1. Confidentiality Statement")
     lines.append(
         f"This document is the exclusive property of {client} and contains proprietary "
@@ -119,13 +119,13 @@ def render_report(run: ChecklistRun, *, client: str = "[CLIENT NAME]") -> str:
             f"| {tag} | {ri.item.test_case} ({ri.item.id}) | {sev} | {_remediation(ri.item.id)} |"
         )
     if not fails:
-        lines.append("| — | No vulnerabilities found | — | — |")
+        lines.append("| - | No vulnerabilities found | - | - |")
     lines.append("")
 
     lines.append("## 6. Technical Findings\n")
     for tag, ri in zip(ds, fails, strict=True):
         sev = _SEV_TO_SCALE[severity_for(ri.item.id)]
-        lines.append(f"### Finding {tag} — {ri.item.test_case} ({ri.item.id}) — {sev}")
+        lines.append(f"### Finding {tag} - {ri.item.test_case} ({ri.item.id}) - {sev}")
         lines.append(f"- **WSTG ID:** {ri.item.id}    **ASVS:** {ri.item.asvs or '-'}")
         lines.append(f"- **Location:** {run.target}")
         lines.append(f"- **Description:** {ri.item.description}")
@@ -177,10 +177,10 @@ def render_report_html(run: ChecklistRun, *, client: str = "[CLIENT NAME]") -> s
             f"<td>{e(_remediation(ri.item.id))}</td></tr>"
             for tag, ri in zip(ds, fails, strict=True)
         )
-        or "<tr><td>—</td><td>No vulnerabilities found</td><td>—</td><td>—</td></tr>"
+        or "<tr><td>-</td><td>No vulnerabilities found</td><td>-</td><td>-</td></tr>"
     )
     tech = "".join(
-        f"<div class='finding'><h3>{tag} — {e(ri.item.test_case)} ({ri.item.id})</h3>"
+        f"<div class='finding'><h3>{tag} - {e(ri.item.test_case)} ({ri.item.id})</h3>"
         f"<p><b>Severity:</b> {_SEV_TO_SCALE[severity_for(ri.item.id)]} &nbsp; "
         f"<b>ASVS:</b> {e(ri.item.asvs or '-')} &nbsp; <b>Location:</b> {e(run.target)}</p>"
         f"<p><b>Description:</b> {e(ri.item.description)}</p>"
@@ -195,7 +195,7 @@ def render_report_html(run: ChecklistRun, *, client: str = "[CLIENT NAME]") -> s
         for ri in run.items
     )
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
-<title>Vulnerability Report — {e(client)}</title>
+<title>Vulnerability Report - {e(client)}</title>
 <style>
   body{{font:14px/1.6 -apple-system,Segoe UI,system-ui,sans-serif;color:#1a1a1f;
     max-width:900px;margin:0 auto;padding:40px}}
@@ -207,7 +207,7 @@ def render_report_html(run: ChecklistRun, *, client: str = "[CLIENT NAME]") -> s
   .finding{{border-left:3px solid #ff2e4d;padding:2px 16px;margin:14px 0;background:#fafafa}}
   .muted{{color:#777}} @media print{{body{{padding:0}}}}
 </style></head><body>
-<h1>Vulnerability Report — {e(client)}</h1>
+<h1>Vulnerability Report - {e(client)}</h1>
 <p class="muted">{date.today():%B %d, %Y} · Target: {e(run.target)}</p>
 <h2>Authorization</h2><p>{e(run.attestation)}</p>
 <h2>Executive Summary</h2>

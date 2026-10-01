@@ -1,7 +1,7 @@
 """Parse CloudFormation templates (JSON or YAML) into :class:`CloudResource`.
 
 CloudFormation YAML uses short-form intrinsic tags (``!Ref``, ``!GetAtt``,
-``!Sub`` …) that vanilla ``yaml.safe_load`` rejects. We register a multi
+``!Sub`` ...) that vanilla ``yaml.safe_load`` rejects. We register a multi
 constructor that turns each into its canonical ``{"Fn::<name>": value}`` (or
 ``{"Ref": value}``) mapping, so downstream checks see plain data and are never
 tripped by the tag syntax.
@@ -32,7 +32,7 @@ def _construct_intrinsic(loader: _CfnLoader, tag_suffix: str, node: yaml.Node) -
         value = loader.construct_sequence(node)
     elif isinstance(node, yaml.MappingNode):
         value = loader.construct_mapping(node)
-    else:  # pragma: no cover — pyyaml only emits the three node types above
+    else:  # pragma: no cover - pyyaml only emits the three node types above
         value = None
     # !Ref maps to {"Ref": ...}; everything else to {"Fn::<Name>": ...}.
     key = "Ref" if tag_suffix == "Ref" else f"Fn::{tag_suffix}"

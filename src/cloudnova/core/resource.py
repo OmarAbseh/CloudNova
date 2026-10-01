@@ -4,7 +4,7 @@ Terraform, CloudFormation, and Kubernetes describe the same underlying cloud
 objects in three different dialects. Rather than write three parallel rule sets,
 every IaC parser normalizes its input into :class:`CloudResource` objects, and
 checks reason over those. This is the seam that lets one rule (e.g. "S3 bucket
-is public") work regardless of which format declared the bucket — and it is the
+is public") work regardless of which format declared the bucket - and it is the
 same node type the Phase 3 attack-path graph will be built from.
 """
 
@@ -29,7 +29,7 @@ class CloudResource:
 
     ``type`` keeps the dialect-native type string (``aws_s3_bucket``,
     ``AWS::S3::Bucket``, ``Deployment``) because checks are written against a
-    specific provider's vocabulary — normalizing the *shape* (a resource with a
+    specific provider's vocabulary - normalizing the *shape* (a resource with a
     name, a type, and a config dict) is what buys reuse, not flattening the type
     names into a lossy common denominator.
     """

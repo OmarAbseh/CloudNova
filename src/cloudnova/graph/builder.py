@@ -7,12 +7,12 @@ vs. CloudFormation ``Ref``/``Fn::GetAtt`` logical IDs).
 
 Two jobs:
 
-1. **Edges** — Terraform interpolations (``${aws_iam_role.r.name}``) encode the
+1. **Edges** - Terraform interpolations (``${aws_iam_role.r.name}``) encode the
    relationships between resources. We extract every ``type.name`` reference from
    a resource's config and classify the edge by the attribute it appeared under
    (a ``role =`` reference is CAN_ASSUME/GRANTS, a security-group reference is
    PROTECTED_BY, etc.).
-2. **Roles** — we tag each node with security roles (internet-exposed, privileged,
+2. **Roles** - we tag each node with security roles (internet-exposed, privileged,
    data-store, compute) derived from its own configuration. Attack-path search
    then only needs the graph, not the raw resources.
 
@@ -110,7 +110,7 @@ def _tag_terraform_roles(graph: ResourceGraph, node_ids: set[str]) -> None:
             node.roles.add(NodeRole.DATA_STORE)
         # A role/profile that grants a wildcard policy is privileged. We tag the
         # identity (role/profile), not the policy document itself, because the
-        # identity is what an attacker actually gains — reporting both would be
+        # identity is what an attacker actually gains - reporting both would be
         # redundant noise.
         if node.type in _ROLE_TYPES:
             for edge in graph.edges_from(node.id):
@@ -170,7 +170,7 @@ def _add_data_access_edges(graph: ResourceGraph) -> None:
     add a CAN_ACCESS edge from each privileged node to each data store of the
     same IaC format (stacks don't share resources across formats). This is what
     lets attack-path search report data *exfiltration*, not just privilege
-    escalation — the wildcard grant, not an explicit reference, is the link.
+    escalation - the wildcard grant, not an explicit reference, is the link.
     """
     privileged = [n for n in graph.nodes() if n.has(NodeRole.PRIVILEGED)]
     data_stores = [n for n in graph.nodes() if n.has(NodeRole.DATA_STORE)]

@@ -34,7 +34,7 @@ def parse(stdout: str) -> list[Finding]:
                     severity=Severity.HIGH if sensitive else Severity.INFO,
                     confidence=Confidence.HIGH,
                     location=Location(path=f"{host}:{svc.port}", resource=host),
-                    description=f"{host} exposes {svc.port}/{svc.protocol} — {banner or svc.name}."
+                    description=f"{host} exposes {svc.port}/{svc.protocol} - {banner or svc.name}."
                     + (f" ({SENSITIVE_PORTS[svc.port]} is sensitive)" if sensitive else ""),
                     remediation=svc.hint,
                     evidence=banner or None,

@@ -1,6 +1,6 @@
 """Read-only boto3 collector for AWS. Isolated so the checks stay import-light.
 
-Every call here is a Describe/Get/List — nothing is created, changed, or deleted.
+Every call here is a Describe/Get/List - nothing is created, changed, or deleted.
 Each service is wrapped in try/except so a credential with partial permissions
 still yields a partial inventory instead of failing the whole scan.
 """

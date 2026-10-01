@@ -1,4 +1,4 @@
-"""The ONLY networked code in web assessment — and it is deliberately narrow.
+"""The ONLY networked code in web assessment - and it is deliberately narrow.
 
 Every function authorizes the target through the Range scope engine *before* it
 opens a socket, and refuses (raising :class:`NotAuthorizedError`) when the scope

@@ -17,7 +17,7 @@ from typing import Any
 
 DEFAULT_MODEL = "claude-opus-5"
 
-# Friendly names for the ATT&CK techniques used across the checks — turns a bare
+# Friendly names for the ATT&CK techniques used across the checks - turns a bare
 # "T1530" into something a human immediately understands in the offline path.
 _MITRE_NAMES: dict[str, str] = {
     "T1078": "Valid Accounts",
@@ -39,15 +39,15 @@ _ATTACKER_VIEW: dict[str, str] = {
     "high": "An attacker can use this to gain significant access or exposure.",
     "medium": "An attacker can leverage this as a useful step in a larger chain.",
     "low": "This weakens your posture and helps an attacker once they're in.",
-    "info": "Informational — worth noting but not directly exploitable.",
+    "info": "Informational - worth noting but not directly exploitable.",
 }
 
 _SYSTEM_PROMPT = """\
 You are a cloud-security remediation expert. Given a single security finding, \
 respond with three short sections, plain and practical for an engineer:
-1. What it is — one or two sentences in plain English.
-2. Why it matters — the attacker's-eye view of the impact.
-3. How to fix it — concrete, specific steps (a config/IaC snippet if useful).
+1. What it is - one or two sentences in plain English.
+2. Why it matters - the attacker's-eye view of the impact.
+3. How to fix it - concrete, specific steps (a config/IaC snippet if useful).
 Be concise and actionable. Do not invent details not implied by the finding."""
 
 
@@ -148,7 +148,7 @@ def explain_finding(
 ) -> TriageNote:
     """Explain and propose a fix for one finding (Claude when available, else offline).
 
-    Set ``allow_claude=False`` to force the instant offline explanation — used by the
+    Set ``allow_claude=False`` to force the instant offline explanation - used by the
     web dashboard so rendering a page never makes (slow, paid) API calls per finding.
     """
     if client is not None:

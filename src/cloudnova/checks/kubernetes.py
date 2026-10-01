@@ -107,7 +107,7 @@ class PrivilegedContainer(_K8sCheck):
                     description=(
                         f"Container '{container.get('name')}' sets "
                         "securityContext.privileged: true, granting near-root access to the "
-                        "host kernel — a container escape primitive."
+                        "host kernel - a container escape primitive."
                     ),
                     remediation="Remove privileged: true; grant only the specific capabilities "
                     "the workload needs.",
@@ -202,7 +202,7 @@ class PrivilegeEscalation(_K8sCheck):
             sec = container.get("securityContext")
             sec = sec if isinstance(sec, dict) else {}
             # Absent defaults to true in Kubernetes, so we flag anything not
-            # explicitly disabled — at MEDIUM confidence when merely unset.
+            # explicitly disabled - at MEDIUM confidence when merely unset.
             value = sec.get("allowPrivilegeEscalation")
             if value is False:
                 continue

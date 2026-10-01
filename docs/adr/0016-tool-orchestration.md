@@ -1,4 +1,4 @@
-# ADR 0016 — Tool orchestration
+# ADR 0016 - Tool orchestration
 
 ## Status
 Accepted.
@@ -25,5 +25,5 @@ aggressive tools require explicit operator confirmation before they run.
 ## Consequences
 - Real tool coverage with consistent, mapped findings.
 - Adding an adapter = build_argv + parse + a test; the scope gate and runner are shared.
-- Operator-run tools can also be ingested after the fact — `range recon` already parses
+- Operator-run tools can also be ingested after the fact - `range recon` already parses
   nmap XML, and other tool output can be imported the same way.

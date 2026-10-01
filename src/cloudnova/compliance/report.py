@@ -20,7 +20,7 @@ _MARK = {ControlState.PASS: "PASS", ControlState.FAIL: "FAIL", ControlState.NOT_
 def render_markdown(
     reports: dict[Framework, ComplianceReport], *, target: str = "", client: str = ""
 ) -> str:
-    lines: list[str] = [f"# Compliance Report{f' — {client}' if client else ''}"]
+    lines: list[str] = [f"# Compliance Report{f' - {client}' if client else ''}"]
     lines.append(f"\n_{date.today():%B %d, %Y}_" + (f" · Target: `{target}`" if target else ""))
     lines.append("\n## Summary\n")
     lines.append("| Framework | Score | Pass | Fail | Assessed |")
@@ -31,7 +31,7 @@ def render_markdown(
             f"{len(rep.failed)} | {len(rep.assessed)} |"
         )
     for fw, rep in reports.items():
-        lines.append(f"\n## {_LABELS.get(fw, fw.value)} — {rep.score}%\n")
+        lines.append(f"\n## {_LABELS.get(fw, fw.value)} - {rep.score}%\n")
         lines.append("| Control | Status | Failing checks |")
         lines.append("|---|---|---|")
         for c in rep.controls:

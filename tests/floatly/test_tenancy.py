@@ -121,7 +121,7 @@ def test_ensure_profile_is_a_noop_when_present(make_client):
 
 
 def test_ensure_profile_swallows_errors(make_client):
-    # A missing profile costs a display name, not access — never block login.
+    # A missing profile costs a display name, not access - never block login.
     client, _ = make_client([_json({"message": "boom"}, status=500)])
     ensure_profile(client, "user-jwt", "user-1", "omar@example.test")
 
