@@ -8,11 +8,6 @@ from fastapi.testclient import TestClient
 from cloudnova.web import create_app
 
 
-@pytest.fixture
-def client():
-    return TestClient(create_app())
-
-
 def test_health(client):
     r = client.get("/health")
     assert r.status_code == 200
@@ -106,14 +101,4 @@ def test_security_headers_present(client):
     assert "Content-Security-Policy" in r.headers
 
 
-def test_auth_required_when_password_set(monkeypatch):
-    monkeypatch.setenv("CLOUDNOVA_WEB_PASSWORD", "s3cret")
-    monkeypatch.setenv("CLOUDNOVA_WEB_USER", "omar")
-    c = TestClient(create_app())
-    # /health stays open for liveness probes
-    assert c.get("/health").status_code == 200
-    # protected route rejects missing/bad creds
-    assert c.get("/").status_code == 401
-    assert c.get("/", auth=("omar", "wrong")).status_code == 401
-    # correct creds pass
-    assert c.get("/", auth=("omar", "s3cret")).status_code == 200
+# Authentication moved to Supabase sessions; see test_auth.py.

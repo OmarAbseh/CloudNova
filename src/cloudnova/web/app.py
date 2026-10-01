@@ -16,16 +16,17 @@ defensive scanner and mentor over HTTP — never Range's target-facing commands.
 
 from __future__ import annotations
 
-import base64
 import html
-import os
-import secrets
 from typing import Any
 
 from fastapi import FastAPI, Form, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
+from starlette.concurrency import run_in_threadpool
 
 from cloudnova import __version__, service
+from cloudnova.platform.client import AuthError, SupabaseClient, SupabaseError
+from cloudnova.platform.config import load_config
+from cloudnova.platform.tenancy import ensure_profile
 from cloudnova.range import active_persona
 from cloudnova.range.mentor import (
     completed,
@@ -36,6 +37,7 @@ from cloudnova.range.mentor import (
     summary,
 )
 from cloudnova.triage import explain_finding
+from cloudnova.web import auth as web_auth
 
 # Three.js (UMD, exposes global THREE). Progressive enhancement only.
 _THREE_CDN = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
@@ -100,9 +102,20 @@ main { max-width:1000px; margin:0 auto; padding:28px 24px 64px; }
 .card p { color:var(--muted); margin:0; font-size:14px; }
 .kicker { color:var(--red); font-weight:700; font-size:12px; letter-spacing:2px; text-transform:uppercase; }
 
-input[type=text] { width:100%; padding:13px 14px; border:1px solid var(--line); border-radius:10px;
+input[type=text],input[type=email],input[type=password] { width:100%; padding:13px 14px;
+  border:1px solid var(--line); border-radius:10px;
   font:inherit; background:#0c0c10; color:var(--text); }
-input[type=text]:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px rgba(255,46,77,.15); }
+input:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px rgba(255,46,77,.15); }
+label { display:block; font-size:13px; color:var(--muted); margin:12px 0 5px; font-weight:600; }
+
+.who { color:var(--muted); padding:7px 10px; font-size:13px; }
+.linkish { background:none; border:0; color:var(--muted); cursor:pointer; font:inherit;
+  font-weight:600; font-size:14px; padding:7px 12px; border-radius:8px; }
+.linkish:hover { color:var(--text); background:var(--panel2); }
+.auth-wrap { max-width:400px; margin:36px auto; }
+.notice { border:1px solid var(--line); border-left:3px solid var(--red); background:var(--panel);
+  padding:12px 14px; border-radius:8px; margin:0 0 14px; font-size:14px; }
+.notice.ok { border-left-color:var(--ok); }
 
 table { width:100%; border-collapse:collapse; }
 th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
@@ -153,8 +166,22 @@ def _hero_script() -> str:
 </script>"""
 
 
-def _page(title: str, body: str, *, hero: bool = False) -> str:
+def _page(
+    title: str,
+    body: str,
+    *,
+    hero: bool = False,
+    user: web_auth.CurrentUser | None = None,
+) -> str:
     p = active_persona()
+    if user is None:
+        account = ""
+    else:
+        account = (
+            f'<span class="who">{_e(user.email)}</span>'
+            f"<form method='post' action='/logout' style='margin:0;display:inline'>"
+            f"<button class='linkish' type='submit'>Sign out</button></form>"
+        )
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -163,7 +190,7 @@ def _page(title: str, body: str, *, hero: bool = False) -> str:
 <header>
   <span class="brand"><span class="dot"></span>CloudNova
     <span class="sub">{_e(p.display_name)} · v{_e(__version__)}</span></span>
-  <nav><a href="/">Home</a><a href="/scan">Scan</a><a href="/mentor">Mentor</a></nav>
+  <nav><a href="/">Home</a><a href="/scan">Scan</a><a href="/mentor">Mentor</a>{account}</nav>
 </header>
 <main>{body}</main>
 {_hero_script() if hero else ""}
@@ -174,51 +201,151 @@ _CSP = (
     "default-src 'self'; "
     "script-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; "
     "style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
-    "base-uri 'none'; frame-ancestors 'none'"
+    "base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
 )
 
 
-def create_app() -> FastAPI:
-    app = FastAPI(title="CloudNova", version=__version__)
-    # Optional HTTP Basic auth: set CLOUDNOVA_WEB_PASSWORD to require login. Without
-    # it the app stays open (fine for 127.0.0.1); the server refuses to bind a public
-    # interface unless a password is set. See server.py.
-    password = os.environ.get("CLOUDNOVA_WEB_PASSWORD", "")
-    user = os.environ.get("CLOUDNOVA_WEB_USER", "admin")
+def _harden(response: Response) -> Response:
+    """Attach the security headers. Applied to redirects too, not just pages —
+    an unauthenticated redirect is still a response an attacker can frame."""
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Content-Security-Policy"] = _CSP
+    response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+    return response
 
-    def _authorized(header: str) -> bool:
-        if not header.startswith("Basic "):
-            return False
-        try:
-            decoded = base64.b64decode(header[6:]).decode("utf-8")
-        except (ValueError, UnicodeDecodeError):
-            return False
-        got_user, _, got_pass = decoded.partition(":")
-        return secrets.compare_digest(got_user, user) and secrets.compare_digest(got_pass, password)
+
+def create_app(client: SupabaseClient | None = None) -> FastAPI:
+    """Build the dashboard.
+
+    Two modes, decided by whether the platform is configured:
+
+    * **Multi-tenant** — ``SUPABASE_URL``/``SUPABASE_ANON_KEY`` present. Real
+      accounts, real orgs, every row filtered by RLS.
+    * **Local single-user** — neither set. The tool behaves as it always has:
+      no accounts, nothing persisted. ``server.py`` refuses to bind a public
+      interface in this mode, so it cannot be exposed by accident.
+
+    ``client`` is injectable so tests can drive the whole auth path without a
+    network.
+    """
+    app = FastAPI(title="CloudNova", version=__version__)
+    config = None if client is not None else load_config()
+    platform = client if client is not None else (SupabaseClient(config) if config else None)
+    app.state.platform = platform
 
     @app.middleware("http")
     async def _security(request: Request, call_next: Any) -> Response:
-        needs_auth = bool(password) and request.url.path != "/health"
-        if needs_auth and not _authorized(request.headers.get("Authorization", "")):
-            return Response(
-                "Unauthorized",
-                status_code=401,
-                headers={"WWW-Authenticate": 'Basic realm="CloudNova"'},
-            )
+        request.state.user = None
+        resolved = web_auth.Resolved()
+
+        if platform is not None:
+            # Blocking httpx inside an async middleware would stall the event
+            # loop, so the Supabase round trip goes to a worker thread.
+            resolved = await run_in_threadpool(web_auth.resolve, request, platform)
+            request.state.user = resolved.user
+            path = request.url.path
+            if resolved.user is None and path not in web_auth.PUBLIC_PATHS:
+                redirect = RedirectResponse("/login", status_code=303)
+                if resolved.clear:
+                    web_auth.clear_session(redirect)
+                return _harden(redirect)
+            if resolved.user is not None and path in {"/login", "/signup"}:
+                return _harden(RedirectResponse("/", status_code=303))
+
         response: Response = await call_next(request)
-        response.headers["X-Frame-Options"] = "DENY"
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Content-Security-Policy"] = _CSP
-        response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
-        return response
+        if resolved.refreshed is not None:
+            # The token rotated mid-request; write the new pair back or the
+            # browser keeps replaying the dead one.
+            web_auth.set_session(
+                response, resolved.refreshed, secure=web_auth.secure_request(request)
+            )
+        return _harden(response)
 
     @app.get("/health")
     def health() -> dict[str, Any]:
         return {"status": "ok", "version": __version__}
 
+    # -- accounts ---------------------------------------------------------
+    # Registered only when the platform is configured; in local mode these
+    # paths stay 404 rather than rendering a login form that cannot work.
+
+    if platform is not None:
+        active: SupabaseClient = platform
+
+        @app.get("/login", response_class=HTMLResponse)
+        def login_form() -> str:
+            return _page("Sign in", _login_body())
+
+        @app.post("/login", response_class=HTMLResponse)
+        async def login(
+            request: Request, email: str = Form(...), password: str = Form(...)
+        ) -> Response:
+            try:
+                session = await run_in_threadpool(active.sign_in, email, password)
+            except AuthError as exc:
+                return _harden(
+                    HTMLResponse(_page("Sign in", _login_body(error=str(exc))), status_code=401)
+                )
+            except SupabaseError as exc:
+                return _harden(
+                    HTMLResponse(_page("Sign in", _login_body(error=str(exc))), status_code=502)
+                )
+            await run_in_threadpool(
+                ensure_profile, active, session.access_token, session.user_id, session.email
+            )
+            response = RedirectResponse("/", status_code=303)
+            web_auth.set_session(response, session, secure=web_auth.secure_request(request))
+            return _harden(response)
+
+        @app.get("/signup", response_class=HTMLResponse)
+        def signup_form() -> str:
+            return _page("Create account", _signup_body())
+
+        @app.post("/signup", response_class=HTMLResponse)
+        async def signup(
+            request: Request, email: str = Form(...), password: str = Form(...)
+        ) -> Response:
+            try:
+                session = await run_in_threadpool(active.sign_up, email, password)
+            except AuthError as exc:
+                return _harden(
+                    HTMLResponse(
+                        _page("Create account", _signup_body(error=str(exc))), status_code=400
+                    )
+                )
+            except SupabaseError as exc:
+                return _harden(
+                    HTMLResponse(
+                        _page("Create account", _signup_body(error=str(exc))), status_code=502
+                    )
+                )
+            if session is None:
+                # The project requires email confirmation: the account exists
+                # but there is no session yet. Saying "signed up" and dropping
+                # them at a login that will fail is the worse outcome.
+                return _harden(
+                    HTMLResponse(_page("Check your email", _confirm_body(email)), status_code=200)
+                )
+            await run_in_threadpool(
+                ensure_profile, active, session.access_token, session.user_id, session.email
+            )
+            response = RedirectResponse("/", status_code=303)
+            web_auth.set_session(response, session, secure=web_auth.secure_request(request))
+            return _harden(response)
+
+        @app.post("/logout")
+        async def logout(request: Request) -> Response:
+            token = request.cookies.get(web_auth.ACCESS_COOKIE, "")
+            if token:
+                await run_in_threadpool(active.sign_out, token)
+            response = RedirectResponse("/login", status_code=303)
+            web_auth.clear_session(response)
+            return _harden(response)
+
     @app.get("/", response_class=HTMLResponse)
-    def home() -> str:
+    def home(request: Request) -> str:
         body = """
         <section class="hero">
           <div>
@@ -244,11 +371,11 @@ def create_app() -> FastAPI:
           <div class="card"><div class="kicker">Range</div><h3>Learn to hack</h3>
             <p>An authorization-first pentest toolkit and a tutor that takes you to job-ready.</p></div>
         </div>"""
-        return _page("Home", body, hero=True)
+        return _page("Home", body, hero=True, user=request.state.user)
 
     @app.get("/scan", response_class=HTMLResponse)
-    def scan_form() -> str:
-        return _page("Scan", _scan_form_body())
+    def scan_form(request: Request) -> str:
+        return _page("Scan", _scan_form_body(), user=request.state.user)
 
     @app.post("/scan", response_class=HTMLResponse)
     def run_scan(path: str = Form(...)) -> str:
@@ -259,7 +386,7 @@ def create_app() -> FastAPI:
         return _page("Scan results", _scan_results_body(path, result))
 
     @app.get("/mentor", response_class=HTMLResponse)
-    def mentor_page() -> str:
+    def mentor_page(request: Request) -> str:
         done = completed()
         prog = summary()
         upcoming = {m.id for m in next_modules(1)}
@@ -315,7 +442,7 @@ def create_app() -> FastAPI:
           <table><thead><tr><th>#</th><th>Module</th><th>Level</th><th></th></tr></thead>
           <tbody>{rows}</tbody></table>
         </div>"""
-        return _page("Mentor", body)
+        return _page("Mentor", body, user=request.state.user)
 
     @app.post("/mentor/toggle")
     def mentor_toggle(module_id: str = Form(...)) -> RedirectResponse:
@@ -329,6 +456,65 @@ def create_app() -> FastAPI:
         return RedirectResponse("/mentor", status_code=303)
 
     return app
+
+
+def _auth_form(
+    *, title: str, action: str, submit: str, footer: str, error: str, autocomplete: str
+) -> str:
+    err = f'<p class="notice">{_e(error)}</p>' if error else ""
+    return f"""
+    <div class="auth-wrap">
+      <div class="kicker">CloudNova</div>
+      <h1 style="margin:4px 0 16px">{_e(title)}</h1>
+      <div class="card">
+        {err}
+        <form method="post" action="{_e(action)}">
+          <label for="email">Email</label>
+          <input id="email" type="email" name="email" required autofocus autocomplete="username">
+          <label for="password">Password</label>
+          <input id="password" type="password" name="password" required
+                 autocomplete="{_e(autocomplete)}">
+          <p style="margin-top:18px"><button class="btn" type="submit">{_e(submit)}</button></p>
+        </form>
+      </div>
+      <p class="muted" style="text-align:center;margin-top:14px">{footer}</p>
+    </div>"""
+
+
+def _login_body(error: str = "") -> str:
+    return _auth_form(
+        title="Sign in",
+        action="/login",
+        submit="Sign in",
+        footer='No account? <a href="/signup">Create one</a>',
+        error=error,
+        autocomplete="current-password",
+    )
+
+
+def _signup_body(error: str = "") -> str:
+    return _auth_form(
+        title="Create your account",
+        action="/signup",
+        submit="Create account",
+        footer='Already have one? <a href="/login">Sign in</a>',
+        error=error,
+        autocomplete="new-password",
+    )
+
+
+def _confirm_body(email: str) -> str:
+    return f"""
+    <div class="auth-wrap">
+      <div class="kicker">Almost there</div>
+      <h1 style="margin:4px 0 16px">Confirm your email</h1>
+      <div class="card">
+        <p class="notice ok" style="margin:0">We sent a confirmation link to
+          <b>{_e(email)}</b>. Open it to activate the account, then sign in.</p>
+      </div>
+      <p class="muted" style="text-align:center;margin-top:14px">
+        <a href="/login">Back to sign in</a></p>
+    </div>"""
 
 
 def _scan_form_body(error: str = "") -> str:
