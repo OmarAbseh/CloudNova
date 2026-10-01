@@ -6,6 +6,26 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Multi-tenant platform (Floatly Platform)
+- **Accounts**: Supabase-backed sign-up, sign-in, sessions and refresh replace the
+  dashboard's HTTP Basic password. The session cookie holds Supabase's own tokens
+  and is verified against Supabase on each request, so a forged cookie cannot
+  render even the shell of a signed-in page. Cookies are `HttpOnly` and
+  `SameSite=Lax`.
+- **Organizations and roles**: owner / admin / member / viewer, invitations by
+  email with expiry and revocation, member listing and role management.
+- **Row-Level Security throughout**: organizations, profiles, memberships,
+  audit_log, targets, scans, findings and invitations. Every read and write goes
+  out under the signed-in user's own token, so the database — not the application
+  — decides what a user can see or change. Nothing is granted to `anon`.
+- **Scan persistence**: scans and findings are saved against the current
+  organization and browsable at `/history`.
+- Two modes: with `SUPABASE_URL`/`SUPABASE_ANON_KEY` the dashboard is
+  multi-tenant; without them it stays the single-user local operator tool, and
+  the server refuses to bind a public interface in that state.
+- Migrations live in `supabase/migrations/` (`0001_platform`,
+  `0002_profiles_trigger`, `0003_invitations`).
+
 ### Webhook alerting on drift
 - `cloudnova monitor <path> --notify` posts an alert to a Slack-compatible incoming
   webhook (`CLOUDNOVA_SLACK_WEBHOOK`) when new findings appear — turning scheduled
