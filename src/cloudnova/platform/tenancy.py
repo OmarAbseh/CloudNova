@@ -30,9 +30,10 @@ class Org:
 def ensure_profile(client: SupabaseClient, token: str, user_id: str, email: str) -> None:
     """Make sure the user has a profile row.
 
-    The schema deliberately has no ``auth.users`` trigger (that needs owner
-    rights on the auth schema), so the first authenticated request does it.
-    Best effort: a missing profile costs a display name, not access.
+    Migration 0002 added an ``auth.users`` trigger that does this, so in a
+    correctly-migrated project this is a no-op. It stays as a safety net for a
+    database that predates 0002 or had the trigger dropped. Best effort
+    throughout: a missing profile costs a display name, not access.
     """
     try:
         existing = client.select("profiles", token, params={"id": f"eq.{user_id}", "select": "id"})
@@ -215,4 +216,179 @@ def list_findings(client: SupabaseClient, token: str, scan_id: str) -> list[dict
         "findings",
         token,
         params={"select": "*", "scan_id": f"eq.{scan_id}", "order": "severity.asc,check_id.asc"},
+    )
+
+
+# -----------------------------------------------------------------------------
+# People: members, invitations, roles
+# -----------------------------------------------------------------------------
+# Every call here is a plain PostgREST request under the user's own token, so
+# an attempt to touch an org they do not administer is refused by the database
+# rather than by a check in this file. The one exception is accepting an
+# invitation, which cannot be a policy at all: the invitee has no rights in
+# the target org yet, so the rule lives in accept_invitation() in the schema.
+
+WRITE_ROLES = ("owner", "admin", "member")
+ADMIN_ROLES = ("owner", "admin")
+
+
+@dataclass(frozen=True)
+class Member:
+    user_id: str
+    email: str
+    full_name: str
+    role: str
+    joined_at: str
+
+
+@dataclass(frozen=True)
+class Invitation:
+    id: str
+    email: str
+    role: str
+    status: str
+    created_at: str
+    expires_at: str
+
+
+def list_members(client: SupabaseClient, token: str, org_id: str) -> list[Member]:
+    """Everyone in an org, with the name and email from their profile.
+
+    Profiles became readable to co-members in 0003; before that this could
+    only have shown opaque user ids.
+    """
+    rows = client.select(
+        "memberships",
+        token,
+        params={
+            "select": "user_id,role,created_at,profiles(email,full_name)",
+            "org_id": f"eq.{org_id}",
+            "order": "created_at.asc",
+        },
+    )
+    members: list[Member] = []
+    for row in rows:
+        raw_profile = row.get("profiles")
+        profile: dict[str, Any] = raw_profile if isinstance(raw_profile, dict) else {}
+        members.append(
+            Member(
+                user_id=str(row.get("user_id") or ""),
+                email=str(profile.get("email") or ""),
+                full_name=str(profile.get("full_name") or ""),
+                role=str(row.get("role") or "member"),
+                joined_at=str(row.get("created_at") or ""),
+            )
+        )
+    return members
+
+
+def change_role(client: SupabaseClient, token: str, org_id: str, user_id: str, role: str) -> None:
+    """Change a member's role. Owner-only, enforced by the schema."""
+    if role not in ("owner", "admin", "member", "viewer"):
+        raise ValueError(f"unknown role: {role}")
+    client.update(
+        "memberships",
+        token,
+        {"role": role},
+        params={"org_id": f"eq.{org_id}", "user_id": f"eq.{user_id}"},
+        returning=False,
+    )
+
+
+def remove_member(client: SupabaseClient, token: str, org_id: str, user_id: str) -> None:
+    """Remove someone from an org. Owner/admin only, enforced by the schema."""
+    client.delete(
+        "memberships",
+        token,
+        params={"org_id": f"eq.{org_id}", "user_id": f"eq.{user_id}"},
+    )
+
+
+def list_invitations(
+    client: SupabaseClient, token: str, org_id: str, *, pending_only: bool = True
+) -> list[Invitation]:
+    params = {
+        "select": "id,email,role,status,created_at,expires_at",
+        "org_id": f"eq.{org_id}",
+        "order": "created_at.desc",
+    }
+    if pending_only:
+        params["status"] = "eq.pending"
+    return [_invitation(row) for row in client.select("invitations", token, params=params)]
+
+
+def list_my_invitations(client: SupabaseClient, token: str) -> list[dict[str, Any]]:
+    """Pending invitations addressed to the caller.
+
+    No email filter is sent: the policy already matches the address against
+    the caller's own verified JWT, so asking for "all pending invitations"
+    returns exactly the caller's.
+    """
+    return client.select(
+        "invitations",
+        token,
+        params={
+            "select": "id,email,role,expires_at,organizations(id,name)",
+            "status": "eq.pending",
+            "order": "created_at.desc",
+        },
+    )
+
+
+def invite_member(
+    client: SupabaseClient,
+    token: str,
+    *,
+    org_id: str,
+    email: str,
+    role: str,
+    invited_by: str,
+) -> Invitation:
+    """Invite someone by email. Owner/admin only, enforced by the schema."""
+    if role not in ("owner", "admin", "member", "viewer"):
+        raise ValueError(f"unknown role: {role}")
+    cleaned = email.strip()
+    if "@" not in cleaned:
+        raise ValueError("that does not look like an email address")
+    rows = client.insert(
+        "invitations",
+        token,
+        [{"org_id": org_id, "email": cleaned, "role": role, "invited_by": invited_by}],
+    )
+    if not rows:
+        raise SupabaseError("Could not create the invitation.")
+    return _invitation(rows[0])
+
+
+def revoke_invitation(client: SupabaseClient, token: str, invitation_id: str) -> None:
+    """Withdraw a pending invitation.
+
+    Marked revoked rather than deleted, so the fact that it was sent and
+    withdrawn survives in the org's history.
+    """
+    client.update(
+        "invitations",
+        token,
+        {"status": "revoked"},
+        params={"id": f"eq.{invitation_id}"},
+        returning=False,
+    )
+
+
+def accept_invitation(client: SupabaseClient, token: str, invitation_id: str) -> str:
+    """Redeem an invitation addressed to the caller. Returns the org id."""
+    result = client.rpc("accept_invitation", token, {"invitation_id": invitation_id})
+    if isinstance(result, str) and result:
+        return result
+    raise SupabaseError("Invitation not found.")
+
+
+def _invitation(row: dict[str, Any]) -> Invitation:
+    return Invitation(
+        id=str(row.get("id") or ""),
+        email=str(row.get("email") or ""),
+        role=str(row.get("role") or "member"),
+        status=str(row.get("status") or "pending"),
+        created_at=str(row.get("created_at") or ""),
+        expires_at=str(row.get("expires_at") or ""),
     )

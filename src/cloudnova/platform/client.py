@@ -234,6 +234,64 @@ class SupabaseClient:
             [row for row in payload if isinstance(row, dict)] if isinstance(payload, list) else []
         )
 
+    def rpc(self, name: str, access_token: str, args: dict[str, Any] | None = None) -> Any:
+        """Call a Postgres function. Used where a policy cannot express the
+        rule — accepting an invitation, where the caller has no rights in the
+        target org yet and the check has to run inside the database."""
+        return self._request(
+            "POST",
+            f"{self.config.rest_url}/rpc/{name}",
+            access_token=access_token,
+            json=args or {},
+            fallback=f"Could not run {name}.",
+        )
+
+    def update(
+        self,
+        table: str,
+        access_token: str,
+        values: dict[str, Any],
+        *,
+        params: dict[str, str],
+        returning: bool = True,
+    ) -> list[dict[str, Any]]:
+        """PATCH matching rows. ``params`` carries the PostgREST filters, and
+        is required: a filterless PATCH would rewrite every row RLS lets the
+        caller touch."""
+        if not params:
+            raise ValueError("update requires filters; refusing to patch a whole table")
+        prefer = "return=representation" if returning else "return=minimal"
+        payload = self._request(
+            "PATCH",
+            f"{self.config.rest_url}/{table}",
+            access_token=access_token,
+            json=values,
+            params=params,
+            extra_headers={"Prefer": prefer},
+            fallback=f"Could not update {table}.",
+        )
+        return (
+            [row for row in payload if isinstance(row, dict)] if isinstance(payload, list) else []
+        )
+
+    def delete(
+        self,
+        table: str,
+        access_token: str,
+        *,
+        params: dict[str, str],
+    ) -> None:
+        """DELETE matching rows. Filters required, for the same reason."""
+        if not params:
+            raise ValueError("delete requires filters; refusing to clear a whole table")
+        self._request(
+            "DELETE",
+            f"{self.config.rest_url}/{table}",
+            access_token=access_token,
+            params=params,
+            fallback=f"Could not delete from {table}.",
+        )
+
     def insert(
         self,
         table: str,
