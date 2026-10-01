@@ -6,6 +6,16 @@ product deploys the same schema shape into its own project.
 
 from __future__ import annotations
 
+from cloudnova.platform.billing import (
+    FREE_PLAN,
+    Entitlements,
+    Plan,
+    Usage,
+    entitlements,
+    get_subscription,
+    get_usage,
+    list_plans,
+)
 from cloudnova.platform.client import AuthError, Session, SupabaseClient, SupabaseError
 from cloudnova.platform.config import SupabaseConfig, load_config, service_role_key_present
 from cloudnova.platform.tenancy import (
@@ -33,26 +43,34 @@ from cloudnova.platform.tenancy import (
 
 __all__ = [
     "ADMIN_ROLES",
+    "FREE_PLAN",
     "WRITE_ROLES",
     "AuthError",
+    "Entitlements",
     "Invitation",
     "Member",
     "Org",
+    "Plan",
     "Session",
     "SupabaseClient",
     "SupabaseConfig",
     "SupabaseError",
+    "Usage",
     "accept_invitation",
     "change_role",
     "create_org",
     "ensure_org",
     "ensure_profile",
+    "entitlements",
+    "get_subscription",
+    "get_usage",
     "invite_member",
     "list_findings",
     "list_invitations",
     "list_members",
     "list_my_invitations",
     "list_orgs",
+    "list_plans",
     "list_scans",
     "load_config",
     "record_scan",
