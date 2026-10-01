@@ -136,7 +136,7 @@ def ask(question: str, *, client: Any = None, model: str = DEFAULT_MODEL) -> Ans
     if not _credentials_available():
         return _offline_answer(question)
     try:
-        import anthropic  # type: ignore[import-not-found]
+        import anthropic
     except ImportError:
         return Answer(
             "(install the agent extra for Claude-powered Q&A: pip install 'cloudnova[agent]')\n\n"
