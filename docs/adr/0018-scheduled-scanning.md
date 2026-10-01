@@ -1,4 +1,4 @@
-# ADR 0018 - Scheduled scanning via history + drift (not a daemon)
+# ADR 0018, Scheduled scanning via history + drift (not a daemon)
 
 ## Status
 Accepted.
@@ -6,7 +6,7 @@ Accepted.
 ## Context
 Customers want continuous monitoring: "tell me when something new breaks." The
 naive approach is to build a scheduler daemon inside CloudNova. That's the wrong
-call - cron, systemd timers, and CI schedulers already do scheduling reliably.
+call, cron, systemd timers, and CI schedulers already do scheduling reliably.
 
 ## Decision
 Add `cloudnova.monitor`: make scans *stateful over time* and let the platform's

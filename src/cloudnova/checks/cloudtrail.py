@@ -122,7 +122,7 @@ class PublicS3Write(Check):
                 continue
             params = event.get("requestParameters") or {}
             # The grant is expressed via the x-amz-acl canned ACL, NOT the
-            # bucket's *name* - the prototype's fatal confusion.
+            # bucket's *name*, the prototype's fatal confusion.
             acl = params.get("x-amz-acl") or params.get("acl")
             if acl in self._PUBLIC_ACLS:
                 bucket = params.get("bucketName", "unknown")

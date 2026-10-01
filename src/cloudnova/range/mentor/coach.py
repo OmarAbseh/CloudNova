@@ -87,7 +87,7 @@ def learning_path(target_level: Level | None = None) -> list[LearningStep]:
     remaining = list(modules)
     while remaining:
         batch = [m for m in remaining if ready(m)]
-        if not batch:  # prereq cycle or out-of-cap prereq - emit the rest as-is
+        if not batch:  # prereq cycle or out-of-cap prereq, emit the rest as-is
             batch = remaining
         batch.sort(key=lambda m: (_LEVEL_ORDER[m.level], m.id))
         for m in batch:

@@ -16,7 +16,7 @@ from itertools import pairwise
 from cloudnova.core.findings import Confidence, Finding, Location, Severity
 from cloudnova.graph.model import EdgeKind, Node, NodeRole, ResourceGraph
 
-#: Don't chase chains longer than this - keeps search bounded and paths readable.
+#: Don't chase chains longer than this, keeps search bounded and paths readable.
 _MAX_DEPTH = 6
 
 _EDGE_VERB = {
@@ -77,7 +77,7 @@ def find_attack_paths(graph: ResourceGraph) -> list[AttackPath]:
                 if key not in seen_targets:
                     seen_targets.add(key)
                     paths.append(AttackPath(tuple(trail), _describe(current)))
-                # Don't stop - a data store reached via a role may still lead on,
+                # Don't stop, a data store reached via a role may still lead on,
                 # but avoid revisiting nodes already in this trail (no cycles).
             for edge in graph.edges_from(current_id):
                 if edge.dst not in trail:

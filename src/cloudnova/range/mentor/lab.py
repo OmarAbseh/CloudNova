@@ -28,7 +28,7 @@ class LabPlan:
 
 
 # A professional engagement methodology, phase by phase. This is the *how to
-# think* checklist - the same flow taught by OSCP/PNPT - not target-specific
+# think* checklist, the same flow taught by OSCP/PNPT, not target-specific
 # exploit steps.
 _METHODOLOGY: list[tuple[str, list[str]]] = [
     (

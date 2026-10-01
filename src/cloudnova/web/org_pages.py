@@ -124,7 +124,7 @@ def _plan_panel(allowance: Entitlements | None) -> str:
         return ""
     if allowance.degraded:
         # Say the numbers are unavailable rather than showing zeros, which
-        # would read as "you have used nothing" - the opposite of the truth.
+        # would read as "you have used nothing", the opposite of the truth.
         return (
             '<div class="card" style="margin-top:16px">'
             '<h3 style="margin-top:0">Plan</h3>'

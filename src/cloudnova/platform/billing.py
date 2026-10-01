@@ -22,7 +22,7 @@ from cloudnova.platform.client import SupabaseClient, SupabaseError
 _ENTITLING_STATUSES = frozenset({"active", "trialing", "past_due"})
 
 # Used when an org has no subscription row at all. Absence is a valid state -
-# nothing has to backfill a row for billing to work - so this must agree with
+# nothing has to backfill a row for billing to work, so this must agree with
 # the `free` row seeded in migration 0004 or the two paths would diverge.
 _PLAN_COLUMNS = "id,name,price_cents,currency,max_seats,max_scans_per_month"
 

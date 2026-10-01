@@ -1,11 +1,11 @@
-# ADR 0014 - Active detection (opt-in)
+# ADR 0014, Active detection (opt-in)
 
 ## Status
 Accepted.
 
 ## Context
 Passive assessment (ADR 0013) confirms posture but not exploitable bugs. Authorized
-active testing - sending crafted probes to confirm a vulnerability exists - is what
+active testing, sending crafted probes to confirm a vulnerability exists, is what
 OWASP ZAP, Burp Scanner, Nuclei, and SQLMap do on scoped engagements. The checklist
 (PTES + OWASP WSTG) should resolve intrusive items with real evidence, not just list
 them.

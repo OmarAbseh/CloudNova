@@ -1,4 +1,4 @@
-# 0002 - Checks are plugins registered via a decorator
+# 0002, Checks are plugins registered via a decorator
 
 **Status:** Accepted
 
@@ -17,7 +17,7 @@ never imports a specific rule.
 - **+** Adding a rule = one new class + one import line. The engine is untouched.
 - **+** `__init_subclass__` rejects a check missing required metadata at import.
 - **+** The registry rejects duplicate IDs, so a copy-paste rule fails fast.
-- **−** Import-time side effects (registration) - mitigated by keeping the
+- **−** Import-time side effects (registration), mitigated by keeping the
   registry explicit and tested.
 
 ## Alternatives considered

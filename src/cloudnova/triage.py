@@ -17,7 +17,7 @@ from typing import Any
 
 DEFAULT_MODEL = "claude-opus-5"
 
-# Friendly names for the ATT&CK techniques used across the checks - turns a bare
+# Friendly names for the ATT&CK techniques used across the checks, turns a bare
 # "T1530" into something a human immediately understands in the offline path.
 _MITRE_NAMES: dict[str, str] = {
     "T1078": "Valid Accounts",

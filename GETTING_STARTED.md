@@ -1,10 +1,10 @@
 # Getting Started with CloudNova
 
-A friendly, plain-language walkthrough. No prior experience needed - copy, paste,
+A friendly, plain-language walkthrough. No prior experience needed, copy, paste,
 and go. CloudNova has two sides:
 
-- **The scanner** - finds security problems in cloud setups (Terraform, AWS, etc.).
-- **Range** - your authorized pentest toolkit *and* a tutor that teaches you to hack, legally.
+- **The scanner**, finds security problems in cloud setups (Terraform, AWS, etc.).
+- **Range**, your authorized pentest toolkit *and* a tutor that teaches you to hack, legally.
 
 ---
 
@@ -59,7 +59,7 @@ pip install -e ".[web]"
 cloudnova-web
 ```
 
-Open **http://127.0.0.1:8000** - run scans and read results in a friendly UI, and
+Open **http://127.0.0.1:8000**, run scans and read results in a friendly UI, and
 browse the learning path. It only runs on your own machine.
 
 ---
@@ -80,7 +80,7 @@ cloudnova iam analyze policy.json    # flags wildcards, privilege-escalation, et
 
 ---
 
-## 5. Range - your pentest toolkit + tutor
+## 5. Range, your pentest toolkit + tutor
 
 Everything in Range is **authorization-first**: it will only work on targets you've
 declared you're allowed to test. That's what keeps it legal.
@@ -144,7 +144,7 @@ cloudnova-mcp        # exposes scan / list_checks / attack_paths to Claude or an
    (TryHackMe, HackTheBox, OWASP Juice Shop), or a bug-bounty program's published
    scope. Range enforces this, but *you* are responsible.
 2. **Learn by doing on practice targets first.** The mentor is there to make you
-   genuinely good - that's what lands the job and the bounty.
+   genuinely good, that's what lands the job and the bounty.
 3. **Never submit findings you don't understand.** Validate first; the mentor
    teaches you how.
 
@@ -152,7 +152,7 @@ cloudnova-mcp        # exposes scan / list_checks / attack_paths to Claude or an
 
 ## Where to go next
 
-- `README.md` - the overview and architecture.
-- `ROADMAP.md` - what's built and what's coming.
-- `docs/adr/` - *why* each part is built the way it is (great for interviews).
-- `CHANGELOG.md` - everything that's shipped.
+- `README.md`, the overview and architecture.
+- `ROADMAP.md`, what's built and what's coming.
+- `docs/adr/`, *why* each part is built the way it is (great for interviews).
+- `CHANGELOG.md`, everything that's shipped.

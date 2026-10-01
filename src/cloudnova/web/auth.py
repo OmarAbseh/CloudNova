@@ -92,7 +92,7 @@ def resolve(request: Request, client: SupabaseClient) -> Resolved:
             user = client.get_user(access)
             return Resolved(user=_user_from(user, access))
         except AuthError:
-            pass  # expired or revoked - fall through to the refresh attempt
+            pass  # expired or revoked, fall through to the refresh attempt
         except SupabaseError:
             # Supabase unreachable. Do not clear the cookie over an outage.
             return Resolved()

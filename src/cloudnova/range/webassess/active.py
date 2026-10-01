@@ -22,7 +22,7 @@ from cloudnova.range.webassess.probe import ProbeError, get_body
 # the parameter reflects input without output-encoding => reflected XSS.
 XSS_MARKER = "cn0va7z<b>xss</b>"
 
-# Signatures of a database error leaking through - the classic SQLi tell.
+# Signatures of a database error leaking through, the classic SQLi tell.
 _SQL_ERRORS = (
     "you have an error in your sql syntax",
     "warning: mysql",

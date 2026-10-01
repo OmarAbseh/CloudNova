@@ -26,7 +26,7 @@ def test_generates_scoped_policy():
 
 
 def test_round_trip_generated_policy_is_clean():
-    # The generator's output must pass the analyzer with zero findings - the
+    # The generator's output must pass the analyzer with zero findings, the
     # proof that what it authors is genuinely least-privilege.
     spec = {
         "grants": [

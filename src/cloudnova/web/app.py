@@ -453,7 +453,7 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
                 ensure_org, platform, user.access_token, user.user_id, user.email
             )
         except SupabaseError:
-            # Org bootstrap failing must not take the whole page down - the
+            # Org bootstrap failing must not take the whole page down, the
             # user stays signed in and the org-scoped parts simply go quiet.
             return None, []
         if not orgs:

@@ -87,7 +87,7 @@ class SupabaseClient:
     def _headers(self, access_token: str | None = None) -> dict[str, str]:
         # `apikey` identifies the project; the bearer decides who you are. With
         # no user token the anon key is its own bearer, which RLS treats as the
-        # `anon` role - and that role is granted nothing in 0001_platform.sql.
+        # `anon` role, and that role is granted nothing in 0001_platform.sql.
         return {
             "apikey": self.config.anon_key,
             "Authorization": f"Bearer {access_token or self.config.anon_key}",

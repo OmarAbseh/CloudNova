@@ -1,14 +1,14 @@
 # 🛡️ CloudNova
 
-**Find cloud misconfigurations before attackers do - then learn to think like one.**
+**Find cloud misconfigurations before attackers do, then learn to think like one.**
 
 CloudNova is a cloud security platform in two halves that share one engine:
 
-- **Scanner** - point it at Terraform, CloudFormation, Kubernetes manifests,
+- **Scanner**, point it at Terraform, CloudFormation, Kubernetes manifests,
   CloudTrail logs, or auth/config logs and it reports misconfigurations as
   structured, actionable findings, mapped to CIS Benchmarks and MITRE ATT&CK,
   emittable as SARIF, and gate-able in CI.
-- **Range** - an *authorization-first* offensive-security side whose headline
+- **Range**, an *authorization-first* offensive-security side whose headline
   feature is a **pentest mentor**: a structured curriculum that takes you from
   foundations to job- and cert-ready, with progress tracking and scope-gated
   practice labs.
@@ -17,7 +17,7 @@ CloudNova is a cloud security platform in two halves that share one engine:
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 
-> **New here?** Read [GETTING_STARTED.md](./GETTING_STARTED.md) - a plain-language
+> **New here?** Read [GETTING_STARTED.md](./GETTING_STARTED.md), a plain-language
 > walkthrough of every feature.
 
 ---
@@ -28,14 +28,14 @@ Most scanners hand you a flat checklist. CloudNova adds the two things a
 checklist misses:
 
 1. **Attack paths.** It builds a graph of your resources and reports exploitable
-   *chains* - "an internet-exposed instance can assume a role that reaches admin"
+   *chains*, "an internet-exposed instance can assume a role that reaches admin"
    - as one narrated CRITICAL finding, not scattered nits.
 2. **A path for the human.** The Range mentor turns the same security knowledge
    into a curriculum, so the person running the tool actually levels up.
 
 Every finding carries a **severity** *and* an independent **confidence**, maps to
 CIS + MITRE ATT&CK, and rolls up into a **transparent posture score** (0-100 /
-A-F) with a full breakdown - no black box.
+A-F) with a full breakdown, no black box.
 
 ---
 
@@ -58,7 +58,7 @@ cloudnova diff old-scan.json .                   # posture drift vs a saved scan
 
 ### Web dashboard
 
-A local browser dashboard (optional `web` extra) - run a scan and see findings,
+A local browser dashboard (optional `web` extra), run a scan and see findings,
 the posture grade, and attack paths, plus the pentest mentor with a live
 progress tracker:
 
@@ -80,7 +80,7 @@ HIGH      LOG_SSH_BRUTE_FORCE     10.0.0.5       120 failed SSH attempts from on
 
 ## What it detects today
 
-**30 checks across 5 input formats** - Terraform, CloudFormation, Kubernetes,
+**30 checks across 5 input formats**, Terraform, CloudFormation, Kubernetes,
 CloudTrail logs, and generic config/auth logs. Run `cloudnova checks` for the
 live list. Highlights:
 
@@ -108,7 +108,7 @@ cloudnova cloud gcp --project <id>
 ```
 
 Public buckets/storage, IAM users without MFA, stale keys, security groups/NSGs
-open to the world, public/unencrypted databases - as the same findings, mapped to
+open to the world, public/unencrypted databases, as the same findings, mapped to
 CIS + MITRE. Read-only only; nothing is created or changed.
 ([ADR 0015](docs/adr/0015-live-cloud-scanning.md))
 
@@ -137,11 +137,11 @@ cloudnova iam analyze policy.json                   # audit for escalation vecto
 (`iam:PassRole` + `ec2:RunInstances`), wildcard principals, and `NotAction`+Allow.
 ([ADR 0010](docs/adr/0010-iam-generate-and-analyze.md))
 
-### CloudNova Range - authorized testing, authorization-first
+### CloudNova Range, authorized testing, authorization-first
 
 `cloudnova.range` is the offensive / validation side, built so the **scope engine
 is the only entry point**. It decides whether a target is authorized *before*
-anything can act on it - deny-by-default, exclusions win, and it refuses
+anything can act on it, deny-by-default, exclusions win, and it refuses
 everything unless a scope file carries an authorization attestation.
 
 ```bash
@@ -153,7 +153,7 @@ Every target-facing action passes the scope engine first.
 ([ADR 0011](docs/adr/0011-range-authorization-first.md))
 
 **Authorized web assessment** (`cloudnova range webassess`): a passive,
-non-destructive posture scan of an in-scope web target - missing security
+non-destructive posture scan of an in-scope web target, missing security
 headers, weak cookies, permissive CORS, plaintext transport, version disclosure,
 and reachable sensitive paths. It authorizes the target *before* any request and
 uses read-only GET/HEAD requests.
@@ -164,9 +164,9 @@ cloudnova range webassess https://app.example.com -s scope.yaml
 
 ([ADR 0013](docs/adr/0013-authorized-web-assessment.md))
 
-**Mentor - your pentest tutor** (`cloudnova range mentor`): a structured
+**Mentor, your pentest tutor** (`cloudnova range mentor`): a structured
 curriculum from foundations to job- and cert-ready, grounded in real cert
-domains (eJPT / PNPT / OSCP / CEH) and pentest job requirements - now with
+domains (eJPT / PNPT / OSCP / CEH) and pentest job requirements, now with
 progress tracking that walks with you.
 
 ```bash
@@ -205,16 +205,16 @@ files ──► loader ──► Artifact(kind, data) ──► Engine ──►
                                                 errors)                            contract)          /json/sarif/html)
 ```
 
-- **`Finding`** - one immutable, validated Pydantic model is the contract every
+- **`Finding`**, one immutable, validated Pydantic model is the contract every
   check produces and every formatter consumes. ([ADR 0001](docs/adr/0001-finding-as-the-core-contract.md))
-- **Checks are plugins** - subclass `Check`, add `@register`; the engine
+- **Checks are plugins**, subclass `Check`, add `@register`; the engine
   discovers them. ([ADR 0002](docs/adr/0002-plugin-check-registry.md))
-- **Parse ≠ check** - only the loader touches disk; checks are pure functions of
+- **Parse ≠ check**, only the loader touches disk; checks are pure functions of
   parsed data, so one bad file can't crash a scan. ([ADR 0003](docs/adr/0003-parse-then-check-separation.md))
-- **Severity ⊥ confidence** - how bad *and* how sure. ([ADR 0004](docs/adr/0004-severity-and-confidence-are-separate.md))
-- **One normalized resource model** - TF/CFN/K8s parse into the same
+- **Severity ⊥ confidence**, how bad *and* how sure. ([ADR 0004](docs/adr/0004-severity-and-confidence-are-separate.md))
+- **One normalized resource model**, TF/CFN/K8s parse into the same
   `CloudResource`, so AWS rules are shared, not triplicated. ([ADR 0005](docs/adr/0005-normalized-resource-model.md))
-- **Baselines by fingerprint** - gate only on *new* findings, stable across
+- **Baselines by fingerprint**, gate only on *new* findings, stable across
   reformatting. ([ADR 0006](docs/adr/0006-baseline-fingerprints.md))
 
 Every design decision is written up in [`docs/adr/`](docs/adr).
@@ -245,7 +245,7 @@ See [ROADMAP.md](./ROADMAP.md). In short: IaC scanning → live cloud scanning
 
 ## License
 
-MIT - see [LICENSE](./LICENSE).
+MIT, see [LICENSE](./LICENSE).
 
 ---
 

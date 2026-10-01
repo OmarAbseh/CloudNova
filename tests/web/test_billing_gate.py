@@ -99,7 +99,7 @@ def test_scan_runs_when_under_the_limit(platform_app, tmp_path):
 
 
 def test_scan_is_refused_at_the_monthly_limit(platform_app, tmp_path):
-    # free plan: 20 scans. Refuse before running, not after - there is no
+    # free plan: 20 scans. Refuse before running, not after, there is no
     # point burning the work only to throw the result away.
     app, seen = _signed_in(platform_app, scans=20)
     r = app.post("/scan", data={"path": _tf(tmp_path)})
