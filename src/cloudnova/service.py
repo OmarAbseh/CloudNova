@@ -1,7 +1,7 @@
 """Programmatic API returning plain JSON-serializable dicts.
 
 This is the seam between CloudNova's engine and any *caller* that isn't a human
-at a terminal — most importantly the MCP server (so an AI agent can scan and
+at a terminal - most importantly the MCP server (so an AI agent can scan and
 reason about infrastructure), but equally a web API or another Python program.
 
 Keeping this logic here, returning dicts (never Rich/console output), means the

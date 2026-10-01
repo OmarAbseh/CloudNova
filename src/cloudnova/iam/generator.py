@@ -1,7 +1,7 @@
 """Generate a least-privilege IAM policy from a high-level grant spec.
 
-You describe *what* an application needs — "read and list this S3 bucket", "write
-to that DynamoDB table" — and the generator emits a scoped IAM policy with only
+You describe *what* an application needs - "read and list this S3 bucket", "write
+to that DynamoDB table" - and the generator emits a scoped IAM policy with only
 the specific actions those intents require, constrained to the resource ARNs you
 name. It refuses to emit wildcard resources, so its output is least-privilege by
 construction; tests then run the analyzer over the result to prove it's clean.

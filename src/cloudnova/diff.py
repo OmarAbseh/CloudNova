@@ -1,7 +1,7 @@
 """Compare two scans: what's newly introduced, what's been fixed.
 
 Point-in-time scanning answers "what's wrong now". Teams also need "what changed"
-— did this PR *introduce* a finding, or fix one? This diffs a previously saved
+- did this PR *introduce* a finding, or fix one? This diffs a previously saved
 JSON report against a fresh scan, matching findings by the same stable fingerprint
 the baseline uses (check_id + path + resource + evidence), so reformatting doesn't
 create false churn.
@@ -15,7 +15,7 @@ from typing import Any
 
 
 def fingerprint(finding: dict[str, Any]) -> str:
-    """Stable id for a finding dict — matches the baseline's fingerprint fields."""
+    """Stable id for a finding dict - matches the baseline's fingerprint fields."""
     loc = finding.get("location") or {}
     parts = "|".join(
         [

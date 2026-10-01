@@ -1,6 +1,6 @@
 """Pure analysis over an :class:`HttpSnapshot`.
 
-Every function takes a snapshot and returns findings — no I/O, no network, no
+Every function takes a snapshot and returns findings - no I/O, no network, no
 mutation. This is what makes the assessment testable offline and deterministic.
 All of it is passive: it reasons about what a single benign request returned. It
 never sends a payload, guesses a credential, or tries to exploit anything.

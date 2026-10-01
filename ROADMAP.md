@@ -3,13 +3,13 @@
 A phased path from a clean engine to a full cloud + offensive security platform.
 Each phase is independently useful and demo-able.
 
-## Phase 0 — Foundation ✅ (this milestone)
+## Phase 0 - Foundation ✅ (this milestone)
 Typed `Finding` model, plugin check engine, robust loader, CLI with CI gating,
 console/JSON reporters, full test + lint + type gate, CI on 3.11/3.12.
 Corrected every prototype detector (real CloudTrail schema, ACL-based S3, IP
 aggregation) and killed the crash-on-malformed-input bugs.
 
-## Phase 1 — Real IaC scanning ✅
+## Phase 1 - Real IaC scanning ✅
 - ✅ Terraform HCL, CloudFormation (JSON/YAML incl. intrinsic tags), and
   multi-document Kubernetes manifest parsers → normalized `CloudResource`s.
 - ✅ Rule packs mapped to CIS Benchmarks + MITRE ATT&CK (24 checks, 5 formats).
@@ -17,23 +17,23 @@ aggregation) and killed the crash-on-malformed-input bugs.
 - ✅ Baseline / suppression by content fingerprint (`cloudnova baseline`).
 - ⏭️ Next: broaden the AWS rule packs (RDS, KMS, VPC flow logs, public AMIs).
 
-## Phase 2 — Live cloud posture ✅
+## Phase 2 - Live cloud posture ✅
 - ✅ Read-only AWS scanning via boto3 (S3, IAM, security groups, RDS).
 - ✅ Read-only Azure scanning (storage, NSGs, SQL) behind the same check/collect seam.
 - ✅ Read-only GCP scanning (Cloud Storage, firewalls, Cloud SQL) behind the same seam.
 - ✅ Credentials via each SDK's own provider chain (profile/role, DefaultAzureCredential,
-  GCP ADC) — never pasted secrets. Collectors are read-only and resilient to partial perms.
+  GCP ADC) - never pasted secrets. Collectors are read-only and resilient to partial perms.
 - ⏭️ Next: more services per provider; feed live findings into the posture score + graph.
 
-## Phase 3 — Attack-path graph 🚧
+## Phase 3 - Attack-path graph 🚧
 - ✅ Resource graph (`cloudnova.graph`): nodes tagged with security roles,
   edges extracted from Terraform references; bounded DFS finds exploitable chains.
 - ✅ Attack paths surface as narrated CRITICAL findings in the normal scan output
-  ("internet-exposed EC2 — can assume → admin role").
+  ("internet-exposed EC2 - can assume → admin role").
 - ✅ CloudFormation edges too (Ref / Fn::GetAtt); attack paths across both IaC formats.
 - ⏭️ Next: live-cloud edges, IAM-implied data-access edges, exploitability ranking.
 
-## Phase 4 — Offensive / pentest modules (authorized-only) 🚧
+## Phase 4 - Offensive / pentest modules (authorized-only) 🚧
 - Opt-in recon and vulnerability *validation* (confirm a finding is real).
 - Hard guardrails: explicit target authorization, scope allowlist, rate limits,
   full audit log. Requires written scope before running.
@@ -49,7 +49,7 @@ aggregation) and killed the crash-on-malformed-input bugs.
   output normalized to Findings.
 - ⏭️ Next: ingest operator tool output (hydra/sqlmap results) into reports.
 
-## Phase 5 — AI agents 🚧
+## Phase 5 - AI agents 🚧
 - ✅ MCP server (`cloudnova-mcp`): exposes scan / list_checks / attack_paths so
   Claude or any MCP client can drive CloudNova; logic in the tested
   `cloudnova.service` API.
@@ -59,7 +59,7 @@ aggregation) and killed the crash-on-malformed-input bugs.
   attacker view, and concrete fix per finding, with an offline fallback.
 - ⏭️ Next: propose-a-fix PRs, attack-graph narration.
 
-## Phase 6 — SaaS / Web 🚧
+## Phase 6 - SaaS / Web 🚧
 - ✅ Local FastAPI dashboard (`cloudnova-web`): run scans and view findings, the
   posture grade, and attack paths in the browser; browse the mentor path.
 - ✅ Dashboard auth + security headers; `$PORT` support; refuses to bind a public
@@ -67,17 +67,17 @@ aggregation) and killed the crash-on-malformed-input bugs.
 - ✅ Multi-tenant accounts (Supabase): sign-up / sign-in / sessions replaced the
   original HTTP Basic password.
 - ✅ Organizations with roles (owner / admin / member / viewer), invitations by
-  email, and member management — every row scoped by Row-Level Security.
+  email, and member management - every row scoped by Row-Level Security.
 - ✅ Scans, findings and targets persisted per organization; scan history in the
   dashboard.
 - ✅ Marketing landing page (`site/`) for Vercel; GitHub Action for CI scanning.
 - ⏭️ Next: see Phase 7.
 
-## Phase 7 — Growth & scale (next build phase) 🔜
+## Phase 7 - Growth & scale (next build phase) 🔜
 The high-value features that turn the platform into a sellable SaaS. Tackled after
 the current phase lands, then we look for more.
 - ✅ **Multi-tenant auth + RBAC** (Supabase): per-user accounts, orgs, roles and
-  isolation — the prerequisite for exposing cloud + pentest features safely.
+  isolation - the prerequisite for exposing cloud + pentest features safely.
 - **Scan history + trend dashboards**: history landed; trend charts still to do.
 - **Scheduled / continuous scanning** with drift alerts.
 - **Integrations**: Slack + email alerts, Jira/Linear ticket creation, GitHub PR checks.
@@ -90,7 +90,7 @@ the current phase lands, then we look for more.
 ---
 
 ### Guiding principles
-1. **Honest output** — severity ⊥ confidence; never a guess dressed as a fact.
-2. **The engine stays dumb** — all security knowledge lives in checks.
+1. **Honest output** - severity ⊥ confidence; never a guess dressed as a fact.
+2. **The engine stays dumb** - all security knowledge lives in checks.
 3. **Everything offensive is authorized, logged, and reversible.**
 4. **Every decision gets an ADR.**

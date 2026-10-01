@@ -1,10 +1,10 @@
 -- =============================================================================
--- 0003_invitations.sql — inviting people into an organization
+-- 0003_invitations.sql - inviting people into an organization
 -- =============================================================================
 -- Two problems that 0001 deliberately left open, solved together because
 -- neither is useful alone.
 --
--- 1. An invitee is, by definition, not yet a member — so every policy in 0001
+-- 1. An invitee is, by definition, not yet a member - so every policy in 0001
 --    hides the org from them, and `memberships` only accepts writes from an
 --    owner or admin. Acceptance therefore cannot be a plain INSERT by the
 --    invitee; it needs a function that can see the invitation and act on it.
@@ -101,7 +101,7 @@ create policy "invitations: admins create" on public.invitations
     and invited_by = (select auth.uid())
   );
 
--- Revoking is an UPDATE to status. Acceptance does not go through here — it
+-- Revoking is an UPDATE to status. Acceptance does not go through here - it
 -- runs in accept_invitation() below, which is the only way an invitee can
 -- change a row in an org they cannot yet see.
 drop policy if exists "invitations: admins update" on public.invitations;
@@ -123,7 +123,7 @@ create policy "invitations: admins delete" on public.invitations
 -- That makes this the most powerful function in the schema, so every guard is
 -- explicit: the caller must be signed in, the invitation must be pending and
 -- unexpired, and its address must match the email in the caller's own verified
--- JWT. The membership it writes is always for auth.uid() — there is no
+-- JWT. The membership it writes is always for auth.uid() - there is no
 -- argument that lets a caller name a different user or a different role.
 
 create or replace function public.accept_invitation(invitation_id uuid)

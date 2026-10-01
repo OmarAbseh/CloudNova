@@ -1,10 +1,10 @@
-# 0011 — CloudNova Range is authorization-first
+# 0011 - CloudNova Range is authorization-first
 
 **Status:** Accepted
 
 ## Context
 The roadmap's offensive/validation phase (testing that a finding is really
-exploitable, and — for users — probing their own authorized cloud accounts) is
+exploitable, and - for users - probing their own authorized cloud accounts) is
 the highest-risk part of the project. Built carelessly it becomes a weapon;
 built correctly it's what a security team recognizes as professional.
 
@@ -15,7 +15,7 @@ scope engine is a deny-by-default policy gate:
 1. A target is authorized only if it explicitly matches an in-scope entry.
 2. Out-of-scope exclusions always win over inclusions.
 3. A scope file must carry an authorization attestation (program, authorized_by,
-   acknowledged) or the engine authorizes nothing — it fails closed.
+   acknowledged) or the engine authorizes nothing - it fails closed.
 
 Every future Range capability (recon organization, finding validation, a
 practice-lab tutor, authorized cloud probing) must obtain an ALLOW decision from

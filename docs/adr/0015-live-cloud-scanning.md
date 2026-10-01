@@ -1,4 +1,4 @@
-# ADR 0015 — Live cloud scanning (AWS + Azure), read-only
+# ADR 0015 - Live cloud scanning (AWS + Azure), read-only
 
 ## Status
 Accepted.
@@ -16,7 +16,7 @@ parse/check split:
   (Describe/Get/List) and returns a plain inventory dataclass. It is lazy-imported
   so the vendor SDKs are optional extras (`[aws]`, `[azure]`), and each service is
   wrapped so partial credentials yield a partial inventory.
-- Pure **check** functions turn the inventory into validated `Finding`s — no
+- Pure **check** functions turn the inventory into validated `Finding`s - no
   network, so they are fully unit-tested offline by feeding inventories directly.
 - `scan_aws(inventory=...)` / `scan_azure(inventory=...)` accept an injected
   inventory, which is how the tests exercise the whole path without credentials.
@@ -28,7 +28,7 @@ unencrypted, NSGs open to the internet, SQL public network access.
 ## Constraints
 Read-only only: the collectors never create, modify, or delete. Credentials come
 from the operator's own environment (AWS profile/role, Azure DefaultAzureCredential)
-— CloudNova stores nothing. This is a security audit of an account you control, not
+- CloudNova stores nothing. This is a security audit of an account you control, not
 an attack.
 
 ## Consequences

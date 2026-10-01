@@ -2,7 +2,7 @@
 
 The engine turns a file on disk into one or more :class:`Artifact` objects,
 each tagged with a ``kind`` (matching a check's ``target``). Separating
-*parsing* from *checking* means a check never touches the filesystem — it just
+*parsing* from *checking* means a check never touches the filesystem - it just
 inspects already-parsed, typed data. That keeps checks pure and testable, and
 lets us later feed artifacts from a live cloud API instead of files with zero
 change to the rules.

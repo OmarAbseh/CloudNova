@@ -1,6 +1,6 @@
 """The Floatly Platform layer: identity, orgs, and org-scoped persistence.
 
-Shared across Floatly products as *code*, not as a shared database — each
+Shared across Floatly products as *code*, not as a shared database - each
 product deploys the same schema shape into its own project.
 """
 

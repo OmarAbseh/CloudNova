@@ -4,7 +4,7 @@ An attack path is a chain of relationships an attacker could follow. We do a
 bounded depth-first search from every internet-exposed compute node, following
 CAN_ASSUME / GRANTS / REFERENCES edges, and report a path when it reaches a node
 that is privileged (can escalate) or a data store (can exfiltrate). Each path
-becomes a CRITICAL :class:`Finding` with a human narration of the chain — the
+becomes a CRITICAL :class:`Finding` with a human narration of the chain - the
 output that makes the risk obvious in a way a flat finding list cannot.
 """
 
@@ -16,7 +16,7 @@ from itertools import pairwise
 from cloudnova.core.findings import Confidence, Finding, Location, Severity
 from cloudnova.graph.model import EdgeKind, Node, NodeRole, ResourceGraph
 
-#: Don't chase chains longer than this — keeps search bounded and paths readable.
+#: Don't chase chains longer than this - keeps search bounded and paths readable.
 _MAX_DEPTH = 6
 
 _EDGE_VERB = {
@@ -56,7 +56,7 @@ def _narrate(graph: ResourceGraph, path: list[str]) -> str:
     parts = [path[0]]
     for src, dst in pairwise(path):
         kind = next((e.kind for e in graph.edges_from(src) if e.dst == dst), EdgeKind.REFERENCES)
-        parts.append(f"— {_EDGE_VERB[kind]} → {dst}")
+        parts.append(f"- {_EDGE_VERB[kind]} → {dst}")
     return " ".join(parts)
 
 
@@ -77,7 +77,7 @@ def find_attack_paths(graph: ResourceGraph) -> list[AttackPath]:
                 if key not in seen_targets:
                     seen_targets.add(key)
                     paths.append(AttackPath(tuple(trail), _describe(current)))
-                # Don't stop — a data store reached via a role may still lead on,
+                # Don't stop - a data store reached via a role may still lead on,
                 # but avoid revisiting nodes already in this trail (no cycles).
             for edge in graph.edges_from(current_id):
                 if edge.dst not in trail:

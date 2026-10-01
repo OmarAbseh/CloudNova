@@ -1,4 +1,4 @@
-"""CloudNova — a cloud security scanning engine.
+"""CloudNova - a cloud security scanning engine.
 
 Public API: import :class:`~cloudnova.core.engine.Engine` and call
 ``scan_path``. Importing this package registers all built-in checks.

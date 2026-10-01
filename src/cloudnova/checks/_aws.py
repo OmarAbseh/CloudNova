@@ -1,7 +1,7 @@
 """Shared AWS security primitives used by multiple check packs.
 
 Terraform, CloudFormation, and CloudTrail checks all reason about the same AWS
-concepts — public ACLs, world-open CIDRs, sensitive ports, and IAM policy
+concepts - public ACLs, world-open CIDRs, sensitive ports, and IAM policy
 statements. Centralizing them here keeps the rules consistent and DRY: fix the
 definition of "public ACL" once and every pack agrees.
 """
@@ -43,7 +43,7 @@ def iter_policy_statements(policy: Any) -> Iterator[dict[str, Any]]:
     """Yield statements from an IAM policy that may be a dict or a JSON string.
 
     ``Statement`` may be a single object or a list. Never raises on malformed
-    input — a policy we can't parse simply yields nothing.
+    input - a policy we can't parse simply yields nothing.
     """
     if isinstance(policy, str):
         try:

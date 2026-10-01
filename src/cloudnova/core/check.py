@@ -3,7 +3,7 @@
 A *check* is one security rule. Every check subclasses :class:`Check`, declares
 metadata as class attributes, and implements :meth:`run`. The
 :func:`register` decorator adds it to a global registry so the engine can
-discover every rule without importing each one by hand — this is the plugin
+discover every rule without importing each one by hand - this is the plugin
 architecture that lets the ruleset grow from 3 rules to 300 without touching
 the engine.
 """
@@ -70,7 +70,7 @@ def register(check_cls: type[Check]) -> type[Check]:
     """Class decorator: validate metadata, instantiate, and register a check.
 
     Validation happens here (not in ``__init_subclass__``) so that abstract
-    intermediate bases — which are never decorated — are never checked, while
+    intermediate bases - which are never decorated - are never checked, while
     every concrete registered rule is guaranteed to carry its metadata.
     """
     for attr in Check._REQUIRED_METADATA:

@@ -1,7 +1,7 @@
 """HTML for the organization settings page.
 
 Kept out of ``app.py`` so the routes there stay readable. Pure functions of
-data in, markup out — no Supabase calls, which is also what makes them cheap
+data in, markup out - no Supabase calls, which is also what makes them cheap
 to test.
 
 The controls here are hidden according to the caller's role, but that is
@@ -93,7 +93,7 @@ def _invite_row(invite: Invitation, *, can_manage: bool) -> str:
 def _invite_form(current: Org) -> str:
     options = "".join(
         f'<option value="{_e(r)}"{" selected" if r == "member" else ""}>'
-        f"{_e(r)} — {_e(_ROLE_HELP[r])}</option>"
+        f"{_e(r)} - {_e(_ROLE_HELP[r])}</option>"
         for r in _ROLES
     )
     return f"""
@@ -114,7 +114,7 @@ def _invite_form(current: Org) -> str:
 
 
 def _limit(used: int, allowed: int | None) -> str:
-    """`3 / 10`, or `3 / unlimited`. Never a bare number — a usage figure with
+    """`3 / 10`, or `3 / unlimited`. Never a bare number - a usage figure with
     nothing to compare it against tells the reader nothing."""
     return f"{used} / {'unlimited' if allowed is None else allowed}"
 
@@ -124,7 +124,7 @@ def _plan_panel(allowance: Entitlements | None) -> str:
         return ""
     if allowance.degraded:
         # Say the numbers are unavailable rather than showing zeros, which
-        # would read as "you have used nothing" — the opposite of the truth.
+        # would read as "you have used nothing" - the opposite of the truth.
         return (
             '<div class="card" style="margin-top:16px">'
             '<h3 style="margin-top:0">Plan</h3>'

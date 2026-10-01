@@ -110,7 +110,7 @@ select = [
 # The checklist is a wide data table (methodology rows); rows read better on one line.
 "src/cloudnova/range/checklist/blackbox.py" = ["E501"]
 # The cloud collectors defensively swallow per-service SDK errors so partial
-# credentials still yield a partial inventory — that pattern is intentional here.
+# credentials still yield a partial inventory - that pattern is intentional here.
 "src/cloudnova/cloud/_aws_collect.py" = ["BLE001", "SIM105"]
 "src/cloudnova/cloud/_azure_collect.py" = ["BLE001", "SIM105"]
 

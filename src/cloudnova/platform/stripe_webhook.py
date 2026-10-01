@@ -29,7 +29,7 @@ _TOLERANCE_SECONDS = 300
 
 # Stripe statuses mapped onto our subscription_status enum. Anything Stripe
 # adds later lands on `incomplete` rather than being written through and
-# breaking the insert — being wrong in the safe direction.
+# breaking the insert - being wrong in the safe direction.
 _STATUS_MAP = {
     "active": "active",
     "trialing": "trialing",
@@ -178,7 +178,7 @@ def _period_end(subscription: dict[str, Any]) -> str | None:
 def plan_change_from_event(event: StripeEvent) -> PlanChange | None:
     """What this event means for an org, or ``None`` if it means nothing.
 
-    Returning ``None`` is the normal path for most events — Stripe sends many
+    Returning ``None`` is the normal path for most events - Stripe sends many
     kinds and only subscription changes matter here.
     """
     if event.type not in _SUBSCRIPTION_EVENTS:
@@ -215,7 +215,7 @@ def apply_plan_change(client: SupabaseClient, service_role_key: str, change: Pla
 
     This is the only function in the codebase that uses the service-role key,
     and it has to: `subscriptions` has no write policy and no write grant, so a
-    credential that bypasses RLS is the only thing that can write it — which is
+    credential that bypasses RLS is the only thing that can write it - which is
     exactly the property that stops a customer upgrading themselves.
 
     Because of that it runs in its own process (``cloudnova-billing``), so the

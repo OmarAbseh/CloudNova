@@ -1,6 +1,6 @@
 """Professional penetration-test report generation.
 
-The report is the deliverable a client pays for — a brilliant finding written up
+The report is the deliverable a client pays for - a brilliant finding written up
 badly is worthless. This turns an engagement (metadata + findings) into a clean,
 conventionally-structured Markdown report: executive summary, methodology,
 findings ranked by severity with reproduction and remediation, and an appendix.
@@ -81,7 +81,7 @@ def render_markdown(engagement: Engagement) -> str:
     )
 
     lines: list[str] = []
-    lines.append(f"# Penetration Test Report — {engagement.client}")
+    lines.append(f"# Penetration Test Report - {engagement.client}")
     lines.append("")
     lines.append(f"**Tester:** {engagement.tester}  ")
     lines.append(f"**Date:** {engagement.date}  ")
@@ -107,8 +107,8 @@ def render_markdown(engagement: Engagement) -> str:
     lines.append("## Methodology")
     lines.append("")
     lines.append(
-        "Testing followed a standard methodology — reconnaissance, enumeration, "
-        "exploitation, and post-exploitation — conducted strictly within the "
+        "Testing followed a standard methodology - reconnaissance, enumeration, "
+        "exploitation, and post-exploitation - conducted strictly within the "
         "authorized scope, with evidence captured throughout."
     )
     lines.append("")

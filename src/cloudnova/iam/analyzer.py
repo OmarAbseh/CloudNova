@@ -197,7 +197,7 @@ def _check_trust_and_notaction(statements: list[dict[str, Any]], source: str) ->
                 "IAM_NOTACTION_ALLOW",
                 "Allow statement uses NotAction",
                 Severity.HIGH,
-                "Allow + NotAction grants every action except those listed — usually far "
+                "Allow + NotAction grants every action except those listed - usually far "
                 "more than intended.",
                 "Rewrite as an explicit Allow of the specific actions needed.",
                 source,

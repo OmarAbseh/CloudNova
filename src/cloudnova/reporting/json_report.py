@@ -2,7 +2,7 @@
 
 Machine-readable output for CI gates, diffing two scans, or feeding an AI
 agent. Uses Pydantic's own serialisation so the schema always matches the
-model — no hand-maintained dict that can drift out of sync.
+model - no hand-maintained dict that can drift out of sync.
 """
 
 from __future__ import annotations

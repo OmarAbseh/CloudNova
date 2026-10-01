@@ -1,11 +1,11 @@
 """Toolkit framework: run real pentest tools, scope-gated, parse output to Findings.
 
-CloudNova does not reimplement nmap or nuclei — it *orchestrates* them. Every
+CloudNova does not reimplement nmap or nuclei - it *orchestrates* them. Every
 adapter follows the same contract:
 
 1. Authorize the target through the Range scope engine BEFORE running anything.
 2. For AGGRESSIVE tools (brute force, exploitation), require explicit operator
-   confirmation — they never run autonomously.
+   confirmation - they never run autonomously.
 3. Shell out with a list argv (never a shell string), with a timeout.
 4. Parse the tool's output into the shared ``Finding`` contract.
 
@@ -29,7 +29,7 @@ from cloudnova.range.scope import Scope
 class ToolTier(StrEnum):
     PASSIVE = "passive"  # read-only recon
     ACTIVE = "active"  # sends probes / scans (non-destructive detection)
-    AGGRESSIVE = "aggressive"  # brute force / exploitation — needs confirmation
+    AGGRESSIVE = "aggressive"  # brute force / exploitation - needs confirmation
 
 
 class ToolError(Exception):

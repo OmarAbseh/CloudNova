@@ -2,7 +2,7 @@
 
 This is what separates CloudNova from a flat checklist scanner. A single public
 bucket or one over-privileged role is a finding; the *interesting* risk is the
-chain — an internet-exposed instance that can assume an admin role that can read
+chain - an internet-exposed instance that can assume an admin role that can read
 a sensitive database. This package builds the graph and walks it for such paths.
 """
 

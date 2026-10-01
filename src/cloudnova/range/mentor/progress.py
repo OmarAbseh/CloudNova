@@ -1,7 +1,7 @@
 """Track learning progress so the Mentor knows where you are.
 
 Persists which curriculum modules you've completed (in the config dir, like the
-persona) and uses that to tell you what to do next — the next module whose
+persona) and uses that to tell you what to do next - the next module whose
 prerequisites you've already finished. This is what turns a static curriculum into
 a companion that walks with you.
 """

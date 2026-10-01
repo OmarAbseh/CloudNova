@@ -4,7 +4,7 @@ Billing hangs off the organization: a seat is a membership and a scan belongs
 to an org, so the org is the only thing a limit sensibly applies to.
 
 Nothing here can *change* what an org is entitled to. ``subscriptions`` has no
-write policy and no write grant, so these functions can only read — a plan
+write policy and no write grant, so these functions can only read - a plan
 changes when Stripe's webhook says it did, never because a user asked.
 """
 
@@ -21,8 +21,8 @@ from cloudnova.platform.client import SupabaseClient, SupabaseError
 # `incomplete` fall back to free.
 _ENTITLING_STATUSES = frozenset({"active", "trialing", "past_due"})
 
-# Used when an org has no subscription row at all. Absence is a valid state —
-# nothing has to backfill a row for billing to work — so this must agree with
+# Used when an org has no subscription row at all. Absence is a valid state -
+# nothing has to backfill a row for billing to work - so this must agree with
 # the `free` row seeded in migration 0004 or the two paths would diverge.
 _PLAN_COLUMNS = "id,name,price_cents,currency,max_seats,max_scans_per_month"
 
@@ -56,7 +56,7 @@ class Usage:
 
 
 def _remaining(limit: int | None, used: int) -> int | None:
-    """Headroom, floored at zero. None stays None — unlimited has no floor.
+    """Headroom, floored at zero. None stays None - unlimited has no floor.
 
     A downgrade can leave usage above the new limit, and reporting negative
     headroom reads as a bug everywhere it is displayed.
@@ -148,7 +148,7 @@ def get_subscription(client: SupabaseClient, token: str, org_id: str) -> tuple[P
     """The org's plan and subscription status.
 
     Returns the free plan when there is no row, or when the subscription has
-    lapsed — otherwise cancelling would leave an org on its old limits forever.
+    lapsed - otherwise cancelling would leave an org on its old limits forever.
     """
     rows = client.select(
         "subscriptions",
@@ -174,7 +174,7 @@ def entitlements(client: SupabaseClient, token: str, org_id: str) -> Entitlement
 
     A failure here opens the gate rather than closing it. Failing closed would
     let a billing outage stop a security team from scanning, which is a worse
-    outcome than briefly allowing an org slightly over its limit — and the
+    outcome than briefly allowing an org slightly over its limit - and the
     result says it is degraded so callers can surface that honestly.
     """
     try:

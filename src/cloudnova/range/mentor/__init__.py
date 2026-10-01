@@ -1,4 +1,4 @@
-"""CloudNova Range — Mentor: a structured pentest tutor.
+"""CloudNova Range - Mentor: a structured pentest tutor.
 
 Turns the curriculum into a personalised learning path, certification tracks, and
 job-readiness maps, plus scope-gated guided lab sessions for practice targets.

@@ -1,6 +1,6 @@
 """Scheduled scanning support: scan history + drift detection.
 
-CloudNova does not run its own scheduler daemon — that's what cron, systemd timers,
+CloudNova does not run its own scheduler daemon - that's what cron, systemd timers,
 and CI already do well. Instead it makes scheduled scanning *useful*: it records a
 timestamped snapshot of each scan, compares a new scan to the previous one, and
 reports drift (newly introduced vs fixed findings). Wire `cloudnova monitor` into

@@ -3,7 +3,7 @@
 # This declares the targets you are AUTHORIZED to test. The engine denies
 # everything not listed here, and exclusions always win. It refuses to authorize
 # anything unless the authorization block below is fully filled in and
-# acknowledged — that block is your accountability record.
+# acknowledged - that block is your accountability record.
 #
 # Only add targets you are genuinely cleared to test: your own lab, a practice
 # platform, or a bug-bounty program's published in-scope assets.
@@ -20,5 +20,5 @@ in_scope:
   - "203.0.113.0/24"         # an authorized IP range
 
 out_of_scope:
-  - "admin.example.com"      # explicitly carved out — exclusions win
+  - "admin.example.com"      # explicitly carved out - exclusions win
   - "internal.example.com"

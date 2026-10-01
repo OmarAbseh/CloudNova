@@ -1,7 +1,7 @@
 """Core data model for CloudNova.
 
 Everything the scanner produces is a :class:`Finding`. Keeping one strongly
-typed, validated shape for every check — instead of ad-hoc dicts — is what lets
+typed, validated shape for every check - instead of ad-hoc dicts - is what lets
 us render to any format, diff two scans, feed an AI agent, and enforce a schema
 in tests. This is the contract the whole rest of the codebase depends on.
 """
@@ -44,7 +44,7 @@ class Confidence(StrEnum):
 
     A substring match on a bucket name is LOW confidence; parsing an IAM
     policy document and finding ``Action: "*"`` is HIGH. Surfacing confidence
-    separately from severity is what stops a scanner from crying wolf — the old
+    separately from severity is what stops a scanner from crying wolf - the old
     prototype flagged any bucket *named* "public" with no such distinction.
     """
 

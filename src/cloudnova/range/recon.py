@@ -4,7 +4,7 @@ The operator runs the tools (e.g. ``nmap -oX out.xml <in-scope target>``) on the
 own machine; this ingests the result, verifies every discovered host against the
 Range scope engine, and turns raw output into a structured inventory with
 methodology next-steps per service. Hosts that aren't in scope are flagged and
-excluded — the organizer never invents or contacts a target, it only structures
+excluded - the organizer never invents or contacts a target, it only structures
 what the operator already collected, and refuses to surface anything unauthorized.
 """
 
@@ -21,7 +21,7 @@ _SERVICE_HINTS: dict[str, str] = {
     "https": "As http, plus review TLS config and certificate.",
     "ssh": "Note version; check default creds only if in scope; never brute-force blindly.",
     "ftp": "Check for anonymous login; note version for known-issue lookup.",
-    "smb": "Enumerate shares/permissions (e.g. smbclient) — in scope only.",
+    "smb": "Enumerate shares/permissions (e.g. smbclient) - in scope only.",
     "mysql": "Note version; check exposure and default creds; should it be internet-facing?",
     "postgresql": "Note version; check exposure and authentication.",
     "rdp": "Note exposure; RDP to the internet is a common finding.",

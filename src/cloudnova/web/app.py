@@ -2,7 +2,7 @@
 
 Server-rendered HTML reusing the tested ``service`` and ``range`` layers. The look
 is a dark, red-accented security aesthetic with a 3D animated hero (Three.js, loaded
-from a CDN as progressive enhancement — the page works fully without it).
+from a CDN as progressive enhancement - the page works fully without it).
 
 Routes:
 - ``/``            landing page + 3D hero + capabilities
@@ -18,11 +18,11 @@ Two modes. With the Floatly Platform configured the dashboard is multi-tenant:
 real accounts, and every scan and finding written and read under the signed-in
 user's own token so Row-Level Security scopes them to their organization.
 Without it the dashboard is the single-user local operator tool it has always
-been — no accounts, nothing persisted — and ``server.py`` refuses to bind a
+been - no accounts, nothing persisted - and ``server.py`` refuses to bind a
 public interface in that state.
 
 Either way it scans local paths and exposes only the defensive scanner and
-mentor over HTTP — never Range's target-facing commands.
+mentor over HTTP - never Range's target-facing commands.
 """
 
 from __future__ import annotations
@@ -249,7 +249,7 @@ def _page(
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{_e(title)} — CloudNova</title><style>{_STYLE}</style></head>
+<title>{_e(title)} - CloudNova</title><style>{_STYLE}</style></head>
 <body>
 <header>
   <span class="brand"><span class="dot"></span>CloudNova
@@ -270,7 +270,7 @@ _CSP = (
 
 
 def _harden(response: Response) -> Response:
-    """Attach the security headers. Applied to redirects too, not just pages —
+    """Attach the security headers. Applied to redirects too, not just pages -
     an unauthenticated redirect is still a response an attacker can frame."""
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-Content-Type-Options"] = "nosniff"
@@ -285,9 +285,9 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
 
     Two modes, decided by whether the platform is configured:
 
-    * **Multi-tenant** — ``SUPABASE_URL``/``SUPABASE_ANON_KEY`` present. Real
+    * **Multi-tenant** - ``SUPABASE_URL``/``SUPABASE_ANON_KEY`` present. Real
       accounts, real orgs, every row filtered by RLS.
-    * **Local single-user** — neither set. The tool behaves as it always has:
+    * **Local single-user** - neither set. The tool behaves as it always has:
       no accounts, nothing persisted. ``server.py`` refuses to bind a public
       interface in this mode, so it cannot be exposed by accident.
 
@@ -417,7 +417,7 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
             <div class="kicker">Cloud security · offensive &amp; defensive</div>
             <h1>Find the <span class="accent">attack path</span><br>before they do.</h1>
             <p>Scan your cloud for misconfigurations, chain them into real attack paths,
-               grade your posture, and train to break in — all in one tool.</p>
+               grade your posture, and train to break in - all in one tool.</p>
             <p style="margin-top:20px">
               <a class="btn" href="/scan">Run a scan →</a>
               <a class="btn ghost" href="/mentor">Open the mentor</a>
@@ -428,7 +428,7 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
 
         <div class="grid">
           <div class="card"><div class="kicker">Scan</div><h3>30+ checks, 5 formats</h3>
-            <p>Terraform, CloudFormation, Kubernetes, CloudTrail &amp; logs — mapped to CIS &amp; MITRE ATT&amp;CK.</p></div>
+            <p>Terraform, CloudFormation, Kubernetes, CloudTrail &amp; logs - mapped to CIS &amp; MITRE ATT&amp;CK.</p></div>
           <div class="card"><div class="kicker">Graph</div><h3>Attack paths</h3>
             <p>Exposed compute → over-privileged role → sensitive data, chained automatically.</p></div>
           <div class="card"><div class="kicker">IAM</div><h3>Author &amp; audit</h3>
@@ -443,7 +443,7 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
 
         The ``cn_org`` cookie only ever *selects* from orgs the database
         already returned for this user, so tampering with it cannot reach
-        another tenant — the worst it can do is fall back to the first.
+        another tenant - the worst it can do is fall back to the first.
         """
         user = request.state.user
         if platform is None or user is None:
@@ -453,7 +453,7 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
                 ensure_org, platform, user.access_token, user.user_id, user.email
             )
         except SupabaseError:
-            # Org bootstrap failing must not take the whole page down — the
+            # Org bootstrap failing must not take the whole page down - the
             # user stays signed in and the org-scoped parts simply go quiet.
             return None, []
         if not orgs:
@@ -935,7 +935,7 @@ def _history_body(org: Org, scans: list[dict[str, Any]], error: str = "") -> str
     <div class="kicker">{_e(org.name)}</div>
     <h1 style="margin:4px 0">Scan history</h1>
     <p class="muted">Every scan saved for this organization. You see these rows
-      because you are a member of it — the database enforces that, not the page.</p>
+      because you are a member of it - the database enforces that, not the page.</p>
     {err}
     <div class="card" style="margin-top:14px">
       <table><thead><tr><th>When</th><th>Target</th><th>Findings</th>
@@ -1052,7 +1052,7 @@ def _scan_results_body(
       <div>
         <div class="kicker">Results</div>
         <h1 style="margin:2px 0">{summary["findings"]} finding(s)</h1>
-        <p class="muted" style="margin:2px 0">{_e(path)} — {summary["files_scanned"]} file(s) scanned</p>
+        <p class="muted" style="margin:2px 0">{_e(path)} - {summary["files_scanned"]} file(s) scanned</p>
         <div class="pills">{pills}</div>
       </div>
     </div>

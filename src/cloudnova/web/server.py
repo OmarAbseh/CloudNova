@@ -40,7 +40,7 @@ def main() -> None:
         )
 
     if service_role_key_present():
-        # The dashboard never uses it, and it bypasses RLS — so if a route ever
+        # The dashboard never uses it, and it bypasses RLS - so if a route ever
         # picked it up by mistake, tenant isolation would be gone with no error.
         print(
             "warning: SUPABASE_SERVICE_ROLE_KEY is set in this process. The "

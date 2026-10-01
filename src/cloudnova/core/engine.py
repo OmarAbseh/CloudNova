@@ -1,6 +1,6 @@
 """Scan orchestration: discover files, parse them, run matching checks.
 
-The engine is deliberately dumb — all the security knowledge lives in the
+The engine is deliberately dumb - all the security knowledge lives in the
 checks. Its job is to be robust: a bad file or a throwing check is isolated and
 reported, never fatal. This is what makes the scanner safe to point at a large,
 messy repository.

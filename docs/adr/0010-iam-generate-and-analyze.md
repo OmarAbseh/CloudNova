@@ -1,4 +1,4 @@
-# 0010 — IAM: author least-privilege, and audit for escalation
+# 0010 - IAM: author least-privilege, and audit for escalation
 
 **Status:** Accepted
 
@@ -10,10 +10,10 @@ for the subtle privilege-escalation vectors a wildcard check misses (e.g.
 
 ## Decision
 Add a `cloudnova.iam` module with two halves:
-- **generator** — turns a high-level grant spec ("read+list this bucket") into a
+- **generator** - turns a high-level grant spec ("read+list this bucket") into a
   least-privilege policy, refusing wildcard resources so its output is scoped by
   construction.
-- **analyzer** — audits any policy for full/service wildcards, known
+- **analyzer** - audits any policy for full/service wildcards, known
   privilege-escalation actions and combos, wildcard principals, and
   `NotAction`+Allow. Reuses the core `Finding` model, so it flows through the
   same reporting.

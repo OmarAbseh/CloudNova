@@ -2,12 +2,12 @@
 
 This is the *only* layer that touches the filesystem. It classifies a file by
 extension + content, parses it safely, and hands the engine typed artifacts.
-Parsing errors become :class:`LoadError` rather than crashing a scan — one
+Parsing errors become :class:`LoadError` rather than crashing a scan - one
 malformed file must never take down the whole run (a lesson from the old
 prototype, where any bad input threw a 500).
 
 Classification is two-stage: the extension picks a parser, then *content*
-refines the kind — a ``.json`` or ``.yaml`` file may be a CloudFormation
+refines the kind - a ``.json`` or ``.yaml`` file may be a CloudFormation
 template, a CloudTrail log, or a generic config, and only its contents can say.
 """
 

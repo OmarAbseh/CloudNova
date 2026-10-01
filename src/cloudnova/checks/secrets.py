@@ -59,7 +59,7 @@ def _redact(text: str) -> str:
     text = text.strip()
     if len(text) <= 8:
         return "****"
-    return f"{text[:4]}…{text[-2:]} ({len(text)} chars)"
+    return f"{text[:4]}...{text[-2:]} ({len(text)} chars)"
 
 
 @register

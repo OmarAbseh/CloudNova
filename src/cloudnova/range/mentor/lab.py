@@ -2,7 +2,7 @@
 
 A lab session is how the Mentor teaches hands-on: it names a *practice target* and
 walks you through a professional methodology checklist against it. Because it
-names a target, it MUST pass the Range scope engine first — the same gate every
+names a target, it MUST pass the Range scope engine first - the same gate every
 Range capability uses. Point it at a practice box (TryHackMe/HTB/local Juice Shop)
 you've listed in your scope file; anything unauthorized is refused.
 """
@@ -28,7 +28,7 @@ class LabPlan:
 
 
 # A professional engagement methodology, phase by phase. This is the *how to
-# think* checklist — the same flow taught by OSCP/PNPT — not target-specific
+# think* checklist - the same flow taught by OSCP/PNPT - not target-specific
 # exploit steps.
 _METHODOLOGY: list[tuple[str, list[str]]] = [
     (
@@ -41,7 +41,7 @@ _METHODOLOGY: list[tuple[str, list[str]]] = [
     (
         "2. Reconnaissance",
         [
-            "Enumerate services and versions (nmap) — only against the in-scope target.",
+            "Enumerate services and versions (nmap) - only against the in-scope target.",
             "For web: browse the app first as a normal user; map the functionality.",
             "Record every open port/service/endpoint before touching anything.",
         ],
@@ -59,7 +59,7 @@ _METHODOLOGY: list[tuple[str, list[str]]] = [
         [
             "Test one hypothesis at a time; confirm impact minimally and safely.",
             "Capture the exact request/response that proves the issue.",
-            "Stop and note as soon as it's confirmed — don't cause damage.",
+            "Stop and note as soon as it's confirmed - don't cause damage.",
         ],
     ),
     (

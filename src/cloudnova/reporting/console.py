@@ -36,7 +36,7 @@ def render_console(result: ScanResult, console: Console | None = None) -> None:
             )
         )
     else:
-        table = Table(title="CloudNova — Security Findings", show_lines=True, expand=True)
+        table = Table(title="CloudNova - Security Findings", show_lines=True, expand=True)
         table.add_column("Severity", no_wrap=True)
         table.add_column("Check", no_wrap=True)
         table.add_column("Resource", overflow="fold")

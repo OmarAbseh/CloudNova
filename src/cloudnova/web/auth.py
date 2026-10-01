@@ -7,7 +7,7 @@ says. That costs one round trip per page and buys a property worth having: a
 forged or tampered cookie cannot even render the shell of a signed-in page.
 
 Tokens are stored in ``HttpOnly`` cookies so page scripts cannot read them, and
-``SameSite=Lax`` so a cross-site form POST does not carry them — which is what
+``SameSite=Lax`` so a cross-site form POST does not carry them - which is what
 stands in for CSRF tokens on the form routes here.
 """
 
@@ -43,7 +43,7 @@ def secure_request(request: Request) -> bool:
     Keyed on the scheme the *browser* used, not the hostname. Local
     development is plain HTTP, where a Secure cookie is silently dropped and
     login would appear to do nothing. Deployments terminate TLS at a proxy and
-    reach the app over HTTP, so the forwarded scheme is what tells the truth —
+    reach the app over HTTP, so the forwarded scheme is what tells the truth -
     ``request.url.scheme`` alone would say "http" and leave the flag off in
     exactly the case that needs it.
     """
@@ -92,7 +92,7 @@ def resolve(request: Request, client: SupabaseClient) -> Resolved:
             user = client.get_user(access)
             return Resolved(user=_user_from(user, access))
         except AuthError:
-            pass  # expired or revoked — fall through to the refresh attempt
+            pass  # expired or revoked - fall through to the refresh attempt
         except SupabaseError:
             # Supabase unreachable. Do not clear the cookie over an outage.
             return Resolved()

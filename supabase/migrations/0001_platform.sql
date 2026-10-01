@@ -1,11 +1,11 @@
 -- =============================================================================
--- 0001_platform.sql — Floatly Platform + CloudNova multi-tenant schema
+-- 0001_platform.sql - Floatly Platform + CloudNova multi-tenant schema
 -- =============================================================================
 -- Two layers, one migration:
 --
 --   1. Floatly Platform (shared across Floatly products): organizations,
 --      profiles, memberships, audit_log. Shared *code/schema shape*, not a
---      shared database — each product deploys this into its own project.
+--      shared database - each product deploys this into its own project.
 --   2. CloudNova per-org data: targets, scans, findings.
 --
 -- Tenant isolation is enforced by Row-Level Security, not by application code.
@@ -17,10 +17,10 @@
 -- applying this twice is a no-op rather than an error.
 --
 -- Deliberately NOT in this migration (next steps, not oversights):
---   * auto-provisioning `profiles` from an `auth.users` trigger — needs owner
+--   * auto-provisioning `profiles` from an `auth.users` trigger - needs owner
 --     rights on the auth schema; do it as its own migration.
 --   * co-member profile visibility (today a profile is self-read only, per the
---     platform baseline) — a members list UI will need a shared-org policy.
+--     platform baseline) - a members list UI will need a shared-org policy.
 --   * guarding admin -> owner self-escalation on `memberships` beyond the
 --     owner-only UPDATE policy below.
 -- =============================================================================
@@ -61,7 +61,7 @@ end $$;
 
 
 -- =============================================================================
--- Layer 1 — Floatly Platform
+-- Layer 1 - Floatly Platform
 -- =============================================================================
 
 -- Organizations (tenants).
@@ -208,7 +208,7 @@ create trigger profiles_set_updated_at
 
 
 -- =============================================================================
--- Layer 2 — CloudNova per-org data
+-- Layer 2 - CloudNova per-org data
 -- =============================================================================
 -- Every table carries its own `org_id` rather than reaching the tenant through
 -- a join. RLS runs on each row of each table, so a join would mean re-walking
@@ -375,7 +375,7 @@ create policy "audit: members read" on public.audit_log
   for select to authenticated
   using (public.is_member(org_id));
 
--- Members may append, and only as themselves — no back-dating another actor.
+-- Members may append, and only as themselves - no back-dating another actor.
 -- No UPDATE/DELETE policy exists, which is what makes the log append-only.
 drop policy if exists "audit: members append" on public.audit_log;
 create policy "audit: members append" on public.audit_log
@@ -473,7 +473,7 @@ grant select, insert on public.audit_log to authenticated;
 -- Function privileges.
 --
 -- `create function` grants EXECUTE to PUBLIC by default, and `anon` inherits
--- that — which would publish every function below as a callable PostgREST RPC
+-- that - which would publish every function below as a callable PostgREST RPC
 -- endpoint. Revoke first, then hand back only what is actually needed.
 revoke all on function public.is_member(uuid) from public, anon;
 revoke all on function public.has_org_role(uuid, public.org_role[]) from public, anon;
@@ -482,7 +482,7 @@ revoke all on function public.set_updated_at() from public, anon, authenticated;
 
 -- The two helpers do need to stay executable by `authenticated`: a policy
 -- expression is evaluated as the querying role, so without EXECUTE here every
--- policy above would fail for real users. They leak nothing — for a caller
+-- policy above would fail for real users. They leak nothing - for a caller
 -- with no session `auth.uid()` is null and both return false.
 grant execute on function public.is_member(uuid) to authenticated;
 grant execute on function public.has_org_role(uuid, public.org_role[]) to authenticated;

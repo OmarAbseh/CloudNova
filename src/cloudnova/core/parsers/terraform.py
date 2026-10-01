@@ -3,7 +3,7 @@
 python-hcl2 (v8) preserves string literals with their surrounding quotes and
 tags blocks with ``__is_block__`` for round-tripping. We normalize both away so
 checks see clean Python data. A parse failure raises :class:`TerraformParseError`
-which the loader turns into a recorded scan error — never a crash.
+which the loader turns into a recorded scan error - never a crash.
 """
 
 from __future__ import annotations
@@ -43,7 +43,7 @@ def resolve_jsonencode(value: Any) -> Any:
     an HCL object literal (``{Key = "v"}``), not JSON. We extract the argument
     and re-parse it as HCL so IAM-policy checks can inspect the real structure.
     Returns the input unchanged if it is not a jsonencode expression or cannot be
-    resolved — callers must tolerate a plain string.
+    resolved - callers must tolerate a plain string.
     """
     if not isinstance(value, str) or "jsonencode(" not in value:
         return value

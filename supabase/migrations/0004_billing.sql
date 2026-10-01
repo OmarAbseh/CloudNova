@@ -1,13 +1,13 @@
 -- =============================================================================
--- 0004_billing.sql — plans, subscriptions and usage
+-- 0004_billing.sql - plans, subscriptions and usage
 -- =============================================================================
 -- Billing hangs off the organization, not the user: a seat is a membership and
 -- a scan belongs to an org, so the org is the only thing a limit can sensibly
 -- apply to.
 --
 -- The important rule here is what is NOT granted. `subscriptions` has a read
--- policy and no write policy at all, so no signed-in user — not even an owner
--- — can insert or update their own row. If they could, upgrading to the top
+-- policy and no write policy at all, so no signed-in user - not even an owner
+-- - can insert or update their own row. If they could, upgrading to the top
 -- plan would be a single PATCH. Stripe's webhook is the only writer, and it
 -- authenticates with the service-role key, which bypasses RLS by design.
 -- =============================================================================
@@ -35,7 +35,7 @@ do $$ begin
 exception when duplicate_object then null;
 end $$;
 
--- One subscription per org. An org with no row is on the free plan — absence
+-- One subscription per org. An org with no row is on the free plan - absence
 -- is a valid state, so nothing has to backfill a row to make billing work.
 create table if not exists public.subscriptions (
   org_id                 uuid primary key references public.organizations (id) on delete cascade,
@@ -65,7 +65,7 @@ alter table public.subscriptions enable row level security;
 -- Policies
 -- -----------------------------------------------------------------------------
 
--- The catalogue is public to anyone signed in — it is a price list, and the
+-- The catalogue is public to anyone signed in - it is a price list, and the
 -- pricing page needs it. Still no write policy: plans change by migration.
 drop policy if exists "plans: readable by signed-in users" on public.plans;
 create policy "plans: readable by signed-in users" on public.plans

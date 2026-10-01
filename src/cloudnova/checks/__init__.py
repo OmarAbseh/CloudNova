@@ -2,7 +2,7 @@
 
 Importing this package imports every check module, whose ``@register``
 decorators populate the global registry. To add a rule pack, create a module
-here and import it below — that is the entire wiring cost of a new check.
+here and import it below - that is the entire wiring cost of a new check.
 """
 
 from cloudnova.checks import (

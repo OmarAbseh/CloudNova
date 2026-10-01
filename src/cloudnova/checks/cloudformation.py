@@ -125,7 +125,7 @@ class CfnSecurityGroupWorldIngress(_CfnCheck):
                 location=self._loc(resource),
                 description=(
                     f"Security group '{resource.name}' allows ingress to {exposed} "
-                    "from 0.0.0.0/0 — reachable by the entire internet."
+                    "from 0.0.0.0/0 - reachable by the entire internet."
                 ),
                 remediation="Restrict CidrIp to specific trusted ranges; never expose "
                 "administrative ports to the world.",

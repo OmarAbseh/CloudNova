@@ -7,7 +7,7 @@ them it stays the single-user local operator tool it has always been. Returning
 ``None`` rather than raising is what keeps that second mode working.
 
 Only the *anon* key belongs here. It is safe to ship to a browser precisely
-because it carries no authority of its own — every request made with it is
+because it carries no authority of its own - every request made with it is
 still filtered by Row-Level Security. The service-role key bypasses RLS
 entirely and must never reach this process; see ``load_config``.
 """
@@ -93,7 +93,7 @@ def service_role_key_present(
 ) -> bool:
     """True when a service-role key is reachable from this process.
 
-    The dashboard never uses it — it bypasses RLS, so a bug in a route would
+    The dashboard never uses it - it bypasses RLS, so a bug in a route would
     become a cross-tenant data leak instead of an empty page. This exists so
     the app can warn an operator that the key is in scope needlessly.
     """

@@ -3,7 +3,7 @@
 When an Anthropic API key (or `ant` profile) is available, questions are answered
 by Claude with a security-tutor system prompt that keeps guidance
 methodology-focused and authorized-targets-only. When no credential is present,
-it falls back to an offline answer built from the curriculum — so the mentor is
+it falls back to an offline answer built from the curriculum - so the mentor is
 useful with or without a key, and the offline path is fully testable.
 
 The ``anthropic`` package is an optional dependency (``pip install
@@ -38,7 +38,7 @@ labs, practice platforms, or an in-scope bug-bounty/engagement asset.
 an authorized practice equivalent.
 - Keep guidance at a methodology and learning level; do not write turn-key attack \
 payloads aimed at a specific real target.
-- Emphasise scope, authorization, and note-taking — the habits of a professional.
+- Emphasise scope, authorization, and note-taking - the habits of a professional.
 """
 
 
@@ -65,7 +65,7 @@ def _offline_answer(question: str) -> Answer:
     """Answer from the curriculum when no model is available.
 
     Keyword-matches the question against module titles/concepts and returns the
-    most relevant topics with their resources — genuinely useful, and it tells the
+    most relevant topics with their resources - genuinely useful, and it tells the
     user how to enable full Q&A.
     """
     q = question.lower()
@@ -77,7 +77,7 @@ def _offline_answer(question: str) -> Answer:
             scored.append((score, module))
     scored.sort(key=lambda t: -t[0])
 
-    lines = ["(offline answer — set ANTHROPIC_API_KEY for full Claude-powered Q&A)\n"]
+    lines = ["(offline answer - set ANTHROPIC_API_KEY for full Claude-powered Q&A)\n"]
     if not scored:
         lines.append(
             "I couldn't match that to a topic. Try `cloudnova range mentor path` to see "
@@ -91,7 +91,7 @@ def _offline_answer(question: str) -> Answer:
         lines.append(f"    {module.summary}")
         if module.resources:
             r = module.resources[0]
-            lines.append(f"    Start here: {r.name} — {r.url}")
+            lines.append(f"    Start here: {r.name} - {r.url}")
     lines.append("\nRun `cloudnova range mentor topic <id>` for concepts, tools, and certs.")
     return Answer("\n".join(lines), source="offline")
 

@@ -1,6 +1,6 @@
 """Organization settings UI: members, invitations, roles.
 
-Controls are hidden by role, but hiding is presentation only — the database
+Controls are hidden by role, but hiding is presentation only - the database
 refuses regardless. These tests check both: that the right controls appear,
 and that a refusal from Supabase reaches the user instead of a 500.
 """
