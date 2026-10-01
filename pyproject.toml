@@ -157,6 +157,13 @@ disable_error_code = [
     "arg-type",
 ]
 
+# The Anthropic SDK is an optional extra. Typing must hold whether or not it is
+# installed, so missing imports are ignored rather than pinned with inline
+# comments that go stale (and trip warn_unused_ignores) when the extra is present.
+[[tool.mypy.overrides]]
+module = ["anthropic", "anthropic.*"]
+ignore_missing_imports = true
+
 # ---- pytest ----
 [tool.pytest.ini_options]
 testpaths = ["tests"]

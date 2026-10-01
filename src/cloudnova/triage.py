@@ -160,7 +160,7 @@ def explain_finding(
     if not _credentials_available():
         return _offline_note(finding)
     try:
-        import anthropic  # type: ignore[import-not-found]
+        import anthropic
     except ImportError:
         return _offline_note(finding)
     return _claude_note(finding, anthropic.Anthropic(), model)
