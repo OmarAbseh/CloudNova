@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import html
 
+from cloudnova.platform.billing import Entitlements
 from cloudnova.platform.tenancy import Invitation, Member, Org
 
 _ROLES = ("owner", "admin", "member", "viewer")
@@ -112,12 +113,64 @@ def _invite_form(current: Org) -> str:
     </div>"""
 
 
+def _limit(used: int, allowed: int | None) -> str:
+    """`3 / 10`, or `3 / unlimited`. Never a bare number — a usage figure with
+    nothing to compare it against tells the reader nothing."""
+    return f"{used} / {'unlimited' if allowed is None else allowed}"
+
+
+def _plan_panel(allowance: Entitlements | None) -> str:
+    if allowance is None:
+        return ""
+    if allowance.degraded:
+        # Say the numbers are unavailable rather than showing zeros, which
+        # would read as "you have used nothing" — the opposite of the truth.
+        return (
+            '<div class="card" style="margin-top:16px">'
+            '<h3 style="margin-top:0">Plan</h3>'
+            f'<p class="notice">Billing information is unavailable right now, so '
+            f"limits are not being applied. {_e(allowance.error)}</p></div>"
+        )
+
+    seats = _limit(allowance.seats_used, allowance.plan.max_seats)
+    scans = _limit(allowance.usage.scans_this_month, allowance.plan.max_scans_per_month)
+    pending = (
+        f'<p class="muted" style="margin:6px 0 0">Includes '
+        f"{allowance.usage.pending_invites} pending invitation(s), which hold a seat "
+        "until accepted or revoked.</p>"
+        if allowance.usage.pending_invites
+        else ""
+    )
+    lapsed = (
+        f'<p class="notice" style="margin:10px 0 0">Subscription status: '
+        f"{_e(allowance.status)}. The organization is on the free limits.</p>"
+        if allowance.status in ("canceled", "incomplete")
+        else ""
+    )
+    return f"""
+    <div class="card" style="margin-top:16px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px">
+        <h3 style="margin:0">Plan</h3>
+        <span class="rolechip owner">{_e(allowance.plan.name)}</span>
+      </div>
+      <table style="margin-top:10px">
+        <tbody>
+          <tr><td>Seats</td><td><b>{_e(seats)}</b></td></tr>
+          <tr><td>Scans this month</td><td><b>{_e(scans)}</b></td></tr>
+        </tbody>
+      </table>
+      {pending}
+      {lapsed}
+    </div>"""
+
+
 def org_settings_body(
     *,
     current: Org,
     members: list[Member],
     invites: list[Invitation],
     me: str,
+    allowance: Entitlements | None = None,
     notice: str = "",
     error: str = "",
 ) -> str:
@@ -163,6 +216,7 @@ def org_settings_body(
       <table><thead><tr><th>Person</th><th>Role</th><th>Joined</th><th></th></tr></thead>
       <tbody>{member_rows}</tbody></table>
     </div>
+    {_plan_panel(allowance)}
     {invites_block}
     {invite_block}
     {_create_org_form()}"""
