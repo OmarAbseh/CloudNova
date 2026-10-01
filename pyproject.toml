@@ -72,6 +72,9 @@ gcp = [
 cloudnova = "cloudnova.cli:app"
 cloudnova-mcp = "cloudnova.mcp_server:main"
 cloudnova-web = "cloudnova.web.server:main"
+# Runs separately from the dashboard so the service-role key it needs never
+# has to be present in the dashboard's environment.
+cloudnova-billing = "cloudnova.web.billing_service:main"
 
 [project.urls]
 Homepage = "https://github.com/OmarAbseh/CloudNova"
