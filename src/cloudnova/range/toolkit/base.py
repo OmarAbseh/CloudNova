@@ -29,7 +29,7 @@ from cloudnova.range.scope import Scope
 class ToolTier(StrEnum):
     PASSIVE = "passive"  # read-only recon
     ACTIVE = "active"  # sends probes / scans (non-destructive detection)
-    AGGRESSIVE = "aggressive"  # brute force / exploitation - needs confirmation
+    AGGRESSIVE = "aggressive"  # brute force / exploitation, needs confirmation
 
 
 class ToolError(Exception):

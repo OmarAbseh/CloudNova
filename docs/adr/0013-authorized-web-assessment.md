@@ -1,4 +1,4 @@
-# ADR 0013 - Authorized web assessment (passive, scope-gated)
+# ADR 0013, Authorized web assessment (passive, scope-gated)
 
 ## Status
 Accepted.
@@ -6,7 +6,7 @@ Accepted.
 ## Context
 CloudNova Range needed a target-facing capability beyond recon organization: an
 assessment that actually talks to a live web target and reports its security
-posture. The risk is obvious - a target-facing tool must not become an
+posture. The risk is obvious, a target-facing tool must not become an
 unsupervised attack engine, and must never touch a target the operator is not
 authorized to test.
 
@@ -37,4 +37,4 @@ mentor curriculum, always behind the scope gate ([ADR 0011](0011-range-authoriza
 - Findings reuse the shared `Severity`/`Confidence` vocabulary, so web findings
   read like every other CloudNova finding.
 - New surface: `cloudnova range webassess <url> -s scope.yaml`.
-- Adding a check is a pure function in `checks.py` plus a test - no I/O touched.
+- Adding a check is a pure function in `checks.py` plus a test, no I/O touched.

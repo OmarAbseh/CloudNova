@@ -29,7 +29,7 @@ _TOLERANCE_SECONDS = 300
 
 # Stripe statuses mapped onto our subscription_status enum. Anything Stripe
 # adds later lands on `incomplete` rather than being written through and
-# breaking the insert - being wrong in the safe direction.
+# breaking the insert, being wrong in the safe direction.
 _STATUS_MAP = {
     "active": "active",
     "trialing": "trialing",

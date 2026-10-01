@@ -22,7 +22,7 @@ class State(StrEnum):
 
 class Mode(StrEnum):
     AUTO = "auto"  # CloudNova checks this passively (always run)
-    ACTIVE = "active"  # Intrusive *detection* - opt-in (--active), scope-gated
+    ACTIVE = "active"  # Intrusive *detection*, opt-in (--active), scope-gated
     MANUAL = "manual"  # Needs operator judgment/context; tracked, never auto-exploited
 
 

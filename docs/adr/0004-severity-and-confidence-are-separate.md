@@ -1,4 +1,4 @@
-# 0004 - Severity and confidence are independent axes
+# 0004, Severity and confidence are independent axes
 
 **Status:** Accepted
 
@@ -15,6 +15,6 @@ parsing an IAM policy document and seeing `Action:"*"` is HIGH/HIGH.
 ## Consequences
 - **+** Consumers can filter noise (`confidence >= medium`) without losing the
   severity signal.
-- **+** Honest output - the scanner stops crying wolf, which is the fastest way a
+- **+** Honest output, the scanner stops crying wolf, which is the fastest way a
   security tool loses its users' trust.
 - **−** Rule authors must think about confidence. That's a feature.

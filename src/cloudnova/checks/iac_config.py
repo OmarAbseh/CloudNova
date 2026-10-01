@@ -66,7 +66,7 @@ class PasswordAuthDisabled(Check):
     def run(self, artifact: Artifact) -> Iterator[Finding]:
         cfg = _as_mapping(artifact.data)
         auth = _as_mapping(cfg.get("authentication"))
-        # Only flag an explicit `false` - a missing key is not evidence of a
+        # Only flag an explicit `false`, a missing key is not evidence of a
         # weakness and would be a false positive.
         if auth.get("password_required") is False:
             yield Finding(

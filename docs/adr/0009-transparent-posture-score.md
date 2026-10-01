@@ -1,10 +1,10 @@
-# 0009 - A transparent posture score, not a black-box model
+# 0009, A transparent posture score, not a black-box model
 
 **Status:** Accepted
 
 ## Context
 The original thesis surfaced an "AI risk score" from a DecisionTreeClassifier
-that - as the rebuild's review proved - had collapsed to a single feature
+that, as the rebuild's review proved, had collapsed to a single feature
 (`public_access`), so the number was both wrong and unexplainable. A security
 tool's headline number must be defensible.
 
@@ -18,10 +18,10 @@ double-counted as their own CRITICAL finding. Every term is returned in a
 
 ## Consequences
 - **+** Explainable: anyone can see why the score is what it is, and reproduce it.
-  The exact opposite of the thesis's black box - a strong thing to be able to say.
+  The exact opposite of the thesis's black box, a strong thing to be able to say.
 - **+** Stable and testable; no model file to drift or retrain.
 - **+** Weights live in one place and are easy to tune with rationale.
-- **−** It is a heuristic, not a probability - presented as a posture indicator,
+- **−** It is a heuristic, not a probability, presented as a posture indicator,
   not a prediction. That honesty is the point.
 - **−** An ML-learned score could capture interactions a linear formula can't;
   that's a deliberate future option, only worth it with real labelled data

@@ -110,7 +110,7 @@ def _tag_terraform_roles(graph: ResourceGraph, node_ids: set[str]) -> None:
             node.roles.add(NodeRole.DATA_STORE)
         # A role/profile that grants a wildcard policy is privileged. We tag the
         # identity (role/profile), not the policy document itself, because the
-        # identity is what an attacker actually gains - reporting both would be
+        # identity is what an attacker actually gains, reporting both would be
         # redundant noise.
         if node.type in _ROLE_TYPES:
             for edge in graph.edges_from(node.id):

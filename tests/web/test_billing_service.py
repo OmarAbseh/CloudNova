@@ -165,6 +165,6 @@ def test_health_reports_readiness_without_leaking_values(service):
     payload = r.json()
     assert payload["signing_secret_configured"] is True
     assert payload["service_key_configured"] is True
-    # Booleans only - never the values themselves.
+    # Booleans only, never the values themselves.
     assert SECRET not in r.text
     assert "service-role-key" not in r.text

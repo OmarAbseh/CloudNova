@@ -1,4 +1,4 @@
-# 0001 - A single typed `Finding` is the core contract
+# 0001, A single typed `Finding` is the core contract
 
 **Status:** Accepted
 

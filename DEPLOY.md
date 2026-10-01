@@ -1,7 +1,7 @@
 # Deploying the CloudNova dashboard
 
 The dashboard is a FastAPI app. It binds `127.0.0.1` locally. To expose it
-publicly you MUST configure the Floatly Platform (Supabase) - that is what
+publicly you MUST configure the Floatly Platform (Supabase), that is what
 supplies accounts and per-organization isolation, and the server refuses to
 bind a public interface without it.
 
@@ -55,7 +55,7 @@ high-severity findings.
 
 **Pin to a commit, not a branch.** `@main` means whatever that branch points at
 when the workflow runs, so anyone who can move the branch can change what
-executes in your CI - and this action installs and runs a package. A commit SHA
+executes in your CI, and this action installs and runs a package. A commit SHA
 is immutable, which is why GitHub's own hardening guidance recommends it. The
 `ref` input is pinned to the same commit so the installed CloudNova matches the
 action definition; left at its `main` default it would float independently.
@@ -67,8 +67,8 @@ Update the pin deliberately, the same way you would bump any other dependency.
   `/signup` requires a session, and the session cookie is verified against
   Supabase on each request rather than trusted on its own.
 - Scans, findings and targets are scoped per organization by Row-Level
-  Security, so the database - not the application - decides what a user sees.
+  Security, so the database, not the application, decides what a user sees.
 - Security headers (CSP, X-Frame-Options, HSTS, nosniff) are set on every
   response, including redirects.
-- The dashboard exposes only the defensive scanner + mentor - not Range's
+- The dashboard exposes only the defensive scanner + mentor, not Range's
   target-facing commands. Keep it that way for a public deployment.

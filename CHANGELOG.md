@@ -16,7 +16,7 @@ releases, so entries are grouped by development phase.
   email with expiry and revocation, member listing and role management.
 - **Row-Level Security throughout**: organizations, profiles, memberships,
   audit_log, targets, scans, findings and invitations. Every read and write goes
-  out under the signed-in user's own token, so the database - not the application
+  out under the signed-in user's own token, so the database, not the application
   - decides what a user can see or change. Nothing is granted to `anon`.
 - **Scan persistence**: scans and findings are saved against the current
   organization and browsable at `/history`.
@@ -28,7 +28,7 @@ releases, so entries are grouped by development phase.
 
 ### Webhook alerting on drift
 - `cloudnova monitor <path> --notify` posts an alert to a Slack-compatible incoming
-  webhook (`CLOUDNOVA_SLACK_WEBHOOK`) when new findings appear - turning scheduled
+  webhook (`CLOUDNOVA_SLACK_WEBHOOK`) when new findings appear, turning scheduled
   scans into continuous monitoring with paging. Delivery is injectable and tested
   offline.
 
@@ -41,7 +41,7 @@ releases, so entries are grouped by development phase.
 ### Scheduled scanning (history + drift)
 - `cloudnova monitor <path>`: scans, compares to the previous snapshot (introduced
   vs fixed findings + score delta), and records a timestamped snapshot. `--fail-on-new`
-  exits non-zero when new findings appear - wire it into cron / a systemd timer / a
+  exits non-zero when new findings appear, wire it into cron / a systemd timer / a
   scheduled GitHub Action for continuous monitoring with alerting.
 - `cloudnova history <path>`: posture trend across recorded scans.
   ([ADR 0018](docs/adr/0018-scheduled-scanning.md))
@@ -80,7 +80,7 @@ releases, so entries are grouped by development phase.
 
 ### Live cloud scanning (AWS + Azure)
 - `cloudnova cloud aws` and `cloudnova cloud azure`: scan a LIVE account read-only
-  with your own credentials and audit the actual resources - public S3 buckets /
+  with your own credentials and audit the actual resources, public S3 buckets /
   storage accounts, IAM users without MFA, stale access keys, security groups /
   NSGs open to the world on sensitive ports, public/unencrypted RDS and SQL. Same
   validated Finding contract (CIS + MITRE mappings) as the IaC scanner. Read-only
@@ -118,7 +118,7 @@ releases, so entries are grouped by development phase.
 
 ### Triage in the dashboard
 - The web scan-results page now has a per-finding **Explain** expander (what it is,
-  why it matters, how to fix) rendered instantly offline - `explain_finding` gained
+  why it matters, how to fix) rendered instantly offline, `explain_finding` gained
   an `allow_claude=False` mode so page rendering never makes API calls.
 
 ### Scan diff (posture over time)
@@ -136,7 +136,7 @@ releases, so entries are grouped by development phase.
 
 ### AI finding triage
 - `cloudnova triage <path>`: scans, then explains the worst findings in plain
-  English - what it is, why it matters (attacker's view + friendly ATT&CK names),
+  English, what it is, why it matters (attacker's view + friendly ATT&CK names),
   and a concrete fix. Uses Claude when ANTHROPIC_API_KEY is set, with a useful
   templated offline fallback. `cloudnova.triage.explain_finding` is the reusable API.
 
@@ -150,11 +150,11 @@ releases, so entries are grouped by development phase.
 - `cloudnova.web`: a local FastAPI dashboard (optional `web` extra, `cloudnova-web`).
   Run a scan from the browser and view findings, the posture grade, and attack
   paths; browse the pentest-mentor learning path. Server-rendered, HTML-escaped,
-  binds to 127.0.0.1, reuses the tested service/engine - exposes only the
+  binds to 127.0.0.1, reuses the tested service/engine, exposes only the
   defensive scanner and mentor over HTTP, never Range's target-facing commands.
 
 ### Range personas
-- `cloudnova.range.persona`: switchable operator identity - `cloudnova` (the
+- `cloudnova.range.persona`: switchable operator identity, `cloudnova` (the
   professional product face) and `gh0st` (personal handle). Cosmetic only: it
   changes greetings and the default report byline, never any security behavior.
   Selection via `CLOUDNOVA_PERSONA` env var or a saved config. CLI:
@@ -176,7 +176,7 @@ releases, so entries are grouped by development phase.
 
 ### Pentest report generation
 - `cloudnova.range.report`: turns an engagement (metadata + findings, as a YAML
-  file) into a professional Markdown pentest report - executive summary,
+  file) into a professional Markdown pentest report, executive summary,
   findings-at-a-glance table, methodology, per-finding detail (severity/CVSS,
   impact, reproduction, remediation), appendix. Can adapt CloudNova scan findings.
 - CLI: `cloudnova range report <engagement.yaml> [-o report.md]`.
@@ -221,21 +221,21 @@ releases, so entries are grouped by development phase.
   the thesis's black-box "AI risk score". Weighted by finding severity plus an
   attack-path penalty, with a full auditable breakdown; shown in console + JSON.
 
-### Phase 5 - AI agents (started)
+### Phase 5, AI agents (started)
 - MCP server (`cloudnova-mcp`) exposing `scan`, `list_checks`, and `attack_paths`
   so Claude or any MCP client can drive CloudNova. Logic lives in a new
   plain-dict `cloudnova.service` API; `mcp` is an optional extra.
 
-### Phase 3 - Attack-path graph
+### Phase 3, Attack-path graph
 - `cloudnova.graph`: a dependency-free resource graph. Nodes are normalized
   `CloudResource`s tagged with security roles (internet-exposed, privileged,
   data-store, compute); edges are relationships extracted from Terraform
   references (`PROTECTED_BY` / `CAN_ASSUME` / `GRANTS`).
 - Bounded, cycle-safe DFS reports exploitable chains as narrated CRITICAL
-  findings ("internet-exposed EC2 - can assume → admin role"). Runs during
+  findings ("internet-exposed EC2, can assume → admin role"). Runs during
   `scan` (`--no-graph` to disable).
 
-### Phase 1 - IaC scanning
+### Phase 1, IaC scanning
 - Terraform (HCL, incl. `jsonencode` policy resolution), CloudFormation
   (JSON/YAML with intrinsic tags), and multi-document Kubernetes parsers, all
   normalized to `CloudResource`.
@@ -244,12 +244,12 @@ releases, so entries are grouped by development phase.
 - Baseline/suppression by content fingerprint (`cloudnova baseline`).
 - `--min-severity` filter and `--fail-on` CI gate.
 
-### Phase 0 - Foundation
+### Phase 0, Foundation
 - Rebuilt from the thesis prototype into a typed, tested package.
 - Immutable Pydantic `Finding` contract; plugin check registry; loader/check
   separation so malformed input is recorded, never fatal.
 - Typer CLI (`scan`, `checks`, `baseline`); console + JSON reporters.
 - Full quality gate: ruff, mypy (strict), pytest; CI on Python 3.11 & 3.12.
 - Security hygiene: `.gitignore`, `.env.example`, detect-private-key pre-commit
-  hook (the prototype had leaked a live key - since revoked).
+  hook (the prototype had leaked a live key, since revoked).
 - Original prototype preserved under `legacy/`.

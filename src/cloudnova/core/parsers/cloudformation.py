@@ -32,7 +32,7 @@ def _construct_intrinsic(loader: _CfnLoader, tag_suffix: str, node: yaml.Node) -
         value = loader.construct_sequence(node)
     elif isinstance(node, yaml.MappingNode):
         value = loader.construct_mapping(node)
-    else:  # pragma: no cover - pyyaml only emits the three node types above
+    else:  # pragma: no cover, pyyaml only emits the three node types above
         value = None
     # !Ref maps to {"Ref": ...}; everything else to {"Fn::<Name>": ...}.
     key = "Ref" if tag_suffix == "Ref" else f"Fn::{tag_suffix}"
