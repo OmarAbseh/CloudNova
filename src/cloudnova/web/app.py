@@ -8,6 +8,8 @@ Routes:
 - ``/``            landing page + 3D hero + capabilities
 - ``/scan``        run a scan and view findings / score / attack paths
 - ``/history``     scans saved for the current organization
+- ``/org``         members, invitations and roles for the current organization
+- ``/invites``     invitations addressed to the signed-in user
 - ``/mentor``      the pentest learning path
 - ``/login`` ``/signup`` ``/logout``  accounts (multi-tenant mode only)
 - ``/health``      liveness probe (tests)
@@ -37,11 +39,20 @@ from cloudnova.platform.client import AuthError, SupabaseClient, SupabaseError
 from cloudnova.platform.config import load_config
 from cloudnova.platform.tenancy import (
     Org,
+    accept_invitation,
+    change_role,
+    create_org,
     ensure_org,
     ensure_profile,
+    invite_member,
     list_findings,
+    list_invitations,
+    list_members,
+    list_my_invitations,
     list_scans,
     record_scan,
+    remove_member,
+    revoke_invitation,
 )
 from cloudnova.range import active_persona
 from cloudnova.range.mentor import (
@@ -54,6 +65,7 @@ from cloudnova.range.mentor import (
 )
 from cloudnova.triage import explain_finding
 from cloudnova.web import auth as web_auth
+from cloudnova.web.org_pages import invitations_body, org_settings_body
 
 # Three.js (UMD, exposes global THREE). Progressive enhancement only.
 _THREE_CDN = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
@@ -130,6 +142,14 @@ label { display:block; font-size:13px; color:var(--muted); margin:12px 0 5px; fo
 .linkish:hover { color:var(--text); background:var(--panel2); }
 .orgpick { background:#0c0c10; color:var(--text); border:1px solid var(--line);
   border-radius:8px; padding:6px 10px; font:inherit; font-size:13px; }
+.rolechip { font-size:11px; font-weight:800; letter-spacing:.5px; padding:3px 9px;
+  border-radius:6px; text-transform:uppercase; border:1px solid var(--line); color:var(--muted); }
+.rolechip.owner { background:rgba(255,46,77,.14); color:var(--pink); border-color:var(--red2); }
+.rolechip.admin { background:rgba(255,107,129,.10); color:var(--pink); }
+.rolechip.member { background:var(--panel2); color:var(--text); }
+.rolechip.viewer { background:transparent; }
+.linkish.danger { color:var(--red); }
+.linkish.danger:hover { background:rgba(255,46,77,.12); color:var(--red); }
 .auth-wrap { max-width:400px; margin:36px auto; }
 .notice { border:1px solid var(--line); border-left:3px solid var(--red); background:var(--panel);
   padding:12px 14px; border-radius:8px; margin:0 0 14px; font-size:14px; }
@@ -213,7 +233,9 @@ def _page(
     current: Org | None = None,
 ) -> str:
     p = active_persona()
-    history = '<a href="/history">History</a>' if user is not None else ""
+    links = (
+        '<a href="/history">History</a><a href="/org">Organization</a>' if user is not None else ""
+    )
     if user is None:
         account = ""
     else:
@@ -231,7 +253,7 @@ def _page(
 <header>
   <span class="brand"><span class="dot"></span>CloudNova
     <span class="sub">{_e(p.display_name)} · v{_e(__version__)}</span></span>
-  <nav><a href="/">Home</a><a href="/scan">Scan</a>{history}<a href="/mentor">Mentor</a>{account}</nav>
+  <nav><a href="/">Home</a><a href="/scan">Scan</a>{links}<a href="/mentor">Mentor</a>{account}</nav>
 </header>
 <main>{body}</main>
 {_hero_script() if hero else ""}
@@ -510,6 +532,172 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
                 )
                 if any(o.id == org_id for o in orgs):
                     web_auth.set_org(response, org_id, secure=web_auth.secure_request(request))
+            return _harden(response)
+
+        # -- organization settings ---------------------------------------
+        # Every handler below posts through RLS. The page hides controls the
+        # caller's role cannot use, but that is presentation: the database is
+        # what refuses, and these routes surface its refusal rather than
+        # pre-empting it.
+
+        async def _org_page(request: Request, *, notice: str = "", error: str = "") -> str:
+            current, orgs = await _orgs_for(request)
+            user = request.state.user
+            if current is None or user is None:
+                return _page("Organization", _empty_history(), user=user)
+            try:
+                members = await run_in_threadpool(
+                    list_members, store, user.access_token, current.id
+                )
+                invites = await run_in_threadpool(
+                    list_invitations, store, user.access_token, current.id
+                )
+            except SupabaseError as exc:
+                members, invites = [], []
+                error = error or str(exc)
+            return _page(
+                "Organization",
+                org_settings_body(
+                    current=current,
+                    members=members,
+                    invites=invites,
+                    me=user.user_id,
+                    notice=notice,
+                    error=error,
+                ),
+                user=user,
+                orgs=orgs,
+                current=current,
+            )
+
+        @app.get("/org", response_class=HTMLResponse)
+        async def org_settings(request: Request) -> str:
+            return await _org_page(request)
+
+        @app.post("/org/invite", response_class=HTMLResponse)
+        async def org_invite(
+            request: Request, email: str = Form(...), role: str = Form("member")
+        ) -> str:
+            current, _ = await _orgs_for(request)
+            user = request.state.user
+            if current is None or user is None:
+                return await _org_page(request, error="No organization selected.")
+            try:
+                await run_in_threadpool(
+                    lambda: invite_member(
+                        store,
+                        user.access_token,
+                        org_id=current.id,
+                        email=email,
+                        role=role,
+                        invited_by=user.user_id,
+                    )
+                )
+            except ValueError as exc:
+                return await _org_page(request, error=str(exc))
+            except SupabaseError as exc:
+                return await _org_page(request, error=str(exc))
+            return await _org_page(request, notice=f"Invitation sent to {email.strip()}.")
+
+        @app.post("/org/invite/revoke", response_class=HTMLResponse)
+        async def org_revoke(request: Request, invitation_id: str = Form(...)) -> str:
+            user = request.state.user
+            if user is None:
+                return await _org_page(request)
+            try:
+                await run_in_threadpool(revoke_invitation, store, user.access_token, invitation_id)
+            except SupabaseError as exc:
+                return await _org_page(request, error=str(exc))
+            return await _org_page(request, notice="Invitation revoked.")
+
+        @app.post("/org/member/role", response_class=HTMLResponse)
+        async def org_change_role(
+            request: Request, user_id: str = Form(...), role: str = Form(...)
+        ) -> str:
+            current, _ = await _orgs_for(request)
+            user = request.state.user
+            if current is None or user is None:
+                return await _org_page(request, error="No organization selected.")
+            if user_id == user.user_id:
+                # The only thing this enables is demoting yourself out of the
+                # last owner seat and locking the org.
+                return await _org_page(request, error="You cannot change your own role.")
+            try:
+                await run_in_threadpool(
+                    change_role, store, user.access_token, current.id, user_id, role
+                )
+            except ValueError as exc:
+                return await _org_page(request, error=str(exc))
+            except SupabaseError as exc:
+                return await _org_page(request, error=str(exc))
+            return await _org_page(request, notice=f"Role updated to {role}.")
+
+        @app.post("/org/member/remove", response_class=HTMLResponse)
+        async def org_remove_member(request: Request, user_id: str = Form(...)) -> str:
+            current, _ = await _orgs_for(request)
+            user = request.state.user
+            if current is None or user is None:
+                return await _org_page(request, error="No organization selected.")
+            if user_id == user.user_id:
+                return await _org_page(request, error="You cannot remove yourself.")
+            try:
+                await run_in_threadpool(
+                    remove_member, store, user.access_token, current.id, user_id
+                )
+            except SupabaseError as exc:
+                return await _org_page(request, error=str(exc))
+            return await _org_page(request, notice="Member removed.")
+
+        @app.post("/orgs/create")
+        async def org_create(request: Request, name: str = Form(...)) -> Response:
+            user = request.state.user
+            cleaned = name.strip()
+            if user is None or not cleaned:
+                return _harden(RedirectResponse("/org", status_code=303))
+            try:
+                org = await run_in_threadpool(
+                    create_org, store, user.access_token, user.user_id, cleaned
+                )
+            except SupabaseError:
+                return _harden(RedirectResponse("/org", status_code=303))
+            # Switch to it: creating an org and staying in the old one is
+            # never what was meant.
+            response = RedirectResponse("/org", status_code=303)
+            web_auth.set_org(response, org.id, secure=web_auth.secure_request(request))
+            return _harden(response)
+
+        @app.get("/invites", response_class=HTMLResponse)
+        async def my_invites(request: Request, notice: str = "", error: str = "") -> str:
+            current, orgs = await _orgs_for(request)
+            user = request.state.user
+            if user is None:
+                return _page("Invitations", _empty_history())
+            try:
+                pending = await run_in_threadpool(list_my_invitations, store, user.access_token)
+            except SupabaseError as exc:
+                pending, error = [], str(exc)
+            return _page(
+                "Invitations",
+                invitations_body(pending, notice=notice, error=error),
+                user=user,
+                orgs=orgs,
+                current=current,
+            )
+
+        @app.post("/invites/accept")
+        async def accept_invite(request: Request, invitation_id: str = Form(...)) -> Response:
+            user = request.state.user
+            if user is None:
+                return _harden(RedirectResponse("/invites", status_code=303))
+            try:
+                org_id = await run_in_threadpool(
+                    accept_invitation, store, user.access_token, invitation_id
+                )
+            except SupabaseError:
+                return _harden(RedirectResponse("/invites", status_code=303))
+            # Land in the org they just joined.
+            response = RedirectResponse("/org", status_code=303)
+            web_auth.set_org(response, org_id, secure=web_auth.secure_request(request))
             return _harden(response)
 
         @app.get("/history", response_class=HTMLResponse)
