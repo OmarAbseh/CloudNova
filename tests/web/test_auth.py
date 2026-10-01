@@ -38,6 +38,10 @@ def _route(request: httpx.Request) -> httpx.Response:
         return httpx.Response(401, json={"msg": "invalid claim"})
     if path == "/auth/v1/logout":
         return httpx.Response(204)
+    if path == "/rest/v1/memberships":
+        return httpx.Response(
+            200, json=[{"role": "owner", "organizations": {"id": "org-1", "name": "Acme"}}]
+        )
     if path.startswith("/rest/v1/"):
         return httpx.Response(200, json=[])
     return httpx.Response(404, json={"msg": f"unexpected {path}"})

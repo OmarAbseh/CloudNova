@@ -5,13 +5,22 @@ is a dark, red-accented security aesthetic with a 3D animated hero (Three.js, lo
 from a CDN as progressive enhancement — the page works fully without it).
 
 Routes:
-- ``/``        landing page + 3D hero + capabilities
-- ``/scan``    run a scan and view findings / score / attack paths
-- ``/mentor``  the pentest learning path
-- ``/health``  liveness probe (tests)
+- ``/``            landing page + 3D hero + capabilities
+- ``/scan``        run a scan and view findings / score / attack paths
+- ``/history``     scans saved for the current organization
+- ``/mentor``      the pentest learning path
+- ``/login`` ``/signup`` ``/logout``  accounts (multi-tenant mode only)
+- ``/health``      liveness probe (tests)
 
-Local operator tool: scans local paths, binds to 127.0.0.1, and exposes only the
-defensive scanner and mentor over HTTP — never Range's target-facing commands.
+Two modes. With the Floatly Platform configured the dashboard is multi-tenant:
+real accounts, and every scan and finding written and read under the signed-in
+user's own token so Row-Level Security scopes them to their organization.
+Without it the dashboard is the single-user local operator tool it has always
+been — no accounts, nothing persisted — and ``server.py`` refuses to bind a
+public interface in that state.
+
+Either way it scans local paths and exposes only the defensive scanner and
+mentor over HTTP — never Range's target-facing commands.
 """
 
 from __future__ import annotations
@@ -26,7 +35,14 @@ from starlette.concurrency import run_in_threadpool
 from cloudnova import __version__, service
 from cloudnova.platform.client import AuthError, SupabaseClient, SupabaseError
 from cloudnova.platform.config import load_config
-from cloudnova.platform.tenancy import ensure_profile
+from cloudnova.platform.tenancy import (
+    Org,
+    ensure_org,
+    ensure_profile,
+    list_findings,
+    list_scans,
+    record_scan,
+)
 from cloudnova.range import active_persona
 from cloudnova.range.mentor import (
     completed,
@@ -112,6 +128,8 @@ label { display:block; font-size:13px; color:var(--muted); margin:12px 0 5px; fo
 .linkish { background:none; border:0; color:var(--muted); cursor:pointer; font:inherit;
   font-weight:600; font-size:14px; padding:7px 12px; border-radius:8px; }
 .linkish:hover { color:var(--text); background:var(--panel2); }
+.orgpick { background:#0c0c10; color:var(--text); border:1px solid var(--line);
+  border-radius:8px; padding:6px 10px; font:inherit; font-size:13px; }
 .auth-wrap { max-width:400px; margin:36px auto; }
 .notice { border:1px solid var(--line); border-left:3px solid var(--red); background:var(--panel);
   padding:12px 14px; border-radius:8px; margin:0 0 14px; font-size:14px; }
@@ -166,18 +184,41 @@ def _hero_script() -> str:
 </script>"""
 
 
+def _org_switcher(orgs: list[Org], current: Org | None) -> str:
+    """A switcher, but only once there is something to switch between."""
+    if current is None:
+        return ""
+    if len(orgs) < 2:
+        return f'<span class="who">{_e(current.name)} · {_e(current.role)}</span>'
+    options = "".join(
+        f'<option value="{_e(o.id)}"{" selected" if o.id == current.id else ""}>'
+        f"{_e(o.name)} ({_e(o.role)})</option>"
+        for o in orgs
+    )
+    return (
+        "<form method='post' action='/orgs/switch' style='margin:0;display:inline'>"
+        f"<select name='org_id' class='orgpick' onchange='this.form.submit()'>{options}</select>"
+        "<noscript><button class='linkish' type='submit'>Switch</button></noscript>"
+        "</form>"
+    )
+
+
 def _page(
     title: str,
     body: str,
     *,
     hero: bool = False,
     user: web_auth.CurrentUser | None = None,
+    orgs: list[Org] | None = None,
+    current: Org | None = None,
 ) -> str:
     p = active_persona()
+    history = '<a href="/history">History</a>' if user is not None else ""
     if user is None:
         account = ""
     else:
         account = (
+            f"{_org_switcher(orgs or [], current)}"
             f'<span class="who">{_e(user.email)}</span>'
             f"<form method='post' action='/logout' style='margin:0;display:inline'>"
             f"<button class='linkish' type='submit'>Sign out</button></form>"
@@ -190,7 +231,7 @@ def _page(
 <header>
   <span class="brand"><span class="dot"></span>CloudNova
     <span class="sub">{_e(p.display_name)} · v{_e(__version__)}</span></span>
-  <nav><a href="/">Home</a><a href="/scan">Scan</a><a href="/mentor">Mentor</a>{account}</nav>
+  <nav><a href="/">Home</a><a href="/scan">Scan</a>{history}<a href="/mentor">Mentor</a>{account}</nav>
 </header>
 <main>{body}</main>
 {_hero_script() if hero else ""}
@@ -345,7 +386,8 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
             return _harden(response)
 
     @app.get("/", response_class=HTMLResponse)
-    def home(request: Request) -> str:
+    async def home(request: Request) -> str:
+        current, orgs = await _orgs_for(request)
         body = """
         <section class="hero">
           <div>
@@ -371,22 +413,149 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
           <div class="card"><div class="kicker">Range</div><h3>Learn to hack</h3>
             <p>An authorization-first pentest toolkit and a tutor that takes you to job-ready.</p></div>
         </div>"""
-        return _page("Home", body, hero=True, user=request.state.user)
+        return _page("Home", body, hero=True, user=request.state.user, orgs=orgs, current=current)
+
+    async def _orgs_for(request: Request) -> tuple[Org | None, list[Org]]:
+        """The caller's current org and the full list they belong to.
+
+        The ``cn_org`` cookie only ever *selects* from orgs the database
+        already returned for this user, so tampering with it cannot reach
+        another tenant — the worst it can do is fall back to the first.
+        """
+        user = request.state.user
+        if platform is None or user is None:
+            return None, []
+        try:
+            orgs = await run_in_threadpool(
+                ensure_org, platform, user.access_token, user.user_id, user.email
+            )
+        except SupabaseError:
+            # Org bootstrap failing must not take the whole page down — the
+            # user stays signed in and the org-scoped parts simply go quiet.
+            return None, []
+        if not orgs:
+            return None, []
+        wanted = request.cookies.get(web_auth.ORG_COOKIE, "")
+        current = next((o for o in orgs if o.id == wanted), orgs[0])
+        return current, orgs
 
     @app.get("/scan", response_class=HTMLResponse)
-    def scan_form(request: Request) -> str:
-        return _page("Scan", _scan_form_body(), user=request.state.user)
+    async def scan_form(request: Request) -> str:
+        current, orgs = await _orgs_for(request)
+        return _page(
+            "Scan",
+            _scan_form_body(org=current),
+            user=request.state.user,
+            orgs=orgs,
+            current=current,
+        )
 
     @app.post("/scan", response_class=HTMLResponse)
-    def run_scan(path: str = Form(...)) -> str:
+    async def run_scan(request: Request, path: str = Form(...)) -> str:
+        current, orgs = await _orgs_for(request)
         try:
-            result = service.scan(path)
+            result = await run_in_threadpool(service.scan, path)
         except FileNotFoundError:
-            return _page("Scan", _scan_form_body(error=f"Path not found: {path}"))
-        return _page("Scan results", _scan_results_body(path, result))
+            return _page(
+                "Scan",
+                _scan_form_body(error=f"Path not found: {path}", org=current),
+                user=request.state.user,
+                orgs=orgs,
+                current=current,
+            )
+
+        # Persisting is scoped by RLS: the insert carries org_id and the
+        # database refuses it unless the caller is a member with a write role.
+        saved = ""
+        warning = ""
+        user = request.state.user
+        if platform is not None and user is not None and current is not None:
+            try:
+                scan_id = await run_in_threadpool(
+                    lambda: record_scan(
+                        platform,
+                        user.access_token,
+                        org_id=current.id,
+                        user_id=user.user_id,
+                        path=path,
+                        result=result,
+                    )
+                )
+                saved = scan_id
+            except SupabaseError as exc:
+                # The scan itself succeeded; losing the results because we
+                # could not file them would be the worse outcome.
+                warning = f"Scan ran, but saving it failed: {exc}"
+
+        return _page(
+            "Scan results",
+            _scan_results_body(path, result, org=current, saved=saved, warning=warning),
+            user=request.state.user,
+            orgs=orgs,
+            current=current,
+        )
+
+    if platform is not None:
+        store: SupabaseClient = platform
+
+        @app.post("/orgs/switch")
+        async def switch_org(request: Request, org_id: str = Form(...)) -> Response:
+            user = request.state.user
+            response = RedirectResponse("/history", status_code=303)
+            if user is not None:
+                # Only accept an id the database just confirmed for this user,
+                # so the cookie can never point at someone else's tenant.
+                orgs = await run_in_threadpool(
+                    ensure_org, store, user.access_token, user.user_id, user.email
+                )
+                if any(o.id == org_id for o in orgs):
+                    web_auth.set_org(response, org_id, secure=web_auth.secure_request(request))
+            return _harden(response)
+
+        @app.get("/history", response_class=HTMLResponse)
+        async def history(request: Request) -> str:
+            current, orgs = await _orgs_for(request)
+            user = request.state.user
+            if current is None or user is None:
+                return _page("History", _empty_history(), user=user)
+            try:
+                scans = await run_in_threadpool(list_scans, store, user.access_token, current.id)
+                error = ""
+            except SupabaseError as exc:
+                scans, error = [], str(exc)
+            return _page(
+                "History",
+                _history_body(current, scans, error),
+                user=user,
+                orgs=orgs,
+                current=current,
+            )
+
+        @app.get("/history/{scan_id}", response_class=HTMLResponse)
+        async def scan_detail(request: Request, scan_id: str) -> str:
+            current, orgs = await _orgs_for(request)
+            user = request.state.user
+            if user is None:
+                return _page("Scan", _empty_history())
+            try:
+                # No org filter here on purpose: RLS already restricts this to
+                # the caller's orgs, so an id from another tenant returns
+                # nothing rather than being rejected by our own check.
+                rows = await run_in_threadpool(list_findings, store, user.access_token, scan_id)
+                error = ""
+            except SupabaseError as exc:
+                rows, error = [], str(exc)
+            return _page(
+                "Scan detail",
+                _scan_detail_body(scan_id, rows, error),
+                user=user,
+                orgs=orgs,
+                current=current,
+            )
 
     @app.get("/mentor", response_class=HTMLResponse)
-    def mentor_page(request: Request) -> str:
+    async def mentor_page(request: Request) -> str:
+        current, orgs = await _orgs_for(request)
         done = completed()
         prog = summary()
         upcoming = {m.id for m in next_modules(1)}
@@ -442,7 +611,7 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
           <table><thead><tr><th>#</th><th>Module</th><th>Level</th><th></th></tr></thead>
           <tbody>{rows}</tbody></table>
         </div>"""
-        return _page("Mentor", body, user=request.state.user)
+        return _page("Mentor", body, user=request.state.user, orgs=orgs, current=current)
 
     @app.post("/mentor/toggle")
     def mentor_toggle(module_id: str = Form(...)) -> RedirectResponse:
@@ -517,12 +686,80 @@ def _confirm_body(email: str) -> str:
     </div>"""
 
 
-def _scan_form_body(error: str = "") -> str:
+def _empty_history() -> str:
+    return '<p class="muted">Nothing to show.</p>'
+
+
+def _history_body(org: Org, scans: list[dict[str, Any]], error: str = "") -> str:
+    err = f'<p class="notice">{_e(error)}</p>' if error else ""
+    if not scans:
+        rows = '<tr><td colspan="5" class="muted">No scans saved yet.</td></tr>'
+    else:
+        rows = "".join(_history_row(s) for s in scans)
+    return f"""
+    <div class="kicker">{_e(org.name)}</div>
+    <h1 style="margin:4px 0">Scan history</h1>
+    <p class="muted">Every scan saved for this organization. You see these rows
+      because you are a member of it — the database enforces that, not the page.</p>
+    {err}
+    <div class="card" style="margin-top:14px">
+      <table><thead><tr><th>When</th><th>Target</th><th>Findings</th>
+      <th>Score</th><th></th></tr></thead><tbody>{rows}</tbody></table>
+    </div>"""
+
+
+def _history_row(scan: dict[str, Any]) -> str:
+    target = scan.get("targets") or {}
+    name = target.get("name") if isinstance(target, dict) else None
+    grade = str(scan.get("grade") or "-")
+    color = _GRADE_COLOR.get(grade, "#8b8b99")
+    scan_id = str(scan.get("id") or "")
+    started = str(scan.get("started_at") or "")[:19].replace("T", " ")
+    return (
+        f"<tr><td class='muted'>{_e(started)}</td>"
+        f"<td>{_e(name or 'unknown')}</td>"
+        f"<td>{_e(scan.get('findings_count', 0))}</td>"
+        f"<td><b style='color:{color}'>{_e(grade)}</b> "
+        f"<span class='muted'>{_e(scan.get('posture_score', '-'))}/100</span></td>"
+        f"<td><a href='/history/{_e(scan_id)}'>View</a></td></tr>"
+    )
+
+
+def _scan_detail_body(scan_id: str, findings: list[dict[str, Any]], error: str = "") -> str:
+    err = f'<p class="notice">{_e(error)}</p>' if error else ""
+    if not findings:
+        rows = '<tr><td colspan="3" class="muted">No findings recorded for this scan.</td></tr>'
+    else:
+        rows = "".join(
+            f'<tr><td><span class="sev {_e(f.get("severity", "info"))}">'
+            f"{_e(str(f.get('severity', 'info')).upper())}</span></td>"
+            f"<td><b>{_e(f.get('title', ''))}</b><br>"
+            f'<span class="muted">{_e(f.get("description", ""))}</span><br>'
+            f'<span class="muted">↳ {_e(f.get("remediation", ""))}</span></td>'
+            f'<td class="muted">{_e(f.get("location_resource") or f.get("location_path", ""))}</td>'
+            f"</tr>"
+            for f in findings
+        )
+    return f"""
+    <div class="kicker">Saved scan</div>
+    <h1 style="margin:4px 0">{_e(len(findings))} finding(s)</h1>
+    <p class="muted">Scan <code>{_e(scan_id)}</code></p>
+    {err}
+    <div class="card" style="margin-top:14px">
+      <table><thead><tr><th>Severity</th><th>Finding</th><th>Resource</th></tr></thead>
+      <tbody>{rows}</tbody></table>
+    </div>
+    <p><a class="btn ghost" href="/history">← Back to history</a></p>"""
+
+
+def _scan_form_body(error: str = "", org: Org | None = None) -> str:
     err = f'<p style="color:var(--red)">{_e(error)}</p>' if error else ""
+    scope = f'<p class="muted">Results are saved to <b>{_e(org.name)}</b>.</p>' if org else ""
     return f"""
     <div class="kicker">Scanner</div>
     <h1 style="margin:4px 0">Run a scan</h1>
     <p class="muted">Enter a path to a file or directory on this machine.</p>
+    {scope}
     <div class="card" style="margin-top:14px">
       {err}
       <form method="post" action="/scan">
@@ -532,7 +769,14 @@ def _scan_form_body(error: str = "") -> str:
     </div>"""
 
 
-def _scan_results_body(path: str, result: dict[str, Any]) -> str:
+def _scan_results_body(
+    path: str,
+    result: dict[str, Any],
+    *,
+    org: Org | None = None,
+    saved: str = "",
+    warning: str = "",
+) -> str:
     summary = result["summary"]
     grade = summary["grade"]
     color = _GRADE_COLOR.get(grade, "#8b8b99")
@@ -557,7 +801,16 @@ def _scan_results_body(path: str, result: dict[str, Any]) -> str:
     rows = "".join(_row(f) for f in result["findings"]) or (
         '<tr><td colspan="3" class="muted">No findings. 🎉</td></tr>'
     )
+    banner = ""
+    if warning:
+        banner = f'<p class="notice">{_e(warning)}</p>'
+    elif saved and org is not None:
+        banner = (
+            f'<p class="notice ok">Saved to <b>{_e(org.name)}</b>. '
+            f'<a href="/history/{_e(saved)}">View it in history</a>.</p>'
+        )
     return f"""
+    {banner}
     <div class="card summary">
       <div><div class="grade" style="color:{color}">{_e(grade)}</div>
         <div class="muted">{summary["posture_score"]}/100 · lower is better</div></div>
