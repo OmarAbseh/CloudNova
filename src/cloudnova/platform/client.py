@@ -292,6 +292,39 @@ class SupabaseClient:
             fallback=f"Could not delete from {table}.",
         )
 
+    def upsert(
+        self,
+        table: str,
+        access_token: str,
+        rows: list[dict[str, Any]],
+        *,
+        on_conflict: str,
+        returning: bool = False,
+    ) -> list[dict[str, Any]]:
+        """Insert, or merge into the existing row on a conflict.
+
+        Separate from ``insert`` because merge-duplicates silently overwrites,
+        which is right for a webhook replaying the current state of a
+        subscription and wrong almost everywhere else.
+        """
+        if not rows:
+            return []
+        prefer = "resolution=merge-duplicates," + (
+            "return=representation" if returning else "return=minimal"
+        )
+        payload = self._request(
+            "POST",
+            f"{self.config.rest_url}/{table}",
+            access_token=access_token,
+            json=rows,
+            params={"on_conflict": on_conflict},
+            extra_headers={"Prefer": prefer},
+            fallback=f"Could not upsert into {table}.",
+        )
+        return (
+            [row for row in payload if isinstance(row, dict)] if isinstance(payload, list) else []
+        )
+
     def insert(
         self,
         table: str,
