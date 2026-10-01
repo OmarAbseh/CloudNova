@@ -50,6 +50,9 @@ web = [
     # The dashboard's login and mentor routes post form bodies, which FastAPI
     # refuses to parse unless this is present.
     "python-multipart>=0.0.9",
+    # How the dashboard talks to Supabase (auth + PostgREST). A thin HTTP client
+    # rather than the SDK, so it is always obvious which credential signs a call.
+    "httpx>=0.27",
 ]
 aws = [
     "boto3>=1.34",
