@@ -35,6 +35,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from starlette.concurrency import run_in_threadpool
 
 from cloudnova import __version__, service
+from cloudnova.platform.billing import Entitlements, entitlements
 from cloudnova.platform.client import AuthError, SupabaseClient, SupabaseError
 from cloudnova.platform.config import load_config
 from cloudnova.platform.tenancy import (
@@ -472,9 +473,30 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
             current=current,
         )
 
+    async def _entitlements(request: Request, current: Org | None) -> Entitlements | None:
+        """What the current org may do. ``None`` in local mode, where there is
+        no org and so nothing to meter."""
+        user = request.state.user
+        if platform is None or user is None or current is None:
+            return None
+        return await run_in_threadpool(entitlements, platform, user.access_token, current.id)
+
     @app.post("/scan", response_class=HTMLResponse)
     async def run_scan(request: Request, path: str = Form(...)) -> str:
         current, orgs = await _orgs_for(request)
+
+        # Check before scanning, not after: there is no point burning the work
+        # only to refuse to keep the result.
+        allowance = await _entitlements(request, current)
+        if allowance is not None and not allowance.can_run_scan:
+            return _page(
+                "Scan",
+                _scan_form_body(error=_scan_limit_message(allowance), org=current),
+                user=request.state.user,
+                orgs=orgs,
+                current=current,
+            )
+
         try:
             result = await run_in_threadpool(service.scan, path)
         except FileNotFoundError:
@@ -555,6 +577,7 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
             except SupabaseError as exc:
                 members, invites = [], []
                 error = error or str(exc)
+            allowance = await _entitlements(request, current)
             return _page(
                 "Organization",
                 org_settings_body(
@@ -562,6 +585,7 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
                     members=members,
                     invites=invites,
                     me=user.user_id,
+                    allowance=allowance,
                     notice=notice,
                     error=error,
                 ),
@@ -582,6 +606,9 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
             user = request.state.user
             if current is None or user is None:
                 return await _org_page(request, error="No organization selected.")
+            allowance = await _entitlements(request, current)
+            if allowance is not None and not allowance.can_add_seat:
+                return await _org_page(request, error=_seat_limit_message(allowance))
             try:
                 await run_in_threadpool(
                     lambda: invite_member(
@@ -872,6 +899,26 @@ def _confirm_body(email: str) -> str:
       <p class="muted" style="text-align:center;margin-top:14px">
         <a href="/login">Back to sign in</a></p>
     </div>"""
+
+
+def _scan_limit_message(allowance: Entitlements) -> str:
+    """Say which limit was hit and what it is, not just that something failed."""
+    limit = allowance.plan.max_scans_per_month
+    return (
+        f"You have reached the monthly scan limit for the {allowance.plan.name} plan "
+        f"({limit} scans). Usage resets at the start of next month."
+    )
+
+
+def _seat_limit_message(allowance: Entitlements) -> str:
+    seats = allowance.plan.max_seats
+    pending = allowance.usage.pending_invites
+    extra = (
+        f" {pending} of those are pending invitations, which hold a seat until accepted or revoked."
+        if pending
+        else ""
+    )
+    return f"The {allowance.plan.name} plan includes {seats} seat(s), and all are in use.{extra}"
 
 
 def _empty_history() -> str:
