@@ -66,6 +66,7 @@ from cloudnova.range.mentor import (
 )
 from cloudnova.triage import explain_finding
 from cloudnova.web import auth as web_auth
+from cloudnova.web.guide_pages import guide_body
 from cloudnova.web.org_pages import invitations_body, org_settings_body
 
 # Three.js (UMD, exposes global THREE). Progressive enhancement only.
@@ -151,6 +152,32 @@ label { display:block; font-size:13px; color:var(--muted); margin:12px 0 5px; fo
 .rolechip.viewer { background:transparent; }
 .linkish.danger { color:var(--red); }
 .linkish.danger:hover { background:rgba(255,46,77,.12); color:var(--red); }
+.badge { display:inline-block; min-width:17px; margin-left:6px; padding:1px 5px;
+  border-radius:9px; background:var(--red); color:#fff; font-size:11px; font-weight:800;
+  text-align:center; vertical-align:middle; }
+/* Guide: a fixed sidebar of contents beside readable prose. */
+.guide { display:grid; grid-template-columns:200px 1fr; gap:40px; align-items:start; }
+.guide-toc { position:sticky; top:84px; }
+.guide-toc h2 { font-size:13px; color:var(--muted); margin:0 0 10px; font-weight:700; }
+.guide-toc ol { margin:0; padding-left:18px; }
+.guide-toc li { margin-bottom:7px; font-size:13.5px; }
+.guide-toc a { color:var(--muted); }
+.guide-toc a:hover { color:var(--pink); }
+.guide-body { max-width:68ch; }
+.guide-s { margin-top:34px; padding-top:4px; }
+.guide-s h2 { font-size:22px; margin:0 0 10px; letter-spacing:-.3px; }
+.guide-s h3 { font-size:15px; margin:20px 0 6px; color:var(--pink); }
+.guide-s p { margin:0 0 12px; }
+.guide-s pre { background:#07070a; border:1px solid var(--line); border-radius:9px;
+  padding:13px 15px; overflow-x:auto; font-family:ui-monospace,"SF Mono",Menlo,monospace;
+  font-size:13px; line-height:1.55; color:#d8d8e0; }
+.guide-s table.roles td { padding:7px 10px 7px 0; border-bottom:1px solid var(--line);
+  vertical-align:top; }
+.guide-s table.roles td:first-child { width:86px; white-space:nowrap; }
+@media (max-width:760px){
+  .guide { grid-template-columns:1fr; gap:18px; }
+  .guide-toc { position:static; }
+}
 .auth-wrap { max-width:400px; margin:36px auto; }
 .notice { border:1px solid var(--line); border-left:3px solid var(--red); background:var(--panel);
   padding:12px 14px; border-radius:8px; margin:0 0 14px; font-size:14px; }
@@ -224,6 +251,11 @@ def _org_switcher(orgs: list[Org], current: Org | None) -> str:
     )
 
 
+def _ic(request: Request) -> int:
+    """Pending invitation count for the nav badge, 0 when not computed."""
+    return int(getattr(request.state, "invite_count", 0) or 0)
+
+
 def _page(
     title: str,
     body: str,
@@ -232,11 +264,19 @@ def _page(
     user: web_auth.CurrentUser | None = None,
     orgs: list[Org] | None = None,
     current: Org | None = None,
+    invite_count: int = 0,
 ) -> str:
     p = active_persona()
-    links = (
-        '<a href="/history">History</a><a href="/org">Organization</a>' if user is not None else ""
-    )
+    if user is None:
+        links = ""
+    else:
+        badge = f'<span class="badge">{invite_count}</span>' if invite_count else ""
+        links = (
+            '<a href="/history">History</a>'
+            '<a href="/org">Organization</a>'
+            f'<a href="/invites">Invitations{badge}</a>'
+            '<a href="/guide">Guide</a>'
+        )
     if user is None:
         account = ""
     else:
@@ -436,7 +476,15 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
           <div class="card"><div class="kicker">Range</div><h3>Learn to hack</h3>
             <p>An authorization-first pentest toolkit and a tutor that takes you to job-ready.</p></div>
         </div>"""
-        return _page("Home", body, hero=True, user=request.state.user, orgs=orgs, current=current)
+        return _page(
+            "Home",
+            body,
+            hero=True,
+            user=request.state.user,
+            invite_count=_ic(request),
+            orgs=orgs,
+            current=current,
+        )
 
     async def _orgs_for(request: Request) -> tuple[Org | None, list[Org]]:
         """The caller's current org and the full list they belong to.
@@ -448,6 +496,11 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
         user = request.state.user
         if platform is None or user is None:
             return None, []
+        try:
+            pending = await run_in_threadpool(list_my_invitations, platform, user.access_token)
+            request.state.invite_count = len(pending)
+        except SupabaseError:
+            request.state.invite_count = 0
         try:
             orgs = await run_in_threadpool(
                 ensure_org, platform, user.access_token, user.user_id, user.email
@@ -469,6 +522,7 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
             "Scan",
             _scan_form_body(org=current),
             user=request.state.user,
+            invite_count=_ic(request),
             orgs=orgs,
             current=current,
         )
@@ -493,6 +547,7 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
                 "Scan",
                 _scan_form_body(error=_scan_limit_message(allowance), org=current),
                 user=request.state.user,
+                invite_count=_ic(request),
                 orgs=orgs,
                 current=current,
             )
@@ -504,6 +559,7 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
                 "Scan",
                 _scan_form_body(error=f"Path not found: {path}", org=current),
                 user=request.state.user,
+                invite_count=_ic(request),
                 orgs=orgs,
                 current=current,
             )
@@ -535,6 +591,7 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
             "Scan results",
             _scan_results_body(path, result, org=current, saved=saved, warning=warning),
             user=request.state.user,
+            invite_count=_ic(request),
             orgs=orgs,
             current=current,
         )
@@ -566,7 +623,7 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
             current, orgs = await _orgs_for(request)
             user = request.state.user
             if current is None or user is None:
-                return _page("Organization", _empty_history(), user=user)
+                return _page("Organization", _empty_history(), user=user, invite_count=_ic(request))
             try:
                 members = await run_in_threadpool(
                     list_members, store, user.access_token, current.id
@@ -590,6 +647,7 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
                     error=error,
                 ),
                 user=user,
+                invite_count=_ic(request),
                 orgs=orgs,
                 current=current,
             )
@@ -707,6 +765,7 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
                 "Invitations",
                 invitations_body(pending, notice=notice, error=error),
                 user=user,
+                invite_count=_ic(request),
                 orgs=orgs,
                 current=current,
             )
@@ -732,7 +791,7 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
             current, orgs = await _orgs_for(request)
             user = request.state.user
             if current is None or user is None:
-                return _page("History", _empty_history(), user=user)
+                return _page("History", _empty_history(), user=user, invite_count=_ic(request))
             try:
                 scans = await run_in_threadpool(list_scans, store, user.access_token, current.id)
                 error = ""
@@ -742,6 +801,7 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
                 "History",
                 _history_body(current, scans, error),
                 user=user,
+                invite_count=_ic(request),
                 orgs=orgs,
                 current=current,
             )
@@ -764,9 +824,22 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
                 "Scan detail",
                 _scan_detail_body(scan_id, rows, error),
                 user=user,
+                invite_count=_ic(request),
                 orgs=orgs,
                 current=current,
             )
+
+    @app.get("/guide", response_class=HTMLResponse)
+    async def guide(request: Request) -> str:
+        current, orgs = await _orgs_for(request)
+        return _page(
+            "Guide",
+            guide_body(),
+            user=request.state.user,
+            invite_count=_ic(request),
+            orgs=orgs,
+            current=current,
+        )
 
     @app.get("/mentor", response_class=HTMLResponse)
     async def mentor_page(request: Request) -> str:
@@ -826,7 +899,14 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
           <table><thead><tr><th>#</th><th>Module</th><th>Level</th><th></th></tr></thead>
           <tbody>{rows}</tbody></table>
         </div>"""
-        return _page("Mentor", body, user=request.state.user, orgs=orgs, current=current)
+        return _page(
+            "Mentor",
+            body,
+            user=request.state.user,
+            invite_count=_ic(request),
+            orgs=orgs,
+            current=current,
+        )
 
     @app.post("/mentor/toggle")
     def mentor_toggle(module_id: str = Form(...)) -> RedirectResponse:

@@ -134,6 +134,17 @@ def _plan_panel(allowance: Entitlements | None) -> str:
 
     seats = _limit(allowance.seats_used, allowance.plan.max_seats)
     scans = _limit(allowance.usage.scans_this_month, allowance.plan.max_scans_per_month)
+    # An org can sit above its limit after a downgrade, or because seats were
+    # filled before a plan changed. The limit stops the next invite either way,
+    # so say so here rather than letting the numbers look merely odd.
+    over = allowance.plan.max_seats is not None and allowance.seats_used > allowance.plan.max_seats
+    overage = (
+        '<p class="notice" style="margin:10px 0 0">This organization is using '
+        f"{allowance.seats_used} of {allowance.plan.max_seats} seats. Nobody loses access, "
+        "but you cannot invite anyone else until a seat frees up or the plan changes.</p>"
+        if over
+        else ""
+    )
     pending = (
         f'<p class="muted" style="margin:6px 0 0">Includes '
         f"{allowance.usage.pending_invites} pending invitation(s), which hold a seat "
@@ -160,6 +171,7 @@ def _plan_panel(allowance: Entitlements | None) -> str:
         </tbody>
       </table>
       {pending}
+      {overage}
       {lapsed}
     </div>"""
 
