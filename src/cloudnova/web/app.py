@@ -67,6 +67,7 @@ from cloudnova.range.mentor import (
 from cloudnova.triage import explain_finding
 from cloudnova.web import auth as web_auth
 from cloudnova.web.guide_pages import guide_body
+from cloudnova.web.home_pages import home_body
 from cloudnova.web.org_pages import invitations_body, org_settings_body
 
 # Three.js (UMD, exposes global THREE). Progressive enhancement only.
@@ -155,6 +156,30 @@ label { display:block; font-size:13px; color:var(--muted); margin:12px 0 5px; fo
 .badge { display:inline-block; min-width:17px; margin-left:6px; padding:1px 5px;
   border-radius:9px; background:var(--red); color:#fff; font-size:11px; font-weight:800;
   text-align:center; vertical-align:middle; }
+/* Signed-in overview: posture first, then the trend behind it. */
+.overview { display:grid; gap:16px; }
+.card.posture { display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
+.card.posture .grade { min-width:84px; }
+.card.posture > div:nth-child(2) { flex:1; min-width:220px; }
+.delta { font-size:13px; margin-top:4px; }
+.delta.ok { color:var(--ok); }
+
+figure.chart { margin:0; background:linear-gradient(180deg,var(--panel) 0%,var(--panel2) 100%);
+  border:1px solid var(--line); border-radius:14px; padding:16px 18px 6px; }
+figure.chart figcaption { color:var(--muted); font-size:13px; margin-bottom:6px; }
+figure.chart svg { display:block; overflow:visible; }
+
+/* Setup list: a finished step should read as finished. */
+.steps { list-style:none; margin:0; padding:0; }
+.steps li { display:flex; gap:13px; align-items:flex-start; padding:13px 0;
+  border-bottom:1px solid var(--line); }
+.steps li:last-child { border-bottom:0; }
+.steps li.is-done b { color:var(--muted); font-weight:600; }
+.step-done { flex:none; margin-top:2px; font-size:10px; font-weight:800; letter-spacing:.4px;
+  color:var(--ok); border:1px solid var(--ok); border-radius:5px; padding:1px 6px; }
+.step-todo { flex:none; width:19px; height:19px; margin-top:1px; border-radius:50%;
+  border:1px dashed var(--line); }
+
 /* Guide: a fixed sidebar of contents beside readable prose. */
 .guide { display:grid; grid-template-columns:200px 1fr; gap:40px; align-items:start; }
 .guide-toc { position:sticky; top:84px; }
@@ -187,7 +212,7 @@ table { width:100%; border-collapse:collapse; }
 th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
 th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:1px; }
 .sev { font-weight:800; padding:3px 9px; border-radius:6px; color:#fff; font-size:11px; letter-spacing:.5px; }
-.critical{background:#e11d48}.high{background:#f43f5e}.medium{background:#d97706}.low{background:#0891b2}.info{background:#525252}
+.critical{background:#9f1239}.high{background:#f43f5e}.medium{background:#d97706}.low{background:#0891b2}.info{background:#525252}
 .grade { font-size:56px; font-weight:900; line-height:1; }
 .muted { color:var(--muted); }
 .summary { display:flex; gap:26px; align-items:center; flex-wrap:wrap; }
@@ -448,44 +473,6 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
             web_auth.clear_session(response)
             return _harden(response)
 
-    @app.get("/", response_class=HTMLResponse)
-    async def home(request: Request) -> str:
-        current, orgs = await _orgs_for(request)
-        body = """
-        <section class="hero">
-          <div>
-            <div class="kicker">Cloud security · offensive &amp; defensive</div>
-            <h1>Find the <span class="accent">attack path</span><br>before they do.</h1>
-            <p>Scan your cloud for misconfigurations, chain them into real attack paths,
-               grade your posture, and train to break in - all in one tool.</p>
-            <p style="margin-top:20px">
-              <a class="btn" href="/scan">Run a scan →</a>
-              <a class="btn ghost" href="/mentor">Open the mentor</a>
-            </p>
-          </div>
-          <div class="hero-3d"><canvas id="hero3d"></canvas><div class="orb"></div></div>
-        </section>
-
-        <div class="grid">
-          <div class="card"><div class="kicker">Scan</div><h3>30+ checks, 5 formats</h3>
-            <p>Terraform, CloudFormation, Kubernetes, CloudTrail &amp; logs - mapped to CIS &amp; MITRE ATT&amp;CK.</p></div>
-          <div class="card"><div class="kicker">Graph</div><h3>Attack paths</h3>
-            <p>Exposed compute → over-privileged role → sensitive data, chained automatically.</p></div>
-          <div class="card"><div class="kicker">IAM</div><h3>Author &amp; audit</h3>
-            <p>Generate least-privilege policies and catch privilege-escalation vectors.</p></div>
-          <div class="card"><div class="kicker">Range</div><h3>Learn to hack</h3>
-            <p>An authorization-first pentest toolkit and a tutor that takes you to job-ready.</p></div>
-        </div>"""
-        return _page(
-            "Home",
-            body,
-            hero=True,
-            user=request.state.user,
-            invite_count=_ic(request),
-            orgs=orgs,
-            current=current,
-        )
-
     async def _orgs_for(request: Request) -> tuple[Org | None, list[Org]]:
         """The caller's current org and the full list they belong to.
 
@@ -515,6 +502,50 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
         current = next((o for o in orgs if o.id == wanted), orgs[0])
         return current, orgs
 
+    async def _entitlements(request: Request, current: Org | None) -> Entitlements | None:
+        """What the current org may do. ``None`` in local mode, where there is
+        no org and so nothing to meter."""
+        user = request.state.user
+        if platform is None or user is None or current is None:
+            return None
+        return await run_in_threadpool(entitlements, platform, user.access_token, current.id)
+
+    @app.get("/", response_class=HTMLResponse)
+    async def home(request: Request) -> str:
+        current, orgs = await _orgs_for(request)
+        user = request.state.user
+        scans: list[dict[str, Any]] = []
+        allowance = None
+        members = 0
+        error = ""
+        if platform is not None and user is not None and current is not None:
+            try:
+                scans = await run_in_threadpool(list_scans, platform, user.access_token, current.id)
+                members = len(
+                    await run_in_threadpool(list_members, platform, user.access_token, current.id)
+                )
+            except SupabaseError as exc:
+                error = str(exc)
+            allowance = await _entitlements(request, current)
+        body = home_body(
+            org=current,
+            scans=scans,
+            allowance=allowance,
+            member_count=members,
+            error=error,
+        )
+        # The 3D hero only exists on the marketing view, which is what an
+        # unauthenticated visitor sees.
+        return _page(
+            "Home",
+            body,
+            hero=current is None,
+            user=user,
+            invite_count=_ic(request),
+            orgs=orgs,
+            current=current,
+        )
+
     @app.get("/scan", response_class=HTMLResponse)
     async def scan_form(request: Request) -> str:
         current, orgs = await _orgs_for(request)
@@ -526,14 +557,6 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
             orgs=orgs,
             current=current,
         )
-
-    async def _entitlements(request: Request, current: Org | None) -> Entitlements | None:
-        """What the current org may do. ``None`` in local mode, where there is
-        no org and so nothing to meter."""
-        user = request.state.user
-        if platform is None or user is None or current is None:
-            return None
-        return await run_in_threadpool(entitlements, platform, user.access_token, current.id)
 
     @app.post("/scan", response_class=HTMLResponse)
     async def run_scan(request: Request, path: str = Form(...)) -> str:

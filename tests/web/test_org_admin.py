@@ -79,7 +79,11 @@ def _supabase(*, role="owner", members=None, invites=None, on_rest=None):
 
 def _signed_in(platform_app, **kw):
     app, seen = platform_app(_supabase(**kw))
-    app.post("/login", data={"email": "omar@example.test", "password": "pw"})
+    app.post(
+        "/login",
+        data={"email": "omar@example.test", "password": "pw"},
+        follow_redirects=False,
+    )
     seen.clear()
     return app, seen
 
