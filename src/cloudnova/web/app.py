@@ -46,11 +46,13 @@ from cloudnova.platform.tenancy import (
     ensure_org,
     ensure_profile,
     invite_member,
+    list_audit,
     list_findings,
     list_invitations,
     list_members,
     list_my_invitations,
     list_scans,
+    record_event,
     record_scan,
     remove_member,
     revoke_invitation,
@@ -605,6 +607,20 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
                     )
                 )
                 saved = scan_id
+                await run_in_threadpool(
+                    lambda: record_event(
+                        platform,
+                        user.access_token,
+                        org_id=current.id,
+                        actor=user.user_id,
+                        action="scan.completed",
+                        detail={
+                            "target": path,
+                            "findings": result.get("summary", {}).get("findings", 0),
+                            "grade": result.get("summary", {}).get("grade"),
+                        },
+                    )
+                )
             except SupabaseError as exc:
                 # The scan itself succeeded; losing the results because we
                 # could not file them would be the worse outcome.
@@ -658,6 +674,10 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
                 members, invites = [], []
                 error = error or str(exc)
             allowance = await _entitlements(request, current)
+            try:
+                events = await run_in_threadpool(list_audit, store, user.access_token, current.id)
+            except SupabaseError:
+                events = []
             return _page(
                 "Organization",
                 org_settings_body(
@@ -666,6 +686,7 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
                     invites=invites,
                     me=user.user_id,
                     allowance=allowance,
+                    events=events,
                     notice=notice,
                     error=error,
                 ),
@@ -705,6 +726,16 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
                 return await _org_page(request, error=str(exc))
             except SupabaseError as exc:
                 return await _org_page(request, error=str(exc))
+            await run_in_threadpool(
+                lambda: record_event(
+                    store,
+                    user.access_token,
+                    org_id=current.id,
+                    actor=user.user_id,
+                    action="member.invited",
+                    detail={"email": email.strip(), "role": role},
+                )
+            )
             return await _org_page(request, notice=f"Invitation sent to {email.strip()}.")
 
         @app.post("/org/invite/revoke", response_class=HTMLResponse)
@@ -716,6 +747,18 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
                 await run_in_threadpool(revoke_invitation, store, user.access_token, invitation_id)
             except SupabaseError as exc:
                 return await _org_page(request, error=str(exc))
+            current_org, _ = await _orgs_for(request)
+            if current_org is not None:
+                await run_in_threadpool(
+                    lambda: record_event(
+                        store,
+                        user.access_token,
+                        org_id=current_org.id,
+                        actor=user.user_id,
+                        action="member.invite_revoked",
+                        detail={"invitation_id": invitation_id},
+                    )
+                )
             return await _org_page(request, notice="Invitation revoked.")
 
         @app.post("/org/member/role", response_class=HTMLResponse)
@@ -738,6 +781,16 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
                 return await _org_page(request, error=str(exc))
             except SupabaseError as exc:
                 return await _org_page(request, error=str(exc))
+            await run_in_threadpool(
+                lambda: record_event(
+                    store,
+                    user.access_token,
+                    org_id=current.id,
+                    actor=user.user_id,
+                    action="member.role_changed",
+                    detail={"user_id": user_id, "role": role},
+                )
+            )
             return await _org_page(request, notice=f"Role updated to {role}.")
 
         @app.post("/org/member/remove", response_class=HTMLResponse)
@@ -754,6 +807,16 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
                 )
             except SupabaseError as exc:
                 return await _org_page(request, error=str(exc))
+            await run_in_threadpool(
+                lambda: record_event(
+                    store,
+                    user.access_token,
+                    org_id=current.id,
+                    actor=user.user_id,
+                    action="member.removed",
+                    detail={"user_id": user_id},
+                )
+            )
             return await _org_page(request, notice="Member removed.")
 
         @app.post("/orgs/create")

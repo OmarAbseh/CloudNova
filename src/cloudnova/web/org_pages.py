@@ -15,7 +15,7 @@ from __future__ import annotations
 import html
 
 from cloudnova.platform.billing import Entitlements
-from cloudnova.platform.tenancy import Invitation, Member, Org
+from cloudnova.platform.tenancy import AuditEvent, Invitation, Member, Org
 
 _ROLES = ("owner", "admin", "member", "viewer")
 
@@ -176,6 +176,26 @@ def _plan_panel(allowance: Entitlements | None) -> str:
     </div>"""
 
 
+def _activity_panel(events: list[AuditEvent]) -> str:
+    """Recent activity. The log is append-only in the database, so what is
+    shown here cannot have been edited after the fact."""
+    if not events:
+        return ""
+    rows = "".join(
+        f'<tr><td class="muted" style="white-space:nowrap">'
+        f"{_e(e.created_at[:16].replace('T', ' '))}</td>"
+        f"<td>{_e(e.summary)}</td></tr>"
+        for e in events
+    )
+    return f"""
+    <div class="card" style="margin-top:16px">
+      <h3 style="margin-top:0">Activity</h3>
+      <p class="muted" style="margin:0 0 8px;font-size:13px">Append-only. Entries
+        cannot be edited or removed once written.</p>
+      <table><tbody>{rows}</tbody></table>
+    </div>"""
+
+
 def org_settings_body(
     *,
     current: Org,
@@ -183,6 +203,7 @@ def org_settings_body(
     invites: list[Invitation],
     me: str,
     allowance: Entitlements | None = None,
+    events: list[AuditEvent] | None = None,
     notice: str = "",
     error: str = "",
 ) -> str:
@@ -231,6 +252,7 @@ def org_settings_body(
     {_plan_panel(allowance)}
     {invites_block}
     {invite_block}
+    {_activity_panel(events or [])}
     {_create_org_form()}"""
 
 

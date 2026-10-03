@@ -70,6 +70,10 @@ def _supabase(*, role="owner", members=None, invites=None, on_rest=None):
                 return custom
         if path == "/rest/v1/invitations" and method == "GET":
             return httpx.Response(200, json=INVITES if invites is None else invites)
+        if path == "/rest/v1/audit_log":
+            # The settings page reads recent activity and writes an event for
+            # each action; neither should affect what a test is asserting.
+            return httpx.Response(200 if method == "GET" else 201, json=[])
         if path.startswith("/rest/v1/"):
             return httpx.Response(200, json=[])
         return httpx.Response(404, json={"msg": f"unexpected {method} {path}"})

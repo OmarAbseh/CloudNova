@@ -406,3 +406,104 @@ def _invitation(row: dict[str, Any]) -> Invitation:
         created_at=str(row.get("created_at") or ""),
         expires_at=str(row.get("expires_at") or ""),
     )
+
+
+# -----------------------------------------------------------------------------
+# Audit trail
+# -----------------------------------------------------------------------------
+# The table is append-only by construction: members may select and insert, and
+# no update or delete policy or grant exists, so a recorded event cannot be
+# edited away afterwards. Writes go out under the acting user's own token and
+# the policy requires actor = auth.uid(), so an event cannot be attributed to
+# somebody else even by a bug here.
+
+# Actions are named subject.verb in the past tense, so the log reads as a
+# sequence of things that happened rather than a list of endpoints that fired.
+ACTION_LABELS = {
+    "organization.created": "created the organization",
+    "member.invited": "invited",
+    "member.invite_revoked": "revoked an invitation for",
+    "member.removed": "removed",
+    "member.role_changed": "changed a role",
+    "membership.accepted": "joined the organization",
+    "scan.completed": "ran a scan",
+    "session.started": "signed in",
+}
+
+
+@dataclass(frozen=True)
+class AuditEvent:
+    action: str
+    actor_email: str
+    detail: dict[str, Any]
+    created_at: str
+
+    @property
+    def summary(self) -> str:
+        """One readable line. Falls back to the raw action for anything new, so
+        an unmapped event still shows rather than vanishing."""
+        label = ACTION_LABELS.get(self.action, self.action)
+        target = self.detail.get("email") or self.detail.get("name") or ""
+        role = self.detail.get("role")
+        who = self.actor_email or "someone"
+        parts = [who, label]
+        if target:
+            parts.append(str(target))
+        if role and self.action in ("member.invited", "member.role_changed"):
+            parts.append(f"as {role}")
+        return " ".join(parts)
+
+
+def record_event(
+    client: SupabaseClient,
+    token: str,
+    *,
+    org_id: str,
+    actor: str,
+    action: str,
+    detail: dict[str, Any] | None = None,
+) -> None:
+    """Append one event. Best effort by design.
+
+    Losing an audit line is bad. Failing the member's scan because the audit
+    write failed is worse, so this never raises into the caller.
+    """
+    try:
+        client.insert(
+            "audit_log",
+            token,
+            [{"org_id": org_id, "actor": actor, "action": action, "detail": detail or {}}],
+            returning=False,
+        )
+    except SupabaseError:
+        return
+
+
+def list_audit(
+    client: SupabaseClient, token: str, org_id: str, *, limit: int = 50
+) -> list[AuditEvent]:
+    """Recent activity in an org, newest first."""
+    rows = client.select(
+        "audit_log",
+        token,
+        params={
+            "select": "action,detail,created_at,profiles!audit_log_actor_profiles_fkey(email)",
+            "org_id": f"eq.{org_id}",
+            "order": "created_at.desc",
+            "limit": str(limit),
+        },
+    )
+    events: list[AuditEvent] = []
+    for row in rows:
+        raw_actor = row.get("profiles")
+        actor: dict[str, Any] = raw_actor if isinstance(raw_actor, dict) else {}
+        raw_detail = row.get("detail")
+        events.append(
+            AuditEvent(
+                action=str(row.get("action") or ""),
+                actor_email=str(actor.get("email") or ""),
+                detail=raw_detail if isinstance(raw_detail, dict) else {},
+                created_at=str(row.get("created_at") or ""),
+            )
+        )
+    return events

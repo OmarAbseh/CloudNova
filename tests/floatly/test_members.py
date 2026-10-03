@@ -287,3 +287,76 @@ def test_create_org_failure_is_surfaced(make_client):
     client, _ = make_client([_json({"message": "Not signed in."}, status=401)])
     with pytest.raises(SupabaseError):
         create_org(client, "user-jwt", "user-1", "Globex")
+
+
+# -- audit trail -----------------------------------------------------------
+
+
+def test_record_event_appends_with_the_caller_as_actor(make_client):
+    import httpx
+
+    from cloudnova.platform.tenancy import record_event
+
+    client, rec = make_client([httpx.Response(201, content=b"")])
+    record_event(
+        client,
+        "user-jwt",
+        org_id="org-1",
+        actor="user-1",
+        action="scan.completed",
+        detail={"findings": 3},
+    )
+    assert rec.path() == "/rest/v1/audit_log"
+    body = rec.body()[0]
+    assert body["org_id"] == "org-1"
+    # The policy requires actor = auth.uid(), so an event cannot be attributed
+    # to somebody else even if this code tried.
+    assert body["actor"] == "user-1"
+    assert body["action"] == "scan.completed"
+    assert body["detail"] == {"findings": 3}
+
+
+def test_record_event_never_breaks_the_action_it_describes(make_client):
+    # Losing an audit line is bad; failing a member's scan because the audit
+    # write failed is worse. The caller is not given the chance to crash.
+    import httpx
+
+    from cloudnova.platform.tenancy import record_event
+
+    client, _ = make_client([httpx.Response(500, json={"message": "boom"})])
+    record_event(client, "user-jwt", org_id="org-1", actor="user-1", action="x", detail={})
+
+
+def test_list_audit_reads_newest_first_for_one_org(make_client):
+    from cloudnova.platform.tenancy import list_audit
+
+    client, rec = make_client(
+        [
+            _json(
+                [
+                    {
+                        "action": "scan.completed",
+                        "created_at": "2026-10-03T00:00:00Z",
+                        "detail": {},
+                        "profiles": {"email": "a@b.test"},
+                    }
+                ]
+            )
+        ]
+    )
+    rows = list_audit(client, "user-jwt", "org-1")
+    assert len(rows) == 1
+    assert rows[0].action == "scan.completed"
+    assert rows[0].actor_email == "a@b.test"
+    assert rec.last.url.params["org_id"] == "eq.org-1"
+    assert rec.last.url.params["order"] == "created_at.desc"
+
+
+def test_list_audit_tolerates_an_unreadable_actor(make_client):
+    from cloudnova.platform.tenancy import list_audit
+
+    client, _ = make_client(
+        [_json([{"action": "x", "created_at": "", "detail": None, "profiles": None}])]
+    )
+    rows = list_audit(client, "user-jwt", "org-1")
+    assert rows[0].actor_email == ""
