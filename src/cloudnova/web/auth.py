@@ -25,7 +25,9 @@ ORG_COOKIE = "cn_org"
 
 # Paths reachable without a session. Everything else redirects to /login when
 # the platform is configured.
-PUBLIC_PATHS = frozenset({"/health", "/login", "/signup"})
+# Recovery pages must be public: someone who has forgotten their password
+# cannot be asked to sign in to reach the page that fixes that.
+PUBLIC_PATHS = frozenset({"/health", "/login", "/signup", "/forgot", "/reset", "/guide"})
 
 
 @dataclass(frozen=True)

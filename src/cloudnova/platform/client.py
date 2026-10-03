@@ -200,6 +200,56 @@ class SupabaseClient:
         except SupabaseError:
             return
 
+    def request_password_reset(self, email: str, *, redirect_to: str | None = None) -> None:
+        """Ask Supabase to email a recovery link.
+
+        Returns nothing on purpose. Supabase answers 200 whether or not the
+        address has an account, and this must not turn that non-answer into
+        something a caller could use to enumerate accounts.
+        """
+        params = {"redirect_to": redirect_to} if redirect_to else None
+        self._request(
+            "POST",
+            f"{self.config.auth_url}/recover",
+            json={"email": email},
+            params=params,
+            fallback="Could not send a reset link.",
+        )
+
+    def verify_recovery(self, token_hash: str) -> Session:
+        """Exchange a recovery token for a short-lived session.
+
+        Uses the token_hash flow rather than the fragment one. A fragment never
+        reaches the server, so a server-rendered app cannot read it without
+        shipping script to do the work.
+        """
+        payload = self._request(
+            "POST",
+            f"{self.config.auth_url}/verify",
+            json={"type": "recovery", "token_hash": token_hash},
+            error_cls=AuthError,
+            fallback="That reset link is no longer valid.",
+        )
+        session = self._session_from(payload)
+        if session is None:
+            raise AuthError("That reset link is no longer valid.")
+        return session
+
+    def set_password(self, access_token: str, password: str) -> None:
+        """Set a new password for the session's own user.
+
+        Signed with the caller's session, never the anon key, so this can only
+        ever change the password of whoever holds the token.
+        """
+        self._request(
+            "PUT",
+            f"{self.config.auth_url}/user",
+            access_token=access_token,
+            json={"password": password},
+            error_cls=AuthError,
+            fallback="Could not set that password.",
+        )
+
     def get_user(self, access_token: str) -> dict[str, Any]:
         """Resolve a token to its user. This is the authoritative check that a
         session cookie is real - we never trust the token's own contents."""

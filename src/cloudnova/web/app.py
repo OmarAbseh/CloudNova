@@ -466,6 +466,69 @@ def create_app(client: SupabaseClient | None = None) -> FastAPI:
             web_auth.set_session(response, session, secure=web_auth.secure_request(request))
             return _harden(response)
 
+        @app.get("/forgot", response_class=HTMLResponse)
+        def forgot_form() -> str:
+            return _page("Reset your password", _forgot_body())
+
+        @app.post("/forgot", response_class=HTMLResponse)
+        async def forgot(request: Request, email: str = Form(...)) -> Response:
+            redirect = str(request.url_for("reset_form"))
+            try:
+                await run_in_threadpool(
+                    active.request_password_reset, email.strip(), redirect_to=redirect
+                )
+            except SupabaseError as exc:
+                # Rate limiting is the common case and worth saying out loud,
+                # since the alternative looks like nothing happened.
+                return _harden(
+                    HTMLResponse(
+                        _page("Reset your password", _forgot_body(error=str(exc))),
+                        status_code=502,
+                    )
+                )
+            # Always the same answer, whether or not that address has an
+            # account. Anything else is an account enumeration oracle.
+            return _harden(HTMLResponse(_page("Check your email", _forgot_sent_body(email))))
+
+        @app.get("/reset", response_class=HTMLResponse, name="reset_form")
+        def reset_form(token_hash: str = "", type: str = "") -> str:
+            if not token_hash:
+                return _page("Reset your password", _reset_body(token_hash="", invalid=True))
+            return _page("Choose a new password", _reset_body(token_hash=token_hash))
+
+        @app.post("/reset", response_class=HTMLResponse)
+        async def reset(
+            request: Request, token_hash: str = Form(...), password: str = Form(...)
+        ) -> Response:
+            try:
+                session = await run_in_threadpool(active.verify_recovery, token_hash)
+                await run_in_threadpool(active.set_password, session.access_token, password)
+            except AuthError as exc:
+                return _harden(
+                    HTMLResponse(
+                        _page(
+                            "Choose a new password",
+                            _reset_body(token_hash=token_hash, error=str(exc)),
+                        ),
+                        status_code=400,
+                    )
+                )
+            except SupabaseError as exc:
+                return _harden(
+                    HTMLResponse(
+                        _page(
+                            "Choose a new password",
+                            _reset_body(token_hash=token_hash, error=str(exc)),
+                        ),
+                        status_code=502,
+                    )
+                )
+            # Sign them in on the new password rather than bouncing to a login
+            # form they have just finished proving they can pass.
+            response = RedirectResponse("/", status_code=303)
+            web_auth.set_session(response, session, secure=web_auth.secure_request(request))
+            return _harden(response)
+
         @app.post("/logout")
         async def logout(request: Request) -> Response:
             token = request.cookies.get(web_auth.ACCESS_COOKIE, "")
@@ -1031,12 +1094,83 @@ def _auth_form(
     </div>"""
 
 
+def _forgot_body(error: str = "") -> str:
+    err = f'<p class="notice">{_e(error)}</p>' if error else ""
+    return f"""
+    <div class="auth-wrap">
+      <div class="kicker">CloudNova</div>
+      <h1 style="margin:4px 0 16px">Reset your password</h1>
+      <div class="card">
+        {err}
+        <p class="muted" style="margin:0 0 6px">We will email you a link to choose
+          a new one.</p>
+        <form method="post" action="/forgot">
+          <label for="email">Email</label>
+          <input id="email" type="email" name="email" required autofocus
+                 autocomplete="username">
+          <p style="margin-top:18px"><button class="btn" type="submit">Send reset link</button></p>
+        </form>
+      </div>
+      <p class="muted" style="text-align:center;margin-top:14px">
+        <a href="/login">Back to sign in</a></p>
+    </div>"""
+
+
+def _forgot_sent_body(email: str) -> str:
+    # Deliberately the same message whether or not that address has an account.
+    return f"""
+    <div class="auth-wrap">
+      <div class="kicker">Check your email</div>
+      <h1 style="margin:4px 0 16px">On its way</h1>
+      <div class="card">
+        <p class="notice ok" style="margin:0">If <b>{_e(email)}</b> has a CloudNova
+          account, a reset link is on its way. The link is valid for one hour.</p>
+      </div>
+      <p class="muted" style="text-align:center;margin-top:14px">
+        <a href="/login">Back to sign in</a></p>
+    </div>"""
+
+
+def _reset_body(*, token_hash: str, error: str = "", invalid: bool = False) -> str:
+    if invalid:
+        return """
+    <div class="auth-wrap">
+      <div class="kicker">CloudNova</div>
+      <h1 style="margin:4px 0 16px">That link is incomplete</h1>
+      <div class="card">
+        <p class="notice" style="margin:0">Open the reset link from your email
+          directly, or request a new one.</p>
+        <p style="margin:16px 0 0"><a class="btn" href="/forgot">Request a new link</a></p>
+      </div>
+    </div>"""
+    err = f'<p class="notice">{_e(error)}</p>' if error else ""
+    return f"""
+    <div class="auth-wrap">
+      <div class="kicker">CloudNova</div>
+      <h1 style="margin:4px 0 16px">Choose a new password</h1>
+      <div class="card">
+        {err}
+        <form method="post" action="/reset">
+          <input type="hidden" name="token_hash" value="{_e(token_hash)}">
+          <label for="password">New password</label>
+          <input id="password" type="password" name="password" required autofocus
+                 minlength="8" autocomplete="new-password">
+          <p class="muted" style="margin:6px 0 0;font-size:13px">At least 8 characters.</p>
+          <p style="margin-top:18px"><button class="btn" type="submit">Save password</button></p>
+        </form>
+      </div>
+    </div>"""
+
+
 def _login_body(error: str = "") -> str:
     return _auth_form(
         title="Sign in",
         action="/login",
         submit="Sign in",
-        footer='No account? <a href="/signup">Create one</a>',
+        footer=(
+            'No account? <a href="/signup">Create one</a>'
+            ' &middot; <a href="/forgot">Forgot your password?</a>'
+        ),
         error=error,
         autocomplete="current-password",
     )
