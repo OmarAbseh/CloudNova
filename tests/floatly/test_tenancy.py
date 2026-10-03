@@ -66,16 +66,27 @@ def test_list_orgs_reads_through_memberships_to_get_the_role(make_client):
     client, rec = make_client(
         [_json([{"role": "owner", "organizations": {"id": "org-1", "name": "Acme"}}])]
     )
-    orgs = list_orgs(client, "user-jwt")
+    orgs = list_orgs(client, "user-jwt", "user-1")
     assert [(o.id, o.name, o.role) for o in orgs] == [("org-1", "Acme", "owner")]
     # The role lives on the membership row, so that is what we select from.
     assert rec.path() == "/rest/v1/memberships"
     assert rec.bearer() == "user-jwt"
 
 
+def test_list_orgs_filters_to_the_callers_own_membership(make_client):
+    # Regression, caught by the first live sign-in and invisible to a fake that
+    # returns one row. RLS lets a member read every membership row in their own
+    # org, so without this filter a ten-person org comes back ten times, each
+    # carrying somebody else's role, and the role the UI trusts is whichever
+    # row sorted first. A member was shown as owner.
+    client, rec = make_client([_json([])])
+    list_orgs(client, "user-jwt", "user-2")
+    assert rec.last.url.params["user_id"] == "eq.user-2"
+
+
 def test_list_orgs_skips_rows_with_no_embedded_org(make_client):
     client, _ = make_client([_json([{"role": "owner", "organizations": None}])])
-    assert list_orgs(client, "user-jwt") == []
+    assert list_orgs(client, "user-jwt", "user-1") == []
 
 
 def test_ensure_org_returns_existing_without_creating(make_client):
@@ -90,16 +101,16 @@ def test_ensure_org_returns_existing_without_creating(make_client):
 def test_ensure_org_creates_a_personal_workspace_when_none(make_client):
     # Without this a fresh signup lands on a dashboard with no org and no way
     # to make one, because RLS hides every org they are not a member of.
-    client, rec = make_client([_json([]), _json([{"id": "org-new", "name": "omar's workspace"}])])
+    client, rec = make_client([_json([]), _json({"id": "org-new", "name": "omar's workspace"})])
     orgs = ensure_org(client, "user-jwt", "user-1", "omar@example.test")
     assert [o.name for o in orgs] == ["omar's workspace"]
-    assert orgs[0].role == "owner"  # the schema trigger makes the creator owner
-    assert rec.path() == "/rest/v1/organizations"
-    assert rec.body()[0]["created_by"] == "user-1"
+    assert orgs[0].role == "owner"  # the function makes the creator owner
+    assert rec.path() == "/rest/v1/rpc/create_organization"
+    assert rec.body() == {"org_name": "omar's workspace"}
 
 
 def test_create_org_failing_raises(make_client):
-    client, _ = make_client([_json([]), _json([])])
+    client, _ = make_client([_json([]), _json(None)])
     with pytest.raises(SupabaseError, match="Could not create"):
         ensure_org(client, "user-jwt", "user-1", "omar@example.test")
 

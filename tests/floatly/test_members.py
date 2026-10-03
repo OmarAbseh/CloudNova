@@ -268,8 +268,22 @@ def test_expired_invitation_message_is_surfaced(make_client):
 # -- creating orgs ---------------------------------------------------------
 
 
-def test_create_org_stamps_the_creator(make_client):
-    client, rec = make_client([_json([{"id": "org-9", "name": "Globex"}])])
+def test_create_org_goes_through_the_rpc(make_client):
+    # Regression, see migration 0005. A plain insert that asks for the row back
+    # is an INSERT ... RETURNING, and RETURNING is checked against the SELECT
+    # policy, which is false until the founding membership exists. In
+    # production the row was created and then rejected on the way out with a
+    # 403. The old fake returned a row regardless, so nothing caught it.
+    client, rec = make_client([_json({"id": "org-9", "name": "Globex"})])
     org = create_org(client, "user-jwt", "user-1", "Globex")
     assert (org.id, org.name, org.role) == ("org-9", "Globex", "owner")
-    assert rec.body()[0] == {"name": "Globex", "created_by": "user-1"}
+    assert rec.path() == "/rest/v1/rpc/create_organization"
+    # No created_by is sent: the function takes it from auth.uid(), so the
+    # creator cannot be forged by the caller.
+    assert rec.body() == {"org_name": "Globex"}
+
+
+def test_create_org_failure_is_surfaced(make_client):
+    client, _ = make_client([_json({"message": "Not signed in."}, status=401)])
+    with pytest.raises(SupabaseError):
+        create_org(client, "user-jwt", "user-1", "Globex")

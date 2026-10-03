@@ -43,17 +43,24 @@ def ensure_profile(client: SupabaseClient, token: str, user_id: str, email: str)
         return
 
 
-def list_orgs(client: SupabaseClient, token: str) -> list[Org]:
-    """Every org the user belongs to, with their role in each.
+def list_orgs(client: SupabaseClient, token: str, user_id: str) -> list[Org]:
+    """Every org the user belongs to, with *their own* role in each.
 
-    Read through ``memberships`` rather than ``organizations`` because the
-    membership row is what carries the role. RLS on both tables means this can
-    only ever return the caller's own orgs.
+    Read through ``memberships`` because the membership row is what carries the
+    role. The ``user_id`` filter is essential, not a convenience: RLS scopes
+    this to the caller's orgs, but within those orgs a member may read every
+    other member's row too. Without the filter a ten-person org came back ten
+    times, each with somebody else's role, and the role that drives the UI was
+    whichever row happened to sort first.
     """
     rows = client.select(
         "memberships",
         token,
-        params={"select": "role,organizations(id,name)", "order": "created_at.asc"},
+        params={
+            "select": "role,organizations(id,name)",
+            "user_id": f"eq.{user_id}",
+            "order": "created_at.asc",
+        },
     )
     orgs: list[Org] = []
     for row in rows:
@@ -70,11 +77,18 @@ def list_orgs(client: SupabaseClient, token: str) -> list[Org]:
 
 
 def create_org(client: SupabaseClient, token: str, user_id: str, name: str) -> Org:
-    """Create an org. The schema's trigger makes the creator its owner."""
-    rows = client.insert("organizations", token, [{"name": name, "created_by": user_id}])
-    if not rows:
+    """Create an org with the caller as owner.
+
+    Goes through the create_organization RPC rather than inserting directly. A
+    plain insert that asks for the row back is an INSERT ... RETURNING, and
+    RETURNING is checked against the SELECT policy, which is false until the
+    founding membership exists, so the row was created and then rejected on the
+    way out. See migration 0005. The RPC also sets created_by from auth.uid()
+    itself, so the creator cannot be forged.
+    """
+    row = client.rpc("create_organization", token, {"org_name": name})
+    if not isinstance(row, dict) or not row.get("id"):
         raise SupabaseError("Could not create the organization.")
-    row = rows[0]
     return Org(id=str(row["id"]), name=str(row.get("name") or name), role="owner")
 
 
@@ -84,7 +98,7 @@ def ensure_org(client: SupabaseClient, token: str, user_id: str, email: str) -> 
     Without this a fresh signup lands on an empty dashboard with no way
     forward, since RLS hides every org they are not yet a member of.
     """
-    orgs = list_orgs(client, token)
+    orgs = list_orgs(client, token, user_id)
     if orgs:
         return orgs
     local = email.partition("@")[0] or "My"

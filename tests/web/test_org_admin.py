@@ -273,8 +273,9 @@ def test_role_change_refused_by_rls_is_shown(platform_app):
 
 def test_creating_an_org_switches_to_it(platform_app):
     def on_rest(request):
-        if request.url.path == "/rest/v1/organizations" and request.method == "POST":
-            return httpx.Response(201, json=[{"id": "org-new", "name": "Globex"}])
+        # Creation goes through the RPC now, see migration 0005.
+        if request.url.path == "/rest/v1/rpc/create_organization":
+            return httpx.Response(200, json={"id": "org-new", "name": "Globex"})
         return None
 
     app, _ = _signed_in(platform_app, on_rest=on_rest)
@@ -287,7 +288,7 @@ def test_creating_an_org_with_a_blank_name_does_nothing(platform_app):
     app, seen = _signed_in(platform_app)
     r = app.post("/orgs/create", data={"name": "   "}, follow_redirects=False)
     assert r.status_code == 303
-    assert not [s for s in seen if s.url.path == "/rest/v1/organizations"]
+    assert not [s for s in seen if "create_organization" in s.url.path]
 
 
 def test_invites_page_lists_what_you_were_sent(platform_app):
