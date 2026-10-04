@@ -6,7 +6,23 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
-### Ruleset: 30 checks to 63
+### Azure and GCP rule packs
+- CloudNova had no Azure or GCP coverage in infrastructure-as-code at all, so an
+  estate written against `azurerm` or the `google` provider scanned clean. That
+  is worse than no support: an empty report reads as a pass.
+- 16 Azure rules: storage transport and public blobs, SQL public access and
+  firewall rules, auditing, NSG exposure, Key Vault purge protection and network
+  ACLs, AKS RBAC and API exposure, App Service HTTPS, managed disk CMK, Cosmos
+  DB, VM password auth, PostgreSQL and MySQL SSL.
+- 18 GCP rules: public bucket bindings, uniform bucket-level access, versioning,
+  firewall exposure, instance public IP and API scope and serial console and
+  Shielded VM, Cloud SQL public IP and authorized networks and SSL, GKE private
+  nodes and legacy ABAC, primitive IAM roles, public IAM principals, service
+  account keys, KMS rotation, BigQuery exposure.
+- GCP exposure is frequently an IAM binding to `allUsers` rather than a flag on
+  a resource, so several rules inspect bindings instead of attributes.
+
+### Ruleset: 30 checks to 63 (AWS)
 - Three new Terraform rule packs split by what an attacker is after rather than
   by AWS service: data at rest, network exposure, and compute plus identity.
   RDS, DynamoDB, EFS, Redshift, SQS, SNS, S3 versioning and public access

@@ -16,8 +16,10 @@ from cloudnova.checks import (
     secrets,
     syslog,
     terraform,
+    terraform_azure,
     terraform_compute,
     terraform_data,
+    terraform_gcp,
     terraform_network,
 )
 
@@ -29,7 +31,9 @@ __all__ = [
     "secrets",
     "syslog",
     "terraform",
+    "terraform_azure",
     "terraform_compute",
     "terraform_data",
+    "terraform_gcp",
     "terraform_network",
 ]
