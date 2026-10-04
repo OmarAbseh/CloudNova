@@ -49,7 +49,7 @@ cloudnova scan . --format json                   # machine-readable output
 cloudnova scan . --format sarif                  # SARIF 2.1.0 for GitHub code-scanning
 cloudnova scan . --format html > report.html     # shareable HTML report
 cloudnova scan . --fail-on high                  # non-zero exit for CI gating
-cloudnova checks                                 # list the loaded ruleset (30 checks)
+cloudnova checks                                 # list the loaded ruleset (63 checks)
 
 cloudnova baseline .                             # accept current findings as a baseline
 cloudnova scan . --baseline .cloudnova-baseline.json   # report only NEW findings
@@ -80,7 +80,7 @@ HIGH      LOG_SSH_BRUTE_FORCE     10.0.0.5       120 failed SSH attempts from on
 
 ## What it detects today
 
-**30 checks across 5 input formats**, Terraform, CloudFormation, Kubernetes,
+**63 checks across 5 input formats**, Terraform, CloudFormation, Kubernetes,
 CloudTrail logs, and generic config/auth logs. Run `cloudnova checks` for the
 live list. Highlights:
 

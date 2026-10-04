@@ -12,10 +12,12 @@ aggregation) and killed the crash-on-malformed-input bugs.
 ## Phase 1, Real IaC scanning ✅
 - ✅ Terraform HCL, CloudFormation (JSON/YAML incl. intrinsic tags), and
   multi-document Kubernetes manifest parsers → normalized `CloudResource`s.
-- ✅ Rule packs mapped to CIS Benchmarks + MITRE ATT&CK (24 checks, 5 formats).
+- ✅ Rule packs mapped to CIS Benchmarks + MITRE ATT&CK (63 checks, 5 formats).
 - ✅ SARIF 2.1.0 output + GitHub code-scanning workflow.
 - ✅ Baseline / suppression by content fingerprint (`cloudnova baseline`).
-- ⏭️ Next: broaden the AWS rule packs (RDS, KMS, VPC flow logs, public AMIs).
+- ✅ Broadened the AWS rule packs: data at rest, network exposure, compute and
+  identity, split into three packs by what an attacker is after.
+- ⏭️ Next: Azure and GCP rule packs at the same depth.
 
 ## Phase 2, Live cloud posture ✅
 - ✅ Read-only AWS scanning via boto3 (S3, IAM, security groups, RDS).
@@ -81,7 +83,8 @@ the current phase lands, then we look for more.
 - **Scan history + trend dashboards**: history landed; trend charts still to do.
 - **Scheduled / continuous scanning** with drift alerts.
 - **Integrations**: Slack + email alerts, Jira/Linear ticket creation, GitHub PR checks.
-- **PDF/branded report export** (the DarkShield engagement layout as a real document).
+- ✅ **Branded engagement report** (`cloudnova report`): cover, executive summary,
+  key risks, findings, methodology and compliance appendix, print-ready.
 - **GCP scanning**; broaden AWS/Azure service coverage.
 - **Compliance dashboards**: PCI DSS 4.0.1, SOC 2, NIS2, CIS mappings + evidence.
 - **Operator tool-output ingestion**: import hydra/sqlmap/nuclei results into reports.

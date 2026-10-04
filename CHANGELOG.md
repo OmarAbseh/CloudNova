@@ -6,6 +6,33 @@ releases, so entries are grouped by development phase.
 
 ## [Unreleased]
 
+### Ruleset: 30 checks to 63
+- Three new Terraform rule packs split by what an attacker is after rather than
+  by AWS service: data at rest, network exposure, and compute plus identity.
+  RDS, DynamoDB, EFS, Redshift, SQS, SNS, S3 versioning and public access
+  blocks, Secrets Manager rotation, load balancer TLS and logging, VPC flow
+  logs, CloudFront, OpenSearch, Lambda, EKS, ECR, ECS and IAM escalation paths.
+- The sensitive-port rule names the service, so a finding reads "your
+  PostgreSQL is on the internet" rather than "port 5432 is open". Web ports are
+  deliberately excluded.
+- `iam:PassRole` on `"*"` is its own critical rule, separate from the general
+  wildcard check, because that pair is the most reliable privilege-escalation
+  primitive in AWS.
+
+### Client-ready engagement report
+- `cloudnova report <path> --client "..." -o report.html` writes a single
+  self-contained document: cover with confidentiality notice, executive summary
+  with a plain-English verdict, key risks, findings with evidence and
+  remediation, methodology and limitations, and a compliance appendix.
+- Print styling is real, so Print to PDF produces the finished artefact with no
+  PDF toolchain required.
+
+### Landing page
+- Rebuilt around the attack-path graph. The hero draws a cloud estate as a
+  graph and traces real paths through it, steered by the mouse. Hand-written on
+  a canvas, so the page no longer depends on a CDN and cannot break because one
+  is blocked.
+
 ### Multi-tenant platform (Floatly Platform)
 - **Accounts**: Supabase-backed sign-up, sign-in, sessions and refresh replace the
   dashboard's HTTP Basic password. The session cookie holds Supabase's own tokens
