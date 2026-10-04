@@ -326,3 +326,48 @@ def test_mentor_undone(tmp_path, monkeypatch):
     runner.invoke(app, ["range", "mentor", "done", "foundations"])
     r = runner.invoke(app, ["range", "mentor", "undone", "foundations"])
     assert r.exit_code == 0 and "0/12" in r.stdout
+
+
+def test_report_command_writes_a_client_report(tmp_path):
+    (tmp_path / "main.tf").write_text(
+        'resource "aws_s3_bucket" "b" {\n  acl = "public-read"\n}\n', encoding="utf-8"
+    )
+    out = tmp_path / "report.html"
+    res = runner.invoke(
+        app,
+        [
+            "report",
+            str(tmp_path),
+            "--client",
+            "Acme GmbH",
+            "--scope",
+            "terraform/ at commit abc123",
+            "--assessor",
+            "O. Abseh",
+            "-o",
+            str(out),
+        ],
+    )
+    assert res.exit_code == 0, res.output
+    page = out.read_text(encoding="utf-8")
+    assert "Acme GmbH" in page
+    assert "terraform/ at commit abc123" in page
+    assert "Confidential" in page
+
+
+def test_report_command_defaults_the_scope_but_says_so(tmp_path):
+    # An unstated scope is the first thing a dispute turns on, so the default
+    # is explicit rather than silent.
+    (tmp_path / "main.tf").write_text('resource "aws_s3_bucket" "b" {}\n', encoding="utf-8")
+    out = tmp_path / "r.html"
+    res = runner.invoke(app, ["report", str(tmp_path), "--client", "X", "-o", str(out)])
+    assert res.exit_code == 0
+    assert "Infrastructure-as-code under" in out.read_text(encoding="utf-8")
+
+
+def test_report_command_rejects_a_missing_path(tmp_path):
+    res = runner.invoke(
+        app, ["report", "/definitely/not/here", "--client", "X", "-o", str(tmp_path / "r.html")]
+    )
+    assert res.exit_code == 2
+    assert "not found" in res.output.lower()

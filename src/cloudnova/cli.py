@@ -44,6 +44,7 @@ from cloudnova.range import (
     set_active,
 )
 from cloudnova.reporting import render_console, render_html, render_json, render_sarif
+from cloudnova.reporting.engagement import EngagementMeta, render_engagement
 from cloudnova.triage import triage_findings
 
 app = typer.Typer(
@@ -118,6 +119,55 @@ def scan(
         threshold = _parse_severity(fail_on)
         if any(f.severity.rank >= threshold.rank for f in result.findings):
             raise typer.Exit(code=1)
+
+
+@app.command("report")
+def report_cmd(
+    path: Annotated[Path, typer.Argument(help="Path to scan.")],
+    client: Annotated[str, typer.Option("--client", help="Client or organization name.")],
+    out: Annotated[Path, typer.Option("--out", "-o", help="Where to write the report.")],
+    scope: Annotated[
+        str,
+        typer.Option("--scope", help="What was in scope, recorded verbatim in the report."),
+    ] = "",
+    assessor: Annotated[str, typer.Option("--assessor", help="Who performed the assessment.")] = "",
+    engagement: Annotated[
+        str, typer.Option("--engagement", help="Report title.")
+    ] = "Cloud Infrastructure Security Assessment",
+    reference: Annotated[
+        str, typer.Option("--ref", help="Optional engagement or contract reference.")
+    ] = "",
+) -> None:
+    """Write a client-ready engagement report.
+
+    Produces a single self-contained HTML file with a cover, an executive
+    summary, key risks, findings and a compliance appendix. Open it and print
+    to PDF to get the final document; the print styling is real, so this needs
+    no PDF toolchain and the output stays auditable as text.
+    """
+    if not path.exists():
+        _console.print(f"[red]Path not found: {path}[/]")
+        raise typer.Exit(code=2)
+
+    result = Engine().scan_path(path)
+    if result.resources:
+        graph = build_graph(result.resources)
+        result.findings.extend(paths_to_findings(graph, find_attack_paths(graph)))
+
+    meta = EngagementMeta(
+        client=client,
+        engagement=engagement,
+        # Default the scope to the path examined, but say so: an unstated scope
+        # is the first thing a dispute turns on.
+        scope=scope or f"Infrastructure-as-code under {path}",
+        assessor=assessor or "Floatly Security",
+        reference=reference,
+    )
+    out.write_text(render_engagement(result, meta), encoding="utf-8")
+    _console.print(
+        f"[green]Report written to {out}[/] "
+        f"({len(result.findings)} finding(s)). Open it and print to PDF."
+    )
 
 
 @app.command()
