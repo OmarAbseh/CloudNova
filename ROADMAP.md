@@ -12,12 +12,14 @@ aggregation) and killed the crash-on-malformed-input bugs.
 ## Phase 1, Real IaC scanning ✅
 - ✅ Terraform HCL, CloudFormation (JSON/YAML incl. intrinsic tags), and
   multi-document Kubernetes manifest parsers → normalized `CloudResource`s.
-- ✅ Rule packs mapped to CIS Benchmarks + MITRE ATT&CK (63 checks, 5 formats).
+- ✅ Rule packs mapped to CIS Benchmarks + MITRE ATT&CK (97 checks, 5 formats).
 - ✅ SARIF 2.1.0 output + GitHub code-scanning workflow.
 - ✅ Baseline / suppression by content fingerprint (`cloudnova baseline`).
 - ✅ Broadened the AWS rule packs: data at rest, network exposure, compute and
   identity, split into three packs by what an attacker is after.
-- ⏭️ Next: Azure and GCP rule packs at the same depth.
+- ✅ Azure (azurerm) and GCP (google) rule packs: 16 and 18 rules mapped to the
+  CIS Azure and CIS Google Cloud Foundations Benchmarks.
+- ⏭️ Next: deepen CloudFormation, and add Bicep and Pulumi inputs.
 
 ## Phase 2, Live cloud posture ✅
 - ✅ Read-only AWS scanning via boto3 (S3, IAM, security groups, RDS).
