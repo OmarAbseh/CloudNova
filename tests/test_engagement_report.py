@@ -181,3 +181,42 @@ def test_attack_paths_get_their_own_section_when_present(tmp_path):
     result = _result(tmp_path)
     html = render_engagement(result, META)
     assert "Key risks" in html or "Attack path" in html
+
+
+def test_compliance_appendix_reports_real_failures(tmp_path):
+    # Regression. ControlState values are uppercase, so comparing against
+    # "fail" silently reported zero failures for every framework, in a document
+    # telling a client they were compliant. An overclaim in a signed report is
+    # the one error that actually costs money.
+    import re
+
+    result = _result(tmp_path)
+    assert result.findings
+    page = render_engagement(result, META)
+    rows = re.findall(
+        r"<tr><td>([^<]+)</td><td>(\d+)</td><td>(\d+)</td><td><b>(\d+)</b></td></tr>", page
+    )
+    assert rows, "appendix should render a row per framework"
+    assert any(int(failed) > 0 for _, _, _, failed in rows), (
+        "a scan with findings must show at least one failing control"
+    )
+    for name, total, passed, failed in rows:
+        assert int(passed) + int(failed) == int(total), f"{name} columns must add up"
+
+
+def test_compliance_appendix_does_not_count_unassessed_as_passing(tmp_path):
+    # A control CloudNova cannot evaluate is not a control that passed.
+    from cloudnova.compliance.engine import ControlState, assess_all
+
+    result = _result(tmp_path)
+    reports = assess_all([f.check_id for f in result.findings])
+    unassessed = sum(
+        1 for r in reports.values() for c in r.controls if c.state is ControlState.NOT_ASSESSED
+    )
+    page = render_engagement(result, META)
+    import re
+
+    rows = re.findall(r"<tr><td>[^<]+</td><td>(\d+)</td><td>\d+</td><td><b>\d+</b></td></tr>", page)
+    reported = sum(int(t) for t in rows)
+    every = sum(len(r.controls) for r in reports.values())
+    assert reported == every - unassessed

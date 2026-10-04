@@ -17,7 +17,7 @@ import html
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from cloudnova.compliance.engine import assess_all
+from cloudnova.compliance.engine import ControlState, assess_all
 from cloudnova.compliance.frameworks import Framework
 from cloudnova.core.engine import ScanResult
 from cloudnova.core.findings import Finding, Severity
@@ -155,9 +155,13 @@ def _compliance_appendix(check_ids: list[str]) -> str:
     reports = assess_all(check_ids)
     rows = []
     for framework, report in reports.items():
-        total = len(report.controls)
-        failed = sum(1 for c in report.controls if c.state.value == "fail")
-        passed = total - failed
+        # Compare against the enum, never a lowercase string. ControlState
+        # values are uppercase, so a string comparison silently reports zero
+        # failures, which in a client document is an overclaim.
+        assessed = [c for c in report.controls if c.state is not ControlState.NOT_ASSESSED]
+        failed = sum(1 for c in assessed if c.state is ControlState.FAIL)
+        passed = len(assessed) - failed
+        total = len(assessed)
         rows.append(
             f"<tr><td>{_e(_FRAMEWORK_NAMES.get(framework, framework.value.upper()))}</td>"
             f"<td>{total}</td><td>{passed}</td><td><b>{failed}</b></td></tr>"
